@@ -34,11 +34,12 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-sm">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <Link to="/" className="flex items-center space-x-2">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary">
-            <Mic className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-bold text-foreground">OSSTE</span>
+        <Link to="/" className="flex items-center space-x-3">
+          <img 
+            src="/brand/osste-logo-transparent.png" 
+            alt="OSSTE Logo" 
+            className="h-8 w-auto"
+          />
         </Link>
 
         {/* Desktop Navigation */}
