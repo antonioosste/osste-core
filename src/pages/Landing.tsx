@@ -54,14 +54,14 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen relative bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url("/images/backgrounds/library-hero.jpg")' }}>
-      {/* Background overlay */}
-      <div className="absolute inset-0 bg-background/60" />
-      <div className="relative z-10">
-        <Header />
-        
-        {/* Hero Section */}
-        <section className="relative py-16 md:py-24 overflow-hidden">
+    <div className="min-h-screen">
+      <Header />
+      
+      {/* Hero Section */}
+      <section className="relative py-16 md:py-24 overflow-hidden bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url("/images/backgrounds/library-hero.jpg")' }}>
+        {/* Background overlay */}
+        <div className="absolute inset-0 bg-background/60" />
+        <div className="relative z-10">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto text-center">
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight">
@@ -86,7 +86,8 @@ export default function Landing() {
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
         {/* Value Cards */}
         <section className="py-16 md:py-20 bg-muted/30">
@@ -262,7 +263,6 @@ export default function Landing() {
         </section>
 
         <Footer />
-      </div>
     </div>
   );
 }
