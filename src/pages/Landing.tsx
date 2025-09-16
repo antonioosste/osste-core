@@ -54,7 +54,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen relative bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url("/images/gallery/cozy-library.jpg")' }}>
+    <div className="min-h-screen relative bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url("/images/backgrounds/library-hero.jpg")' }}>
       {/* Background overlay */}
       <div className="absolute inset-0 bg-background/60" />
       <div className="relative z-10">
