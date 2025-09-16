@@ -6,53 +6,99 @@ import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 
-const plans = [
+const oneTimePlans = [
   {
     name: "Starter",
-    price: 9,
-    description: "Perfect for individuals starting their story collection",
+    price: 89,
+    description: "Perfect for capturing your first family stories",
     features: [
-      "5 interview sessions per month",
-      "30 minutes per session",
-      "Basic story templates",
-      "PDF story export",
+      "60 minutes of interviews",
+      "Up to 3 chapters",
+      "Basic PDF export",
       "Email support",
     ],
-    cta: "Start Free Trial",
+    cta: "Buy Now",
     popular: false,
+    planId: "starter",
   },
   {
-    name: "Family",
-    price: 24,
-    description: "Best for families preserving multiple stories",
+    name: "Standard", 
+    price: 149,
+    description: "Ideal for comprehensive family histories",
     features: [
-      "15 interview sessions per month",
-      "60 minutes per session",
-      "Advanced story templates",
-      "PDF & audio exports",
-      "Family sharing features",
+      "180 minutes of interviews",
+      "Up to 8 chapters", 
+      "Premium PDF + audio exports",
       "Priority support",
-      "Story editing tools",
     ],
-    cta: "Start Free Trial",
+    cta: "Buy Now",
     popular: true,
+    planId: "standard",
   },
   {
-    name: "Professional",
-    price: 49,
-    description: "For authors, researchers, and professional storytellers",
+    name: "Premium",
+    price: 249,
+    description: "For complete multi-generational collections",
     features: [
-      "Unlimited interview sessions",
-      "120 minutes per session",
-      "Custom story templates",
+      "Unlimited interview minutes",
+      "Unlimited chapters",
+      "All export formats + hardcover",
+      "Dedicated support specialist",
+    ],
+    cta: "Buy Now", 
+    popular: false,
+    planId: "premium",
+  },
+];
+
+const subscriptionPlans = [
+  {
+    name: "Basic",
+    price: 19,
+    period: "month",
+    description: "Ongoing story capture for busy families",
+    features: [
+      "45 minutes per month",
+      "Up to 2 chapters monthly",
+      "PDF exports",
+      "Email support",
+    ],
+    cta: "Coming Soon",
+    popular: false,
+    planId: "basic-monthly",
+    comingSoon: true,
+  },
+  {
+    name: "Plus",
+    price: 39, 
+    period: "month",
+    description: "Enhanced monthly storytelling package",
+    features: [
+      "120 minutes per month",
+      "Up to 5 chapters monthly",
+      "PDF + audio exports",
+      "Priority support",
+    ],
+    cta: "Coming Soon",
+    popular: true,
+    planId: "plus-monthly", 
+    comingSoon: true,
+  },
+  {
+    name: "Pro",
+    price: 79,
+    period: "month", 
+    description: "Professional monthly story documentation",
+    features: [
+      "Unlimited monthly minutes",
+      "Unlimited chapters",
       "All export formats",
-      "Advanced AI enhancement",
-      "Collaboration tools",
-      "API access",
       "Dedicated support",
     ],
-    cta: "Start Free Trial",
+    cta: "Coming Soon",
     popular: false,
+    planId: "pro-monthly",
+    comingSoon: true,
   },
 ];
 
@@ -92,18 +138,22 @@ export default function Pricing() {
               Choose Your Plan
             </h1>
             <p className="text-xl text-muted-foreground mb-8">
-              Start with a free trial. Upgrade anytime to unlock more features 
-              and capture unlimited stories.
+              One-time purchases for complete story collections, or monthly subscriptions for ongoing capture.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Pricing Cards */}
-      <section className="pb-20">
+      {/* One-Time Plans */}
+      <section className="pb-12">
         <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-foreground mb-4">One-Time Purchases</h2>
+            <p className="text-lg text-muted-foreground">Complete story packages - pay once, keep forever</p>
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {plans.map((plan, index) => (
+            {oneTimePlans.map((plan, index) => (
               <Card 
                 key={index} 
                 className={`relative ${plan.popular ? 'border-primary border-2 shadow-lg' : ''}`}
@@ -118,7 +168,7 @@ export default function Pricing() {
                   <CardTitle className="text-2xl">{plan.name}</CardTitle>
                   <div className="mt-4">
                     <span className="text-4xl font-bold text-foreground">${plan.price}</span>
-                    <span className="text-muted-foreground">/month</span>
+                    <span className="text-muted-foreground"> one-time</span>
                   </div>
                   <p className="text-muted-foreground mt-2">{plan.description}</p>
                 </CardHeader>
@@ -138,13 +188,85 @@ export default function Pricing() {
                     variant={plan.popular ? "default" : "outline"}
                     asChild
                   >
-                    <Link to="/signup">
+                    <Link to={`/checkout?plan=${plan.planId}`}>
                       {plan.cta} <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>
                   </Button>
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Subscription Plans */}
+      <section className="pb-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-foreground mb-4">Monthly Subscriptions</h2>
+            <p className="text-lg text-muted-foreground">Ongoing story capture for active families</p>
+            <Badge variant="secondary" className="mt-4">Coming Soon</Badge>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {subscriptionPlans.map((plan, index) => (
+              <Card 
+                key={index} 
+                className={`relative opacity-75 ${plan.popular ? 'border-primary border-2 shadow-lg' : ''}`}
+              >
+                {plan.popular && (
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
+                    Most Popular
+                  </Badge>
+                )}
+                
+                <CardHeader className="text-center">
+                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                  <div className="mt-4">
+                    <span className="text-4xl font-bold text-foreground">${plan.price}</span>
+                    <span className="text-muted-foreground">/{plan.period}</span>
+                  </div>
+                  <p className="text-muted-foreground mt-2">{plan.description}</p>
+                </CardHeader>
+                
+                <CardContent>
+                  <ul className="space-y-3 mb-6">
+                    {plan.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-center">
+                        <Check className="w-4 h-4 text-muted-foreground mr-3 flex-shrink-0" />
+                        <span className="text-sm text-muted-foreground">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    disabled
+                  >
+                    {plan.cta}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          {/* Small Print */}
+          <div className="max-w-4xl mx-auto mt-12 text-center">
+            <div className="text-sm text-muted-foreground space-y-2">
+              <p>
+                <strong>Usage Caps:</strong> Interview minutes reset monthly for subscriptions. 
+                One-time plans include specified limits with no recurring charges.
+              </p>
+              <p>
+                <strong>Payment Processing:</strong> All payments are securely processed by Stripe. 
+                A small processing fee (2.9% + $0.30) applies to all transactions.
+              </p>
+              <p>
+                <strong>Exports:</strong> PDF exports are unlimited on all plans. 
+                Premium plans include additional formats and printing options.
+              </p>
+            </div>
           </div>
         </div>
       </section>
