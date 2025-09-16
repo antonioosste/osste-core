@@ -1,221 +1,206 @@
-import { useState } from "react";
-import { ArrowLeft, CreditCard, Lock, Check } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { CheckCircle, ArrowLeft, CreditCard } from "lucide-react";
 import { Header } from "@/components/layout/Header";
+import { useToast } from "@/hooks/use-toast";
+
+const plans = {
+  basic: {
+    name: "Basic Plan",
+    price: "$9.99",
+    priceId: "price_basic",
+    features: [
+      "Up to 10 stories per month",
+      "Basic PDF generation",
+      "Standard templates"
+    ]
+  },
+  premium: {
+    name: "Premium Plan", 
+    price: "$19.99",
+    priceId: "price_premium",
+    features: [
+      "Unlimited stories",
+      "Premium PDF generation",
+      "Custom templates",
+      "Priority support"
+    ]
+  },
+  family: {
+    name: "Family Plan",
+    price: "$29.99", 
+    priceId: "price_family",
+    features: [
+      "Everything in Premium",
+      "Multiple family accounts",
+      "Shared story collections",
+      "Family tree integration"
+    ]
+  }
+};
 
 export default function Checkout() {
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const planKey = searchParams.get("plan") as keyof typeof plans;
+  const selectedPlan = plans[planKey];
 
-  const handlePayment = async () => {
-    setIsProcessing(true);
+  useEffect(() => {
+    if (!selectedPlan) {
+      toast({
+        title: "Invalid plan",
+        description: "Please select a valid plan from our pricing page.",
+        variant: "destructive"
+      });
+      navigate("/pricing");
+    }
+  }, [selectedPlan, navigate, toast]);
+
+  const handleCheckout = async () => {
+    if (!selectedPlan) return;
     
-    // Mock payment processing
-    setTimeout(() => {
-      window.location.href = "/checkout/success";
-    }, 2000);
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          priceId: selectedPlan.priceId,
+          plan: planKey
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create checkout session");
+      }
+
+      const { url } = await response.json();
+      
+      if (url) {
+        // Redirect to Stripe Checkout
+        window.location.href = url;
+      } else {
+        throw new Error("No checkout URL received");
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+      toast({
+        title: "Checkout Error",
+        description: "Unable to proceed to payment. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (!selectedPlan) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Header isAuthenticated={true} />
       
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Back Navigation */}
-        <div className="mb-6">
-          <Button variant="ghost" asChild>
-            <Link to="/book/preview">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Book Preview
-            </Link>
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Payment Form */}
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <CreditCard className="w-5 h-5 mr-2" />
-                  Payment Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      defaultValue="john@example.com"
-                      readOnly
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="cardNumber">Card Number</Label>
-                    <Input
-                      id="cardNumber"
-                      placeholder="1234 5678 9012 3456"
-                      maxLength={19}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="expiry">Expiry Date</Label>
-                      <Input
-                        id="expiry"
-                        placeholder="MM/YY"
-                        maxLength={5}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cvc">CVC</Label>
-                      <Input
-                        id="cvc"
-                        placeholder="123"
-                        maxLength={4}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Cardholder Name</Label>
-                    <Input
-                      id="name"
-                      placeholder="John Johnson"
-                    />
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Billing Address</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
-                      <Input id="firstName" defaultValue="John" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <Input id="lastName" defaultValue="Johnson" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
-                    <Input id="address" placeholder="123 Main Street" />
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="city">City</Label>
-                      <Input id="city" placeholder="New York" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="state">State</Label>
-                      <Input id="state" placeholder="NY" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="zip">ZIP Code</Label>
-                      <Input id="zip" placeholder="10001" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
-                  <Lock className="w-4 h-4 text-success" />
-                  <p className="text-sm text-muted-foreground">
-                    Your payment information is encrypted and secure
-                  </p>
-                </div>
-
-                <Button 
-                  className="w-full" 
-                  size="lg"
-                  onClick={handlePayment}
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    "Processing Payment..."
-                  ) : (
-                    <>
-                      <Lock className="w-4 h-4 mr-2" />
-                      Complete Purchase - $9.99
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center gap-4 mb-8">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate("/pricing")}
+              className="gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Pricing
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">Checkout</h1>
+              <p className="text-muted-foreground">
+                Complete your purchase to start creating beautiful family stories
+              </p>
+            </div>
           </div>
 
-          {/* Order Summary */}
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span>Book Generation</span>
-                  <span>$9.99</span>
+          {/* Plan Summary */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Order Summary</span>
+                <Badge variant="secondary">{selectedPlan.name}</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center text-lg font-semibold">
+                  <span>{selectedPlan.name}</span>
+                  <span>{selectedPlan.price}/month</span>
                 </div>
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>Processing</span>
-                  <span>$0.00</span>
+                
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                    What's included:
+                  </h4>
+                  <ul className="space-y-2">
+                    {selectedPlan.features.map((feature, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                        <span className="text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <Separator />
-                <div className="flex items-center justify-between font-semibold">
+
+                <hr />
+
+                <div className="flex justify-between items-center text-xl font-bold">
                   <span>Total</span>
-                  <span>$9.99</span>
+                  <span>{selectedPlan.price}/month</span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </CardContent>
+          </Card>
 
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>What's Included</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center">
-                    <Check className="w-4 h-4 text-success mr-2" />
-                    <span className="text-sm">Professional PDF layout</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Check className="w-4 h-4 text-success mr-2" />
-                    <span className="text-sm">Print-ready formatting</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Check className="w-4 h-4 text-success mr-2" />
-                    <span className="text-sm">Multiple format options</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Check className="w-4 h-4 text-success mr-2" />
-                    <span className="text-sm">Unlimited downloads</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="mt-6 border-primary/20 bg-primary/5">
-              <CardContent className="p-4">
-                <div className="flex items-center mb-2">
-                  <Badge className="mr-2">Family Plan</Badge>
-                  <span className="text-sm text-muted-foreground">Active</span>
-                </div>
+          {/* Payment Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5" />
+                Payment
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  This purchase is included in your plan benefits. No additional charges will apply.
+                  You'll be redirected to Stripe's secure checkout to complete your payment.
+                  Your subscription will begin immediately after successful payment.
                 </p>
-              </CardContent>
-            </Card>
-          </div>
+                
+                <Button 
+                  onClick={handleCheckout}
+                  disabled={isLoading}
+                  className="w-full gap-2"
+                  size="lg"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  {isLoading ? "Processing..." : "Proceed to Payment"}
+                </Button>
+
+                <p className="text-xs text-center text-muted-foreground">
+                  Secure payment processed by Stripe. Cancel anytime.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
