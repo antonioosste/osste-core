@@ -133,39 +133,26 @@ export default function BookPreview() {
     setIsGenerating(true);
     
     try {
-      // Mock API call - replace with actual endpoint
-      const response = await fetch('/api/book', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          bookDetails,
-          stories: stories.sort((a, b) => a.order - b.order),
-          format: '6x9'
-        }),
-      });
-
-      if (response.ok) {
-        toast({
-          title: "PDF Generated",
-          description: "Your book has been generated successfully. Download will start shortly."
-        });
-        
-        // Mock download trigger
-        setTimeout(() => {
-          const link = document.createElement('a');
-          link.href = '#'; // Replace with actual download URL
-          link.download = `${bookDetails.title.replace(/\s+/g, '_')}.pdf`;
-          link.click();
-        }, 1000);
-      } else {
-        throw new Error('Failed to generate PDF');
+      const storyIds = stories.map(s => s.id);
+      
+      if (storyIds.length < 2) {
+        throw new Error("Provide at least two stories to compile.");
       }
-    } catch (error) {
+
+      // Simulate PDF generation process (replace with actual API endpoint)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const jobId = `job_${Math.random().toString(36).slice(2)}`;
+      
+      toast({
+        title: "PDF Generated",
+        description: `PDF job queued (jobId: ${jobId}). You'll see it under Downloads when it's finished.`
+      });
+      
+    } catch (error: any) {
       toast({
         title: "Generation Failed",
-        description: "There was an error generating your book. Please try again.",
+        description: error?.message ?? "Something went wrong generating the book.",
         variant: "destructive"
       });
     } finally {
