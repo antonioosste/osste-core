@@ -1,19 +1,50 @@
 import { useState } from "react";
-import { User, CreditCard, Bell, Shield, HelpCircle, LogOut } from "lucide-react";
+import { User, CreditCard, Shield, LogOut, Download, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Header } from "@/components/layout/Header";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Settings() {
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(false);
-  const [autoSave, setAutoSave] = useState(true);
+  const { toast } = useToast();
+  
+  const handleExportData = () => {
+    toast({
+      title: "Export started",
+      description: "Your data export has been initiated. You'll receive a download link via email.",
+    });
+  };
+
+  const handleDeleteAccount = () => {
+    toast({
+      title: "Account deletion initiated",
+      description: "Your account deletion request has been submitted. This action cannot be undone.",
+      variant: "destructive",
+    });
+  };
+
+  const handleManageBilling = () => {
+    toast({
+      title: "Redirecting to billing portal",
+      description: "Opening Stripe customer portal...",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -28,10 +59,9 @@ export default function Settings() {
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="billing">Billing</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="privacy">Privacy</TabsTrigger>
           </TabsList>
 
@@ -44,48 +74,15 @@ export default function Settings() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input id="firstName" defaultValue="John" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input id="lastName" defaultValue="Johnson" />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input id="name" defaultValue="John Johnson" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input id="email" type="email" defaultValue="john@example.com" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" type="tel" defaultValue="+1 (555) 123-4567" />
-                </div>
                 <Button>Save Changes</Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Account Security</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Password</p>
-                    <p className="text-sm text-muted-foreground">Last changed 3 months ago</p>
-                  </div>
-                  <Button variant="outline">Change Password</Button>
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Two-Factor Authentication</p>
-                    <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
-                  </div>
-                  <Button variant="outline">Enable 2FA</Button>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -113,30 +110,9 @@ export default function Settings() {
                   <Badge>Active</Badge>
                   <Badge variant="outline">Next billing: Jan 15, 2024</Badge>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline">Change Plan</Button>
-                  <Button variant="outline">Cancel Subscription</Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Payment Method</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-8 bg-gradient-to-r from-blue-600 to-blue-400 rounded flex items-center justify-center text-white text-xs font-bold">
-                      VISA
-                    </div>
-                    <div>
-                      <p className="font-medium">•••• •••• •••• 4242</p>
-                      <p className="text-sm text-muted-foreground">Expires 12/26</p>
-                    </div>
-                  </div>
-                  <Button variant="outline">Update</Button>
-                </div>
+                <Button onClick={handleManageBilling} className="w-full">
+                  Manage Subscription
+                </Button>
               </CardContent>
             </Card>
 
@@ -163,104 +139,14 @@ export default function Settings() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="notifications" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Bell className="w-5 h-5 mr-2" />
-                  Notification Preferences
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Email Notifications</p>
-                    <p className="text-sm text-muted-foreground">Receive updates about your stories and account</p>
-                  </div>
-                  <Switch
-                    checked={emailNotifications}
-                    onCheckedChange={setEmailNotifications}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Push Notifications</p>
-                    <p className="text-sm text-muted-foreground">Get notified when processing is complete</p>
-                  </div>
-                  <Switch
-                    checked={pushNotifications}
-                    onCheckedChange={setPushNotifications}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Marketing Communications</p>
-                    <p className="text-sm text-muted-foreground">Tips, feature updates, and special offers</p>
-                  </div>
-                  <Switch defaultChecked={false} />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Auto-Save Settings</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Auto-save Stories</p>
-                    <p className="text-sm text-muted-foreground">Automatically save story edits as drafts</p>
-                  </div>
-                  <Switch
-                    checked={autoSave}
-                    onCheckedChange={setAutoSave}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           <TabsContent value="privacy" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Shield className="w-5 h-5 mr-2" />
-                  Privacy & Data
+                  Data Actions
                 </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Data Processing</p>
-                    <p className="text-sm text-muted-foreground">Allow AI to analyze your content for improvements</p>
-                  </div>
-                  <Switch defaultChecked={true} />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Story Sharing</p>
-                    <p className="text-sm text-muted-foreground">Allow family members to view shared stories</p>
-                  </div>
-                  <Switch defaultChecked={true} />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Analytics</p>
-                    <p className="text-sm text-muted-foreground">Help improve our service with usage analytics</p>
-                  </div>
-                  <Switch defaultChecked={false} />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Data Export & Deletion</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -268,7 +154,29 @@ export default function Settings() {
                     <p className="font-medium">Export Your Data</p>
                     <p className="text-sm text-muted-foreground">Download all your stories and recordings</p>
                   </div>
-                  <Button variant="outline">Export Data</Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline">
+                        <Download className="w-4 h-4 mr-2" />
+                        Export Data
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Export Your Data</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will create a downloadable file containing all your stories, recordings, and account data. 
+                          You'll receive an email with the download link once the export is ready.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleExportData}>
+                          Start Export
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
@@ -276,9 +184,32 @@ export default function Settings() {
                     <p className="font-medium text-destructive">Delete Account</p>
                     <p className="text-sm text-muted-foreground">Permanently delete your account and all data</p>
                   </div>
-                  <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
-                    Delete Account
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Account
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete your account
+                          and remove all your data from our servers, including all stories, recordings, and personal information.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={handleDeleteAccount}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete Account
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </CardContent>
             </Card>
