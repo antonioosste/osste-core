@@ -84,9 +84,12 @@ export default function Landing() {
           </div>
         </div>
         
-        {/* Background decoration */}
-        <div className="absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] md:w-[800px] h-[600px] md:h-[800px] rounded-full bg-primary/5 blur-3xl" />
+        {/* Background image */}
+        <div 
+          className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat opacity-20"
+          style={{ backgroundImage: 'url("/images/gallery/cozy-library.jpg")' }}
+        >
+          <div className="absolute inset-0 bg-background/80" />
         </div>
       </section>
 
