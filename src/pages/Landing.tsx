@@ -58,29 +58,23 @@ export default function Landing() {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative py-16 md:py-24 overflow-hidden bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url("/images/backgrounds/library-hero.jpg")' }}>
+      <section className="relative py-24 md:py-32 lg:py-40 overflow-hidden bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url("/images/backgrounds/library-hero.jpg")' }}>
         {/* Background overlay */}
-        <div className="absolute inset-0 bg-background/60" />
+        <div className="absolute inset-0 bg-background/75" />
         <div className="relative z-10">
-          <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto text-center">
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight">
-                Capture Stories That{" "}
-                <span className="text-primary">Matter</span>
+          <div className="container mx-auto px-6 md:px-8">
+            <div className="max-w-3xl mx-auto text-center">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-8 leading-tight tracking-tight">
+                Preserve Stories<br />
+                <span className="text-primary">That Last Forever</span>
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-                Use AI-guided voice interviews to preserve precious memories, 
-                family histories, and personal stories for future generations.
+              <p className="text-xl md:text-2xl text-muted-foreground/90 mb-12 max-w-2xl mx-auto leading-relaxed font-light">
+                Transform precious memories into beautiful books with AI-guided interviews and professional storytelling.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" asChild>
+              <div className="flex justify-center">
+                <Button size="lg" className="px-8 py-6 text-lg font-semibold" asChild>
                   <Link to="/session">
-                    Start a Demo <ArrowRight className="w-4 h-4 ml-2" />
-                  </Link>
-                </Button>
-                <Button variant="outline" size="lg" asChild>
-                  <Link to="/pricing">
-                    See Pricing
+                    Start Your Story <ArrowRight className="w-5 h-5 ml-2" />
                   </Link>
                 </Button>
               </div>
