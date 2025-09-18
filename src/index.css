@@ -9,28 +9,28 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Core Neutral Palette */
-    --background: 48 50% 95%;
-    --foreground: 215 28% 17%;
+    --background: 48 80% 94%;
+    --foreground: 210 20% 15%;
 
     /* Card & Surface Colors */
     --card: 0 0% 100%;
-    --card-foreground: 215 28% 17%;
+    --card-foreground: 210 20% 15%;
 
     /* Popover Colors */
     --popover: 0 0% 100%;
-    --popover-foreground: 215 28% 17%;
+    --popover-foreground: 210 20% 15%;
 
-    /* Primary Brand - Burnt Orange */
-    --primary: 22 100% 41%;
-    --primary-foreground: 0 0% 100%;
-    --primary-soft: 22 100% 95%;
-    --primary-muted: 22 100% 88%;
+    /* Primary Brand - OSSTE Orange */
+    --primary: 16 60% 50%;
+    --primary-foreground: 28 35% 90%;
+    --primary-soft: 16 60% 95%;
+    --primary-muted: 16 60% 88%;
 
-    /* Secondary - Light Beige */
-    --secondary: 48 50% 92%;
-    --secondary-foreground: 215 28% 17%;
-    --secondary-soft: 48 50% 97%;
-    --secondary-muted: 48 50% 85%;
+    /* Secondary - OSSTE Cream */
+    --secondary: 28 35% 90%;
+    --secondary-foreground: 16 60% 50%;
+    --secondary-soft: 28 35% 97%;
+    --secondary-muted: 28 35% 85%;
 
     /* Success - Ocean Green */
     --success: 158 64% 42%;
@@ -43,12 +43,12 @@ All colors MUST be HSL.
     --warning-soft: 35 84% 94%;
 
     /* Muted Grays */
-    --muted: 48 20% 92%;
-    --muted-foreground: 215 15% 45%;
+    --muted: 210 14% 96%;
+    --muted-foreground: 48 40% 65%;
 
-    /* Accent - Lighter Beige */
-    --accent: 48 30% 94%;
-    --accent-foreground: 215 28% 17%;
+    /* Accent - Lighter Ocean */
+    --accent: 206 84% 96%;
+    --accent-foreground: 206 84% 22%;
 
     /* Destructive - Warm Red */
     --destructive: 0 72% 62%;

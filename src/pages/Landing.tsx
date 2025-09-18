@@ -58,23 +58,29 @@ export default function Landing() {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative py-24 md:py-32 lg:py-40 overflow-hidden bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url("/images/backgrounds/library-hero.jpg")' }}>
+      <section className="relative py-16 md:py-24 overflow-hidden bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url("/images/backgrounds/library-hero.jpg")' }}>
         {/* Background overlay */}
-        <div className="absolute inset-0 bg-background/75" />
+        <div className="absolute inset-0 bg-background/60" />
         <div className="relative z-10">
-          <div className="container mx-auto px-6 md:px-8">
-            <div className="max-w-3xl mx-auto text-center">
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-8 leading-tight tracking-tight">
-                Preserve Stories<br />
-                <span className="text-primary">That Last Forever</span>
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto text-center">
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight">
+                Capture Stories That{" "}
+                <span className="text-primary">Matter</span>
               </h1>
-              <p className="text-xl md:text-2xl text-muted-foreground/90 mb-12 max-w-2xl mx-auto leading-relaxed font-light">
-                Transform precious memories into beautiful books with AI-guided interviews and professional storytelling.
+              <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
+                Use AI-guided voice interviews to preserve precious memories, 
+                family histories, and personal stories for future generations.
               </p>
-              <div className="flex justify-center">
-                <Button size="lg" className="px-8 py-6 text-lg font-semibold" asChild>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button size="lg" asChild>
                   <Link to="/session">
-                    Start Your Story <ArrowRight className="w-5 h-5 ml-2" />
+                    Start a Demo <ArrowRight className="w-4 h-4 ml-2" />
+                  </Link>
+                </Button>
+                <Button variant="outline" size="lg" asChild>
+                  <Link to="/pricing">
+                    See Pricing
                   </Link>
                 </Button>
               </div>
@@ -84,10 +90,10 @@ export default function Landing() {
       </section>
 
         {/* Value Cards */}
-        <section className="py-24 md:py-32 bg-muted/20">
-          <div className="container mx-auto px-6 md:px-8">
-            <div className="max-w-3xl mx-auto text-center mb-16 md:mb-20">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+        <section className="py-16 md:py-20 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
                 Everything You Need to Preserve Stories
               </h2>
               <p className="text-lg text-muted-foreground">
@@ -96,16 +102,16 @@ export default function Landing() {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
               {valueProps.map((prop, index) => (
-                <Card key={index} className="text-center border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-card/60 backdrop-blur-sm">
-                  <CardHeader className="pb-6 pt-8">
-                    <div className="flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mx-auto mb-6">
-                      <prop.icon className="w-7 h-7 text-primary" />
+                <Card key={index} className="text-center border-2 hover:border-primary/20 transition-all duration-300 hover:shadow-lg">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mx-auto mb-4">
+                      <prop.icon className="w-6 h-6 text-primary" />
                     </div>
                     <CardTitle className="text-xl">{prop.title}</CardTitle>
                   </CardHeader>
-                  <CardContent className="pb-8">
+                  <CardContent>
                     <p className="text-muted-foreground leading-relaxed">{prop.description}</p>
                   </CardContent>
                 </Card>
@@ -115,10 +121,10 @@ export default function Landing() {
         </section>
 
         {/* How It Works */}
-        <section className="py-24 md:py-32">
-          <div className="container mx-auto px-6 md:px-8">
-            <div className="max-w-3xl mx-auto text-center mb-16 md:mb-20">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+        <section className="py-16 md:py-20">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
                 How It Works
               </h2>
               <p className="text-lg text-muted-foreground">
@@ -126,7 +132,7 @@ export default function Landing() {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 max-w-4xl mx-auto">
               {[
                 {
                   step: "Record",
@@ -148,26 +154,20 @@ export default function Landing() {
                 },
               ].map((item, index) => (
                 <div key={index} className="text-center relative">
-                  {/* Subtle connection dots for desktop */}
+                  {/* Connection line for desktop */}
                   {index < 2 && (
-                    <div className="hidden md:flex absolute top-8 left-1/2 w-full justify-center z-0" 
-                         style={{ transform: 'translateX(50%)' }}>
-                      <div className="flex space-x-2">
-                        {[...Array(6)].map((_, i) => (
-                          <div key={i} className="w-1 h-1 rounded-full bg-primary/30" />
-                        ))}
-                      </div>
-                    </div>
+                    <div className="hidden md:block absolute top-6 left-1/2 w-full h-0.5 bg-gradient-to-r from-primary to-primary/20 z-0" 
+                         style={{ transform: 'translateX(50%)' }} />
                   )}
                   
                   <div className="relative z-10">
-                    <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary text-primary-foreground font-bold text-lg mx-auto mb-6 shadow-lg">
-                      <item.icon className="w-7 h-7" />
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground font-bold text-lg mx-auto mb-4">
+                      <item.icon className="w-6 h-6" />
                     </div>
-                    <h3 className="text-xl font-semibold text-foreground mb-3">
+                    <h3 className="text-xl font-semibold text-foreground mb-2">
                       {item.step}
                     </h3>
-                    <h4 className="text-lg font-medium text-foreground mb-4">
+                    <h4 className="text-lg font-medium text-foreground mb-2">
                       {item.title}
                     </h4>
                     <p className="text-muted-foreground leading-relaxed">{item.description}</p>
@@ -179,22 +179,22 @@ export default function Landing() {
         </section>
 
         {/* Testimonials Slider */}
-        <section className="py-24 md:py-32 bg-gradient-to-b from-muted/10 to-muted/20">
-          <div className="container mx-auto px-6 md:px-8">
-            <div className="max-w-3xl mx-auto text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+        <section className="py-16 md:py-20 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
                 Trusted by Families Worldwide
               </h2>
             </div>
             
             <div className="max-w-4xl mx-auto">
-              <Card className="relative overflow-hidden border-0 shadow-md bg-card/80 backdrop-blur-sm">
-                <CardContent className="p-12 md:p-16">
+              <Card className="relative overflow-hidden">
+                <CardContent className="p-8 md:p-12">
                   <div className="text-center">
-                    <blockquote className="text-xl md:text-2xl text-foreground mb-8 italic leading-relaxed font-light">
+                    <blockquote className="text-lg md:text-xl text-foreground mb-6 italic leading-relaxed">
                       "{testimonials[currentTestimonial].quote}"
                     </blockquote>
-                    <div className="space-y-2">
+                    <div>
                       <p className="font-semibold text-foreground text-lg">
                         {testimonials[currentTestimonial].author}
                       </p>
@@ -205,22 +205,22 @@ export default function Landing() {
                   </div>
                   
                   {/* Navigation */}
-                  <div className="flex items-center justify-center mt-12 space-x-6">
+                  <div className="flex items-center justify-center mt-8 space-x-4">
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={prevTestimonial}
-                      className="w-12 h-12 rounded-full p-0 hover:bg-primary/10"
+                      className="w-10 h-10 rounded-full p-0"
                     >
-                      <ChevronLeft className="w-5 h-5" />
+                      <ChevronLeft className="w-4 h-4" />
                     </Button>
                     
-                    <div className="flex space-x-3">
+                    <div className="flex space-x-2">
                       {testimonials.map((_, index) => (
                         <button
                           key={index}
-                          className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                            index === currentTestimonial ? 'bg-primary scale-110' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                          className={`w-2 h-2 rounded-full transition-colors ${
+                            index === currentTestimonial ? 'bg-primary' : 'bg-muted-foreground/30'
                           }`}
                           onClick={() => setCurrentTestimonial(index)}
                         />
@@ -228,12 +228,12 @@ export default function Landing() {
                     </div>
                     
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={nextTestimonial}
-                      className="w-12 h-12 rounded-full p-0 hover:bg-primary/10"
+                      className="w-10 h-10 rounded-full p-0"
                     >
-                      <ChevronRight className="w-5 h-5" />
+                      <ChevronRight className="w-4 h-4" />
                     </Button>
                   </div>
                 </CardContent>
@@ -243,19 +243,19 @@ export default function Landing() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-24 md:py-32">
-          <div className="container mx-auto px-6 md:px-8">
+        <section className="py-16 md:py-20">
+          <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
                 Start Preserving Stories Today
               </h2>
-              <p className="text-xl text-muted-foreground mb-12 font-light leading-relaxed">
+              <p className="text-lg text-muted-foreground mb-8">
                 Don't let precious memories fade away. Begin capturing the stories 
                 that matter most to your family.
               </p>
-              <Button size="lg" className="px-8 py-6 text-lg font-semibold" asChild>
+              <Button size="lg" asChild>
                 <Link to="/session">
-                  Start Your Story <ArrowRight className="w-5 h-5 ml-2" />
+                  Start a Demo <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
             </div>
