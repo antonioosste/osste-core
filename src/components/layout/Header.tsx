@@ -18,6 +18,7 @@ interface HeaderProps {
 const navigation = [
   { name: "Features", href: "/#features" },
   { name: "Pricing", href: "/pricing" },
+  { name: "Stories", href: "/stories" },
 ];
 
 export function Header({ isAuthenticated = false }: HeaderProps) {
@@ -30,20 +31,20 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
                      location.pathname.startsWith("/settings");
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm shadow-sm">
-      <div className="container mx-auto flex h-20 items-center justify-between px-6">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-sm">
+      <div className="container mx-auto flex h-44 items-center justify-between px-4">
         {/* Logo */}
-        <Link to="/" className="flex items-center">
+        <Link to="/" className="flex items-center space-x-3">
           <img 
-            src="/brand/osste-logo.png" 
+            src="/brand/osste-logo-transparent.png" 
             alt="OSSTE Logo" 
-            className="h-12 w-auto"
+            className="h-60 w-auto"
           />
         </Link>
 
         {/* Desktop Navigation */}
         {!isDashboard && (
-          <nav className="hidden md:flex items-center space-x-12 ml-auto mr-8">
+          <nav className="hidden md:flex items-center space-x-8">
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -87,7 +88,10 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="hidden md:flex">
+            <div className="hidden md:flex items-center space-x-2">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/login">Sign In</Link>
+              </Button>
               <Button size="sm" asChild>
                 <Link to="/signup">Get Started</Link>
               </Button>
@@ -135,6 +139,11 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
           
           {!isAuthenticated && (
             <div className="flex flex-col space-y-2 pt-2 border-t">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                  Sign In
+                </Link>
+              </Button>
               <Button size="sm" asChild>
                 <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
                   Get Started
