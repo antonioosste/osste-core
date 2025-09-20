@@ -32,7 +32,7 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
 
   return (
     <header className="w-full border-b bg-background/80 backdrop-blur-sm">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <div className="container mx-auto flex h-16 items-center justify-between pl-2 pr-4">
         {/* Logo */}
         <Link to="/" className="flex items-center">
           <img 
