@@ -1,4 +1,11 @@
 @tailwind base;
+
+/* Brand logo hard override */
+.brand-logo {
+  height: 56px !important;
+  width: auto !important;
+  display: block;
+}
 @tailwind components;
 @tailwind utilities;
 
