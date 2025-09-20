@@ -32,15 +32,16 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
 
   return (
     <header className="w-full border-b bg-background/80 backdrop-blur-sm">
-      <div className="flex h-16 items-center justify-between">
-        {/* Logo */}
-        <Link to="/" className="flex items-center pl-4">
-          <img 
-            src="/brand/osste-logo-new.png" 
-            alt="OSSTE Logo" 
-            className="h-25 w-auto"
-          />
-        </Link>
+      <div className="max-w-screen-xl mx-auto px-4">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <Link to="/" className="flex items-center shrink-0 w-auto pl-0 ml-0">
+            <img 
+              src="/brand/osste-logo-new.png" 
+              alt="OSSTE Logo" 
+              className="h-16 w-auto"
+            />
+          </Link>
 
         {/* Desktop Navigation */}
         {!isDashboard && (
@@ -57,60 +58,61 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
           </nav>
         )}
 
-        {/* Right side */}
-        <div className="flex items-center space-x-3 pr-4">
-          {isAuthenticated ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="relative">
-                  <User className="w-4 h-4" />
-                  <span className="sr-only">User menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem asChild>
-                  <Link to="/dashboard" className="flex items-center">
-                    <User className="w-4 h-4 mr-2" />
-                    Dashboard
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/settings" className="flex items-center">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="flex items-center text-destructive">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <div className="hidden md:flex items-center space-x-2">
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/login">Sign In</Link>
-              </Button>
-              <Button size="sm" asChild>
-                <Link to="/signup">Get Started</Link>
-              </Button>
-            </div>
-          )}
-
-          {/* Mobile menu button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="md:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? (
-              <X className="w-5 h-5" />
+          {/* Right side */}
+          <div className="flex items-center space-x-3">
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="relative">
+                    <User className="w-4 h-4" />
+                    <span className="sr-only">User menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" className="flex items-center">
+                      <User className="w-4 h-4 mr-2" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings" className="flex items-center">
+                      <Settings className="w-4 h-4 mr-2" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="flex items-center text-destructive">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
-              <Menu className="w-5 h-5" />
+              <div className="hidden md:flex items-center space-x-2">
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/login">Sign In</Link>
+                </Button>
+                <Button size="sm" asChild>
+                  <Link to="/signup">Get Started</Link>
+                </Button>
+              </div>
             )}
-          </Button>
+
+            {/* Mobile menu button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="md:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 
