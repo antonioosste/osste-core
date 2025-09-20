@@ -35,28 +35,28 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
       <div className="max-w-screen-xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center shrink-0 w-auto pl-0 ml-0">
+          <Link to="/" className="shrink-0 h-12 md:h-14 pl-0 ml-0">
             <img 
               src="/brand/osste-logo-new.png" 
               alt="OSSTE Logo" 
-              className="h-16 w-auto"
+              className="h-full w-auto block"
             />
           </Link>
 
-        {/* Desktop Navigation */}
-        {!isDashboard && (
-          <nav className="hidden md:flex items-center space-x-6 flex-1 justify-center">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {item.name}
-              </Link>
-            ))}
-          </nav>
-        )}
+          {/* Desktop Navigation */}
+          {!isDashboard && (
+            <nav className="hidden md:flex items-center space-x-6">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </nav>
+          )}
 
           {/* Right side */}
           <div className="flex items-center space-x-3">
