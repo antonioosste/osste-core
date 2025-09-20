@@ -32,13 +32,13 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-sm">
-      <div className="container mx-auto flex h-44 items-center justify-between px-4">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-3">
           <img 
-            src="/brand/osste-logo-transparent.png" 
+            src="/brand/osste-logo.png" 
             alt="OSSTE Logo" 
-            className="h-60 w-auto"
+            className="h-12 w-auto"
           />
         </Link>
 
