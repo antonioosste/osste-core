@@ -32,9 +32,9 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
 
   return (
     <header className="w-full border-b bg-background/80 backdrop-blur-sm">
-      <div className="container mx-auto flex h-16 items-center justify-between pl-2 pr-4">
+      <div className="flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center">
+        <Link to="/" className="flex items-center pl-4">
           <img 
             src="/brand/osste-logo-new.png" 
             alt="OSSTE Logo" 
@@ -58,7 +58,7 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
         )}
 
         {/* Right side */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 pr-4">
           {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
