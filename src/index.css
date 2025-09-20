@@ -44,7 +44,7 @@ All colors MUST be HSL.
 
     /* Muted Grays */
     --muted: 210 14% 96%;
-    --muted-foreground: 210 20% 40%;
+    --muted-foreground: 48 40% 65%;
 
     /* Accent - Lighter Ocean */
     --accent: 206 84% 96%;
