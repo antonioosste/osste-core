@@ -32,21 +32,19 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-sm">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <div className="container mx-auto flex h-44 items-center justify-between px-4">
         {/* Logo */}
-        <div className="flex-shrink-0">
-          <Link to="/" className="flex items-center">
-            <img 
-              src="/brand/osste-new-logo.png" 
-              alt="OSSTE Logo" 
-              className="h-25 w-auto"
-            />
-          </Link>
-        </div>
+        <Link to="/" className="flex items-center space-x-3">
+          <img 
+            src="/brand/osste-logo-transparent.png" 
+            alt="OSSTE Logo" 
+            className="h-60 w-auto"
+          />
+        </Link>
 
         {/* Desktop Navigation */}
         {!isDashboard && (
-          <nav className="hidden md:flex items-center space-x-8 flex-1 justify-center">
+          <nav className="hidden md:flex items-center space-x-8">
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -60,7 +58,7 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
         )}
 
         {/* Right side */}
-        <div className="flex items-center space-x-3 flex-shrink-0">
+        <div className="flex items-center space-x-4">
           {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
