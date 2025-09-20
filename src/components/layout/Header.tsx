@@ -35,7 +35,7 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
       <div className="max-w-screen-xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="shrink-0 h-12 md:h-14 pl-0 ml-0">
+          <Link to="/" className="shrink-0 h-12 md:h-14">
             <img 
               src="/brand/osste-logo-new.png" 
               alt="OSSTE Logo" 
