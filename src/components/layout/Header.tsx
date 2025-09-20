@@ -38,7 +38,7 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
           <img 
             src="/brand/osste-logo.png" 
             alt="OSSTE Logo" 
-            className="h-100 w-auto object-contain"
+            className="h-70 w-auto object-contain"
           />
         </Link>
 
