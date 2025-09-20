@@ -35,9 +35,9 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
         {/* Logo */}
         <Link to="/" className="flex items-center">
           <img 
-            src="/brand/osste-new-logo.png" 
+            src="/brand/osste-logo.svg" 
             alt="OSSTE Logo" 
-            className="h-12 w-auto"
+            className="h-[4.3rem] w-auto"
           />
         </Link>
 
