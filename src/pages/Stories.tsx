@@ -281,10 +281,16 @@ export default function Stories() {
                       </Badge>
                     ))}
                   </div>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
                     <span>{story.wordCount} words</span>
                     <span>{story.duration}</span>
                   </div>
+                  <Button asChild className="w-full" size="sm">
+                    <Link to={`/stories/${story.id}`}>
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      View Story
+                    </Link>
+                  </Button>
                 </CardContent>
               </Card>
             ))}

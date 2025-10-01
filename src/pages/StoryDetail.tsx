@@ -14,7 +14,8 @@ import {
   Calendar,
   MapPin,
   User,
-  X
+  X,
+  Image as ImageIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +25,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 const sampleStory = {
   id: "1",
@@ -97,6 +99,7 @@ export default function StoryDetail() {
   const [editedContent, setEditedContent] = useState(sampleStory.polishedContent);
   const [regenerateDialog, setRegenerateDialog] = useState(false);
   const [factsDrawerOpen, setFactsDrawerOpen] = useState(false);
+  const [chapterImages, setChapterImages] = useState<File[]>([]);
 
   const handlePlayAudio = () => {
     setIsPlaying(!isPlaying);
@@ -123,6 +126,14 @@ export default function StoryDetail() {
     toast({
       title: "Regenerating story",
       description: "AI is creating a new version based on the transcript."
+    });
+  };
+
+  const handleImageUpload = (files: File[]) => {
+    setChapterImages(prev => [...prev, ...files]);
+    toast({
+      title: "Images uploaded",
+      description: `${files.length} image(s) added to this chapter. They will appear in the final PDF.`
     });
   };
 
@@ -341,6 +352,25 @@ export default function StoryDetail() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Chapter Images Section */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ImageIcon className="w-5 h-5" />
+              Chapter Images
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Upload images to include in this chapter. They will appear in the final PDF version.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <ImageUpload 
+              onImageChange={handleImageUpload}
+              maxImages={5}
+            />
+          </CardContent>
+        </Card>
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-4 mt-8">
