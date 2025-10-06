@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Mic, User, Settings, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,6 +25,10 @@ const navigation = [
 export function Header({ isAuthenticated = false }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
+
+  // Use auth state if available, otherwise fallback to prop
+  const isUserAuthenticated = user !== null || isAuthenticated;
 
   const isDashboard = location.pathname.startsWith("/dashboard") || 
                      location.pathname.startsWith("/session") ||
@@ -60,7 +65,7 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
 
           {/* Right side */}
           <div className="flex items-center space-x-3">
-            {isAuthenticated ? (
+            {isUserAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="relative">
@@ -82,7 +87,10 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="flex items-center text-destructive">
+                  <DropdownMenuItem 
+                    className="flex items-center text-destructive"
+                    onClick={() => signOut()}
+                  >
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
                   </DropdownMenuItem>
@@ -139,7 +147,7 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
             </nav>
           )}
           
-          {!isAuthenticated && (
+          {!isUserAuthenticated && (
             <div className="flex flex-col space-y-2 pt-2 border-t">
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/login" onClick={() => setMobileMenuOpen(false)}>

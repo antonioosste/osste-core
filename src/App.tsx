@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
 import Landing from "./pages/Landing";
 import Pricing from "./pages/Pricing";
 import Login from "./pages/Login";
@@ -27,24 +28,26 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/session" element={<Session />} />
-          <Route path="/stories" element={<Stories />} />
-          <Route path="/stories/:id" element={<StoryDetail />} />
-          <Route path="/book/preview" element={<BookPreview />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/checkout/success" element={<CheckoutSuccess />} />
-          <Route path="/checkout/cancel" element={<CheckoutCancel />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/admin" element={<Admin />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/session" element={<Session />} />
+            <Route path="/stories" element={<Stories />} />
+            <Route path="/stories/:id" element={<StoryDetail />} />
+            <Route path="/book/preview" element={<BookPreview />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/checkout/success" element={<CheckoutSuccess />} />
+            <Route path="/checkout/cancel" element={<CheckoutCancel />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/admin" element={<Admin />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

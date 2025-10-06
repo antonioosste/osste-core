@@ -4,6 +4,7 @@ import { Eye, EyeOff, Mic } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,14 +36,17 @@ export default function Signup() {
     },
   });
 
+  const { signUp } = useAuth();
+
   const onSubmit = async (values: z.infer<typeof signupSchema>) => {
     setIsLoading(true);
-    
-    // Mock authentication
-    setTimeout(() => {
+    try {
+      await signUp(values.email, values.password, `${values.firstName} ${values.lastName}`);
+    } catch (error) {
+      // Error handling is done in the signUp function
+    } finally {
       setIsLoading(false);
-      navigate("/dashboard");
-    }, 1000);
+    }
   };
 
   return (

@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string | null
+          plan: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          name?: string | null
+          plan?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string | null
+          plan?: string | null
+        }
+        Relationships: []
+      }
       sessions: {
         Row: {
           ended_at: string | null
@@ -23,7 +44,7 @@ export type Database = {
           started_at: string | null
           status: string | null
           themes: string[] | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           ended_at?: string | null
@@ -33,7 +54,7 @@ export type Database = {
           started_at?: string | null
           status?: string | null
           themes?: string[] | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           ended_at?: string | null
@@ -43,17 +64,9 @@ export type Database = {
           started_at?: string | null
           status?: string | null
           themes?: string[] | null
-          user_id?: string | null
+          user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "sessions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       stories: {
         Row: {
@@ -96,11 +109,35 @@ export type Database = {
           },
         ]
       }
+      story_embeddings: {
+        Row: {
+          embedding: string | null
+          story_id: string | null
+        }
+        Insert: {
+          embedding?: string | null
+          story_id?: string | null
+        }
+        Update: {
+          embedding?: string | null
+          story_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_embeddings_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       turns: {
         Row: {
           created_at: string | null
           entities: Json | null
           id: string
+          sentiment: string | null
           session_id: string | null
           stt_text: string | null
           tts_voice: string | null
@@ -110,6 +147,7 @@ export type Database = {
           created_at?: string | null
           entities?: Json | null
           id?: string
+          sentiment?: string | null
           session_id?: string | null
           stt_text?: string | null
           tts_voice?: string | null
@@ -119,6 +157,7 @@ export type Database = {
           created_at?: string | null
           entities?: Json | null
           id?: string
+          sentiment?: string | null
           session_id?: string | null
           stt_text?: string | null
           tts_voice?: string | null
@@ -134,36 +173,103 @@ export type Database = {
           },
         ]
       }
-      users: {
-        Row: {
-          created_at: string | null
-          email: string
-          id: string
-          name: string | null
-          plan: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          email: string
-          id?: string
-          name?: string | null
-          plan?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          email?: string
-          id?: string
-          name?: string | null
-          plan?: string | null
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      binary_quantize: {
+        Args: { "": string } | { "": unknown }
+        Returns: unknown
+      }
+      halfvec_avg: {
+        Args: { "": number[] }
+        Returns: unknown
+      }
+      halfvec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      halfvec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      halfvec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
+      hnsw_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_sparsevec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnswhandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflat_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflat_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflathandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      l2_norm: {
+        Args: { "": unknown } | { "": unknown }
+        Returns: number
+      }
+      l2_normalize: {
+        Args: { "": string } | { "": unknown } | { "": unknown }
+        Returns: string
+      }
+      sparsevec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      sparsevec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      sparsevec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
+      vector_avg: {
+        Args: { "": number[] }
+        Returns: string
+      }
+      vector_dims: {
+        Args: { "": string } | { "": unknown }
+        Returns: number
+      }
+      vector_norm: {
+        Args: { "": string }
+        Returns: number
+      }
+      vector_out: {
+        Args: { "": string }
+        Returns: unknown
+      }
+      vector_send: {
+        Args: { "": string }
+        Returns: string
+      }
+      vector_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
