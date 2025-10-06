@@ -10,6 +10,9 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
+  signInWithFacebook: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -121,6 +124,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to sign in with Google. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const signInWithApple = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to sign in with Apple. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const signInWithFacebook = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'facebook',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to sign in with Facebook. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -142,7 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signInWithGoogle, signInWithApple, signInWithFacebook, signOut }}>
       {children}
     </AuthContext.Provider>
   );
