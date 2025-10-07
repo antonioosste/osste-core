@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      pages: {
+        Row: {
+          body_markdown: string | null
+          created_at: string
+          id: string
+          is_published: boolean | null
+          published_at: string | null
+          seo_description: string | null
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body_markdown?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean | null
+          published_at?: string | null
+          seo_description?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body_markdown?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean | null
+          published_at?: string | null
+          seo_description?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
