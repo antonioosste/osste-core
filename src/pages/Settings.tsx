@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User, CreditCard, Shield, LogOut, Download, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,9 +20,32 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 
 export default function Settings() {
   const { toast } = useToast();
+  const { user, signOut } = useAuth();
+  const { profile, loading, updateProfile } = useProfile();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    if (profile) {
+      setName(profile.name || "");
+    }
+    if (user) {
+      setEmail(user.email || "");
+    }
+  }, [profile, user]);
+
+  const handleSaveProfile = async () => {
+    try {
+      await updateProfile({ name });
+    } catch (error) {
+      console.error('Error saving profile:', error);
+    }
+  };
   
   const handleExportData = () => {
     toast({
@@ -44,6 +67,14 @@ export default function Settings() {
       title: "Redirecting to billing portal",
       description: "Opening Stripe customer portal...",
     });
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   return (
@@ -76,13 +107,25 @@ export default function Settings() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" defaultValue="John Johnson" />
+                  <Input 
+                    id="name" 
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={loading}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" defaultValue="john@example.com" />
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    value={email}
+                    disabled={true}
+                  />
                 </div>
-                <Button>Save Changes</Button>
+                <Button onClick={handleSaveProfile} disabled={loading}>
+                  Save Changes
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -98,17 +141,28 @@ export default function Settings() {
               <CardContent>
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-lg font-semibold">Family Plan</h3>
-                    <p className="text-muted-foreground">15 sessions/month • Advanced features</p>
+                    <h3 className="text-lg font-semibold">
+                      {profile?.plan === 'free' ? 'Free Plan' : 
+                       profile?.plan === 'starter' ? 'Starter Plan' :
+                       profile?.plan === 'standard' ? 'Standard Plan' :
+                       profile?.plan === 'premium' ? 'Premium Plan' : 'Current Plan'}
+                    </h3>
+                    <p className="text-muted-foreground">
+                      {profile?.plan === 'free' ? 'Limited features' : 'Full features'}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold">$24</p>
-                    <p className="text-sm text-muted-foreground">/month</p>
+                    <p className="text-2xl font-bold">
+                      {profile?.plan === 'free' ? '$0' : 
+                       profile?.plan === 'starter' ? '$19' :
+                       profile?.plan === 'standard' ? '$29' :
+                       profile?.plan === 'premium' ? '$49' : '$0'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">one-time</p>
                   </div>
                 </div>
                 <div className="flex gap-2 mb-4">
-                  <Badge>Active</Badge>
-                  <Badge variant="outline">Next billing: Jan 15, 2024</Badge>
+                  <Badge>{profile?.plan || 'free'}</Badge>
                 </div>
                 <Button onClick={handleManageBilling} className="w-full">
                   Manage Subscription
@@ -224,7 +278,11 @@ export default function Settings() {
                 <h3 className="font-medium text-foreground">Sign Out</h3>
                 <p className="text-sm text-muted-foreground">Sign out of your account on this device</p>
               </div>
-              <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
+              <Button 
+                variant="outline" 
+                className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                onClick={handleSignOut}
+              >
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign Out
               </Button>

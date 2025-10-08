@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { 
   ArrowLeft, 
@@ -26,6 +26,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { useStories } from "@/hooks/useStories";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const sampleStory = {
   id: "1",
@@ -94,31 +96,67 @@ Those were simpler times, but they were rich with community and connection. Ever
 export default function StoryDetail() {
   const { id } = useParams();
   const { toast } = useToast();
+  const { getStory, updateStory } = useStories();
+  const [story, setStory] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [editedContent, setEditedContent] = useState(sampleStory.polishedContent);
+  const [editedContent, setEditedContent] = useState("");
   const [regenerateDialog, setRegenerateDialog] = useState(false);
   const [factsDrawerOpen, setFactsDrawerOpen] = useState(false);
   const [chapterImages, setChapterImages] = useState<File[]>([]);
+
+  useEffect(() => {
+    const loadStory = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        const data = await getStory(id);
+        if (data) {
+          setStory(data);
+          setEditedContent(data.edited_text || data.raw_text || "");
+        }
+      } catch (error) {
+        console.error('Error loading story:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStory();
+  }, [id]);
 
   const handlePlayAudio = () => {
     setIsPlaying(!isPlaying);
     // Mock audio play/pause
   };
 
-  const handleSaveEdit = () => {
-    setIsEditing(false);
-    toast({
-      title: "Story updated",
-      description: "Your changes have been saved successfully."
-    });
+  const handleSaveEdit = async () => {
+    if (!id) return;
+    
+    try {
+      await updateStory(id, { edited_text: editedContent });
+      setIsEditing(false);
+      if (story) {
+        setStory({ ...story, edited_text: editedContent });
+      }
+    } catch (error) {
+      console.error('Error saving edit:', error);
+    }
   };
 
-  const handleApprove = () => {
-    toast({
-      title: "Story approved",
-      description: "This story is now ready for publishing and book inclusion."
-    });
+  const handleApprove = async () => {
+    if (!id) return;
+    
+    try {
+      await updateStory(id, { approved: true });
+      if (story) {
+        setStory({ ...story, approved: true });
+      }
+    } catch (error) {
+      console.error('Error approving story:', error);
+    }
   };
 
   const handleRegenerate = () => {
@@ -141,6 +179,32 @@ export default function StoryDetail() {
     return timestamp;
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header isAuthenticated={true} />
+        <div className="container mx-auto px-4 py-8">
+          <Skeleton className="h-8 w-32 mb-6" />
+          <Skeleton className="h-12 w-full mb-4" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!story) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header isAuthenticated={true} />
+        <div className="container mx-auto px-4 py-8">
+          <p className="text-muted-foreground">Story not found</p>
+        </div>
+      </div>
+    );
+  }
+
+  const displayContent = story.edited_text || story.raw_text || "No content available";
+
   return (
     <div className="min-h-screen bg-background">
       <Header isAuthenticated={true} />
@@ -161,25 +225,18 @@ export default function StoryDetail() {
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-foreground mb-2">
-                {sampleStory.title}
+                {story.title || "Untitled Story"}
               </h1>
               <p className="text-muted-foreground mb-4">
-                {sampleStory.summary}
+                {displayContent.substring(0, 150)}...
               </p>
               <div className="flex flex-wrap items-center gap-4">
-                <Badge variant={sampleStory.status === "approved" ? "default" : "secondary"}>
-                  {sampleStory.status}
+                <Badge variant={story.approved ? "default" : "secondary"}>
+                  {story.approved ? "approved" : story.edited_text ? "polished" : "draft"}
                 </Badge>
                 <span className="text-sm text-muted-foreground">
-                  {sampleStory.duration} • {sampleStory.wordCount} words • {sampleStory.date}
+                  {displayContent.split(' ').length} words • {new Date(story.created_at).toLocaleDateString()}
                 </span>
-                <div className="flex gap-1">
-                  {sampleStory.tags.map((tag) => (
-                    <Badge key={tag} variant="outline" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
               </div>
             </div>
             <div className="flex gap-2 ml-4">
@@ -260,47 +317,19 @@ export default function StoryDetail() {
 
         {/* Two-Pane Layout */}
         <div className="grid lg:grid-cols-2 gap-6">
-          {/* Left Pane - Transcript */}
+          {/* Left Pane - Raw Text */}
           <Card className="h-fit">
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Play className="w-5 h-5" />
-                Original Transcript
+                <FileText className="w-5 h-5" />
+                Original Content
               </CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePlayAudio}
-                className="gap-2"
-              >
-                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                {isPlaying ? "Pause" : "Play"}
-              </Button>
             </CardHeader>
             <CardContent className="max-h-[600px] overflow-y-auto">
-              <div className="space-y-4 text-sm">
-                {sampleStory.transcript.map((entry, index) => (
-                  <div 
-                    key={index} 
-                    className={`border-l-4 pl-4 ${
-                      entry.speaker === "Interviewer" 
-                        ? "border-primary" 
-                        : "border-secondary"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-foreground">
-                        {entry.speaker}
-                      </span>
-                      <span className="text-xs text-muted-foreground font-mono">
-                        [{formatTimestamp(entry.timestamp)}]
-                      </span>
-                    </div>
-                    <p className="text-muted-foreground">
-                      {entry.text}
-                    </p>
-                  </div>
-                ))}
+              <div className="prose max-w-none">
+                <div className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  {story.raw_text || "No original content available"}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -338,14 +367,10 @@ export default function StoryDetail() {
               ) : (
                 <div className="prose max-w-none">
                   <div 
-                    className="font-serif text-foreground leading-relaxed max-h-[600px] overflow-y-auto"
+                    className="font-serif text-foreground leading-relaxed max-h-[600px] overflow-y-auto whitespace-pre-wrap"
                     style={{ fontFamily: 'Georgia, serif' }}
                   >
-                    {sampleStory.polishedContent.split('\n\n').map((paragraph, index) => (
-                      <p key={index} className="mb-4">
-                        {paragraph}
-                      </p>
-                    ))}
+                    {displayContent}
                   </div>
                 </div>
               )}

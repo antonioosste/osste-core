@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Filter, Grid, List, Plus, BookOpen, MoreVertical, Trash2, Eye, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Header } from "@/components/layout/Header";
 import { EmptyState } from "@/components/empty-states/EmptyState";
 import { StoryCardSkeleton } from "@/components/loaders/StoryCardSkeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useStories } from "@/hooks/useStories";
 
 type StoryStatus = "draft" | "polished" | "approved";
 
@@ -70,13 +71,25 @@ const stories: Story[] = [
 
 export default function Stories() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [statusFilter, setStatusFilter] = useState<"all" | StoryStatus>("all");
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; storyId?: string }>({ open: false });
   const { toast } = useToast();
+  const { stories: dbStories, loading: isLoading, updateStory, deleteStory: deleteStoryDb } = useStories();
 
-  const filteredStories = stories.filter(story => {
+  // Map database stories to UI format
+  const mappedStories = dbStories.map(story => ({
+    id: story.id,
+    title: story.title || "Untitled Story",
+    summary: story.edited_text?.substring(0, 150) || story.raw_text?.substring(0, 150) || "No content yet",
+    status: (story.approved ? "approved" : story.edited_text ? "polished" : "draft") as StoryStatus,
+    updatedDate: story.created_at || new Date().toISOString(),
+    wordCount: (story.edited_text || story.raw_text || "").split(' ').length,
+    duration: "N/A",
+    tags: [] as string[],
+  }));
+
+  const filteredStories = mappedStories.filter(story => {
     const matchesSearch = story.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       story.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
       story.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -97,20 +110,21 @@ export default function Stories() {
     return <Badge variant={config.variant}>{config.text}</Badge>;
   };
 
-  const handleApprove = (storyId: string) => {
-    toast({
-      title: "Story approved",
-      description: "The story has been approved and is ready for publishing."
-    });
+  const handleApprove = async (storyId: string) => {
+    try {
+      await updateStory(storyId, { approved: true });
+    } catch (error) {
+      console.error('Error approving story:', error);
+    }
   };
 
-  const handleDelete = (storyId: string) => {
+  const handleDelete = async (storyId: string) => {
     setDeleteDialog({ open: false });
-    toast({
-      title: "Story deleted",
-      description: "The story has been permanently deleted.",
-      variant: "destructive"
-    });
+    try {
+      await deleteStoryDb(storyId);
+    } catch (error) {
+      console.error('Error deleting story:', error);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -135,8 +149,8 @@ export default function Stories() {
       }`}
     >
       {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
-      {status === "all" && ` (${stories.length})`}
-      {status !== "all" && ` (${stories.filter(s => s.status === status).length})`}
+      {status === "all" && ` (${mappedStories.length})`}
+      {status !== "all" && ` (${mappedStories.filter(s => s.status === status).length})`}
     </button>
   );
 

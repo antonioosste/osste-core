@@ -1,10 +1,12 @@
 import { Check, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 
 const oneTimePlans = [
   {
@@ -126,6 +128,24 @@ const faqs = [
 ];
 
 export default function Pricing() {
+  const { user } = useAuth();
+  const { updatePlan } = useProfile();
+  const navigate = useNavigate();
+
+  const handleSelectPlan = async (planId: string) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      await updatePlan(planId);
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error selecting plan:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -186,11 +206,11 @@ export default function Pricing() {
                   <Button 
                     className="w-full" 
                     variant={plan.popular ? "default" : "outline"}
-                    asChild
+                    onClick={() => handleSelectPlan(plan.planId)}
+                    data-action="select-plan"
+                    data-plan-id={plan.planId}
                   >
-                    <Link to={`/checkout?plan=${plan.planId}`}>
-                      {plan.cta} <ArrowRight className="w-4 h-4 ml-2" />
-                    </Link>
+                    {plan.cta} <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </CardContent>
               </Card>

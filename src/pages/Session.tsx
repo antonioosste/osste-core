@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
+import { useSession } from "@/hooks/useSession";
 
 type SessionStatus = "idle" | "listening" | "thinking" | "speaking" | "paused" | "error";
 type PermissionState = "granted" | "denied" | "pending" | "prompt";
@@ -36,6 +37,7 @@ interface Message {
 export default function Session() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { sessionId, startSession: startSessionDb, endSession } = useSession();
   
   // Core session state
   const [status, setStatus] = useState<SessionStatus>("idle");
@@ -121,6 +123,20 @@ export default function Session() {
       return;
     }
 
+    // Start session in database if not already started
+    if (!sessionId) {
+      try {
+        await startSessionDb({
+          persona: 'friendly',
+          themes: ['family', 'memories'],
+          language: 'en'
+        });
+      } catch (error) {
+        console.error('Error starting session:', error);
+        return;
+      }
+    }
+
     setIsRecording(true);
     setStatus("listening");
     
@@ -167,15 +183,25 @@ export default function Session() {
     setShowEndDialog(true);
   };
 
-  const confirmEndSession = () => {
+  const confirmEndSession = async () => {
+    if (sessionId) {
+      try {
+        await endSession(sessionId);
+      } catch (error) {
+        console.error('Error ending session:', error);
+      }
+    }
     navigate("/dashboard");
   };
 
-  const saveAndExit = () => {
-    toast({
-      title: "Session saved",
-      description: "Your progress has been saved. You can continue later."
-    });
+  const saveAndExit = async () => {
+    if (sessionId) {
+      try {
+        await endSession(sessionId);
+      } catch (error) {
+        console.error('Error saving session:', error);
+      }
+    }
     navigate("/dashboard");
   };
 
