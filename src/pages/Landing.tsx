@@ -38,7 +38,7 @@ export default function Landing() {
       <section
         className="relative bg-cover bg-center bg-no-repeat py-16 sm:py-24 md:py-28"
         style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=1600&auto=format&fit=crop')",
+          backgroundImage: "url('/images/backgrounds/library-hero.jpg')",
         }}
       >
         <div className="absolute inset-0 bg-black/30" />
