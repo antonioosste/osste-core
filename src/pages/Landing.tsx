@@ -1,11 +1,11 @@
-import { ArrowRight, Mic, BookOpen, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, Mic, BookOpen, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
 import { ReactLenis } from 'lenis/react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { TestimonialCard } from "@/components/ui/testimonial-card";
 
 const valueProps = [
   {
@@ -27,32 +27,32 @@ const valueProps = [
 
 const testimonials = [
   {
-    quote: "OSSTE helped me capture my grandfather's war stories before it was too late. The AI made it feel like a natural conversation.",
-    author: "Sarah Chen",
-    title: "Family Historian",
+    author: {
+      name: "Sarah Chen",
+      handle: "@sarahchen",
+      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop",
+    },
+    text: "OSSTE helped me capture my grandfather's war stories before it was too late. The AI made it feel like a natural conversation.",
   },
   {
-    quote: "As a busy parent, I love how easy it is to record family stories. The books we create are treasures for our children.",
-    author: "Michael Rodriguez",
-    title: "Father of Three",
+    author: {
+      name: "Michael Rodriguez",
+      handle: "@mikerodriguez",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop",
+    },
+    text: "As a busy parent, I love how easy it is to record family stories. The books we create are treasures for our children.",
   },
   {
-    quote: "The quality of the final stories is incredible. It's like having a professional writer capture our family's voice perfectly.",
-    author: "Elena Thompson", 
-    title: "Grandmother",
+    author: {
+      name: "Elena Thompson",
+      handle: "@elenathompson",
+      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop",
+    },
+    text: "The quality of the final stories is incredible. It's like having a professional writer capture our family's voice perfectly.",
   },
 ];
 
 export default function Landing() {
-  const [currentTestimonial, setCurrentTestimonial] = useState(0);
-
-  const nextTestimonial = () => {
-    setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
-  };
-
-  const prevTestimonial = () => {
-    setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-  };
 
   return (
     <ReactLenis root>
@@ -180,7 +180,7 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* Testimonials Slider */}
+        {/* Testimonials */}
         <section className="py-16 md:py-20 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center mb-12">
@@ -189,57 +189,14 @@ export default function Landing() {
               </h2>
             </div>
             
-            <div className="max-w-4xl mx-auto">
-              <Card className="relative overflow-hidden">
-                <CardContent className="p-8 md:p-12">
-                  <div className="text-center">
-                    <blockquote className="text-lg md:text-xl text-foreground mb-6 italic leading-relaxed">
-                      "{testimonials[currentTestimonial].quote}"
-                    </blockquote>
-                    <div>
-                      <p className="font-semibold text-foreground text-lg">
-                        {testimonials[currentTestimonial].author}
-                      </p>
-                      <p className="text-muted-foreground">
-                        {testimonials[currentTestimonial].title}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {/* Navigation */}
-                  <div className="flex items-center justify-center mt-8 space-x-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={prevTestimonial}
-                      className="w-10 h-10 rounded-full p-0"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    
-                    <div className="flex space-x-2">
-                      {testimonials.map((_, index) => (
-                        <button
-                          key={index}
-                          className={`w-2 h-2 rounded-full transition-colors ${
-                            index === currentTestimonial ? 'bg-primary' : 'bg-muted-foreground/30'
-                          }`}
-                          onClick={() => setCurrentTestimonial(index)}
-                        />
-                      ))}
-                    </div>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={nextTestimonial}
-                      className="w-10 h-10 rounded-full p-0"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="flex flex-wrap justify-center gap-6 max-w-6xl mx-auto">
+              {testimonials.map((testimonial, index) => (
+                <TestimonialCard
+                  key={index}
+                  author={testimonial.author}
+                  text={testimonial.text}
+                />
+              ))}
             </div>
           </div>
         </section>
