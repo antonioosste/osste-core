@@ -37,12 +37,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
+import { useAdminRole } from "@/hooks/useAdminRole";
 
 export default function Admin() {
   const { toast } = useToast();
-  
-  // Mock admin check - in real app this would come from auth context
-  const isAdmin = true; // Change to false to test access denied view
+  const { isAdmin, loading } = useAdminRole();
   
   // Mock data for prompt templates
   const [promptTemplates, setPromptTemplates] = useState([
@@ -172,6 +171,20 @@ export default function Admin() {
     setIsPlanDialogOpen(false);
     setEditingPlan(null);
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header isAuthenticated={true} />
+        <div className="container mx-auto px-4 py-16 max-w-2xl">
+          <div className="text-center">
+            <p className="text-muted-foreground">Verifying permissions...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Access denied view for non-admins
   if (!isAdmin) {
