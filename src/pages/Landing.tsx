@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { TestimonialsSection } from "@/components/ui/testimonials-section";
+import { HomeTestimonials } from "@/components/sections/HomeTestimonials";
 
 const valueProps = [
   {
@@ -25,32 +25,6 @@ const valueProps = [
   },
 ];
 
-const testimonials = [
-  {
-    author: {
-      name: "Sarah Chen",
-      handle: "@sarahchen",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop",
-    },
-    text: "OSSTE helped me capture my grandfather's war stories before it was too late. The AI made it feel like a natural conversation.",
-  },
-  {
-    author: {
-      name: "Michael Rodriguez",
-      handle: "@mikerodriguez",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop",
-    },
-    text: "As a busy parent, I love how easy it is to record family stories. The books we create are treasures for our children.",
-  },
-  {
-    author: {
-      name: "Elena Thompson",
-      handle: "@elenathompson",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop",
-    },
-    text: "The quality of the final stories is incredible. It's like having a professional writer capture our family's voice perfectly.",
-  },
-];
 
 export default function Landing() {
 
@@ -181,11 +155,7 @@ export default function Landing() {
         </section>
 
         {/* Testimonials */}
-        <TestimonialsSection
-          title="Trusted by Families Worldwide"
-          description="Join thousands of families preserving their precious memories"
-          testimonials={testimonials}
-        />
+        <HomeTestimonials />
 
         {/* Sticky Gallery Section */}
         <section className="py-16 md:py-20 bg-background">
