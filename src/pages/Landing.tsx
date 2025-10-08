@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { TestimonialCard } from "@/components/ui/testimonial-card";
+import { TestimonialsSection } from "@/components/ui/testimonials-section";
 
 const valueProps = [
   {
@@ -181,25 +181,11 @@ export default function Landing() {
         </section>
 
         {/* Testimonials */}
-        <section className="py-16 md:py-20 bg-muted/30">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                Trusted by Families Worldwide
-              </h2>
-            </div>
-            
-            <div className="flex flex-wrap justify-center gap-6 max-w-6xl mx-auto">
-              {testimonials.map((testimonial, index) => (
-                <TestimonialCard
-                  key={index}
-                  author={testimonial.author}
-                  text={testimonial.text}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
+        <TestimonialsSection
+          title="Trusted by Families Worldwide"
+          description="Join thousands of families preserving their precious memories"
+          testimonials={testimonials}
+        />
 
         {/* Sticky Gallery Section */}
         <section className="py-16 md:py-20 bg-background">
