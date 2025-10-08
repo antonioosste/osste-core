@@ -35,20 +35,28 @@ export default function Landing() {
         <Header />
       
       {/* Hero Section */}
-      <section className="py-16 sm:py-24 md:py-28">
-        <LandingHeroTitle />
-        
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-          <Button size="lg" asChild>
-            <Link to="/session">
-              Start a Demo <ArrowRight className="w-4 h-4 ml-2" />
-            </Link>
-          </Button>
-          <Button variant="outline" size="lg" asChild>
-            <Link to="/pricing">
-              See Pricing
-            </Link>
-          </Button>
+      <section
+        className="relative bg-cover bg-center bg-no-repeat py-16 sm:py-24 md:py-28"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=1600&auto=format&fit=crop')",
+        }}
+      >
+        <div className="absolute inset-0 bg-black/30" />
+        <div className="relative z-10">
+          <LandingHeroTitle />
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+            <Button size="lg" asChild>
+              <Link to="/session">
+                Start a Demo <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild>
+              <Link to="/pricing">
+                See Pricing
+              </Link>
+            </Button>
+          </div>
         </div>
       </section>
 
