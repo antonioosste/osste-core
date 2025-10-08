@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { HomeTestimonials } from "@/components/sections/HomeTestimonials";
+import { LandingHeroTitle } from "@/components/sections/LandingHeroTitle";
 
 const valueProps = [
   {
@@ -34,34 +35,20 @@ export default function Landing() {
         <Header />
       
       {/* Hero Section */}
-      <section className="relative py-16 md:py-24 overflow-hidden bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url("/images/backgrounds/library-hero.jpg")' }}>
-        {/* Background overlay */}
-        <div className="absolute inset-0 bg-background/60" />
-        <div className="relative z-10">
-          <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto text-center">
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight">
-                Capture Stories That{" "}
-                <span className="text-primary">Matter</span>
-              </h1>
-              <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-                Use AI-guided voice interviews to preserve precious memories, 
-                family histories, and personal stories for future generations.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" asChild>
-                  <Link to="/session">
-                    Start a Demo <ArrowRight className="w-4 h-4 ml-2" />
-                  </Link>
-                </Button>
-                <Button variant="outline" size="lg" asChild>
-                  <Link to="/pricing">
-                    See Pricing
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </div>
+      <section className="py-16 sm:py-24 md:py-28">
+        <LandingHeroTitle />
+        
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+          <Button size="lg" asChild>
+            <Link to="/session">
+              Start a Demo <ArrowRight className="w-4 h-4 ml-2" />
+            </Link>
+          </Button>
+          <Button variant="outline" size="lg" asChild>
+            <Link to="/pricing">
+              See Pricing
+            </Link>
+          </Button>
         </div>
       </section>
 
