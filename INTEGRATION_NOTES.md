@@ -3,6 +3,21 @@
 ## Overview
 All frontend pages have been wired to Supabase for backend functionality without modifying UI/layout.
 
+## Route Protection
+
+**Component:** `src/components/auth/ProtectedRoute.tsx`
+
+All private routes are now protected and require authentication:
+- `/dashboard`
+- `/session`
+- `/stories` and `/stories/:id`
+- `/book/preview`
+- `/checkout` and checkout success/cancel pages
+- `/settings`
+- `/admin`
+
+Unauthenticated users are automatically redirected to `/login`. A loading spinner is shown while checking authentication status.
+
 ## Pages Integrated
 
 ### 1. Settings Page (`/settings`)
