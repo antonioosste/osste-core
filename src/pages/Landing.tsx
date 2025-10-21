@@ -36,10 +36,14 @@ export default function Landing() {
       
       {/* Hero Section */}
       <section
-        className="relative bg-cover bg-center bg-no-repeat py-16 sm:py-24 md:py-28"
+        className="relative py-16 sm:py-24 md:py-28"
         style={{
-          background: "linear-gradient(rgba(20, 10, 0, 0.6), rgba(20, 10, 0, 0.7)), url('/images/backgrounds/library-hero.jpg') center/cover no-repeat",
-          filter: "sepia(15%) contrast(95%) brightness(90%)",
+          backgroundImage: "url('/textures/grain.png'), linear-gradient(rgba(20, 10, 0, 0.6), rgba(20, 10, 0, 0.7)), url('/images/backgrounds/library-hero.jpg')",
+          backgroundPosition: "center, center, center",
+          backgroundSize: "auto, cover, cover",
+          backgroundRepeat: "repeat, no-repeat, no-repeat",
+          backgroundBlendMode: "overlay",
+          opacity: 0.9,
         }}
       >
         <div className="relative z-10">
