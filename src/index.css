@@ -8,13 +8,11 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Paper Theme Base Palette */
-    --paper: 44 56% 94%;
-    --ink: 0 0% 10%;
-    --antique: 39 58% 60%;
-    --paper-overlay: rgba(20, 10, 0, 0.04);
-    --paper-vignette: radial-gradient(120% 70% at 50% -10%, transparent 60%, rgba(0,0,0,0.12) 100%);
-    --grain-opacity: 0.35;
+    /* ---------- Brand tokens ---------- */
+    --paper: 44 56% 94%;    /* warm paper #FAF4E8 */
+    --ink: 0 0% 10%;        /* dark text #1A1A1A */
+    --antique: 39 58% 60%;  /* gold accent #D4A55D */
+    --grain-opacity: 0.35;  /* tune 0.20–0.50 */
 
     /* Core Neutral Palette - Paper Theme */
     --background: 44 56% 94%;
@@ -154,18 +152,11 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  /* ---------- Site-wide base ---------- */
   html, body {
     height: 100%;
     background-color: hsl(var(--paper));
     color: hsl(var(--ink));
-    /* Multiple layers: texture, vignette, warm tint */
-    background-image:
-      url('/textures/grain.png'),
-      var(--paper-vignette),
-      linear-gradient(var(--paper-overlay), var(--paper-overlay));
-    background-repeat: repeat, no-repeat, no-repeat;
-    background-size: auto, cover, cover;
-    background-blend-mode: overlay, normal, normal;
   }
 
   /* Typography */
@@ -177,11 +168,7 @@ All colors MUST be HSL.
     font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
   }
 
-  /* Control grain opacity */
-  body {
-    isolation: isolate;
-  }
-
+  /* Fixed grain layer across the whole site */
   body::before {
     content: "";
     position: fixed;
@@ -189,22 +176,25 @@ All colors MUST be HSL.
     background: url('/textures/grain.png') repeat;
     opacity: var(--grain-opacity);
     pointer-events: none;
-    z-index: -1;
+    z-index: 0; /* behind everything */
   }
 }
 
-/* Utility for sections with warm overlay */
+/* ---------- Section helpers ---------- */
 @layer components {
   .accent {
     color: hsl(var(--antique));
   }
 
-  .section-overlay-warm {
-    position: relative;
+  /* Use on solid-color sections that would otherwise hide the body grain */
+  .grain-surface {
+    background-image: url('/textures/grain.png');
+    background-repeat: repeat;
+    background-size: auto;
   }
-  
-  .section-overlay-warm::before {
-    content: "";
+
+  /* A simple warm overlay that DOES NOT bleed into next sections */
+  .overlay-warm {
     position: absolute;
     inset: 0;
     background: linear-gradient(
@@ -212,6 +202,7 @@ All colors MUST be HSL.
       rgba(20, 10, 0, 0.55)
     );
     pointer-events: none;
+    z-index: 0;
   }
 
   /* Grain control utilities */
@@ -232,10 +223,10 @@ All colors MUST be HSL.
   }
 }
 
-/* Accessibility: reduce texture for better experience */
+/* Accessibility */
 @media (prefers-reduced-motion: reduce) {
   body::before {
-    opacity: 0.2;
+    opacity: 0.20;
   }
 }
 
