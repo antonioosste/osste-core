@@ -155,7 +155,10 @@ All colors MUST be HSL.
   /* ---------- Site-wide base ---------- */
   html, body {
     height: 100%;
-    background-color: hsl(var(--paper));
+  }
+
+  body {
+    background: hsl(var(--paper));
     color: hsl(var(--ink));
   }
 
