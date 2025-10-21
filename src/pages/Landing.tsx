@@ -41,8 +41,8 @@ export default function Landing() {
           backgroundImage: "url('/images/backgrounds/library-hero.jpg')",
         }}
       >
-        {/* The warm overlay lives INSIDE this section only */}
-        <div className="overlay-warm" />
+        {/* Warm overlay to improve contrast on top of the photo */}
+        <div className="section-overlay-warm absolute inset-0" />
 
         {/* Content sits above overlays */}
         <div className="relative z-10 py-16 sm:py-24 md:py-28">
@@ -64,13 +64,13 @@ export default function Landing() {
       </section>
 
         {/* Value Cards */}
-        <section className="relative grain-surface bg-[var(--paper)]">
-          <div className="mx-auto max-w-6xl px-6 py-16">
-            <div className="max-w-3xl mb-12 md:mb-16">
-              <h2 className="font-serif text-4xl sm:text-5xl text-foreground mb-4">
+        <section className="py-16 md:py-20 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
                 Everything You Need to Preserve Stories
               </h2>
-              <p className="mt-4 text-lg text-muted-foreground">
+              <p className="text-lg text-muted-foreground">
                 Our AI-powered platform makes it simple to conduct meaningful 
                 interviews and create lasting memories.
               </p>
