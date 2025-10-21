@@ -49,18 +49,16 @@ export default function Landing() {
           <LandingHeroTitle />
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-            <Link 
-              to="/session"
-              className="inline-flex items-center justify-center bg-[var(--antique)] text-[var(--ink)] hover:brightness-95 rounded-xl px-8 py-3 text-lg font-medium transition"
-            >
-              Start a Demo <ArrowRight className="w-4 h-4 ml-2" />
-            </Link>
-            <Link 
-              to="/pricing"
-              className="inline-flex items-center justify-center border-2 border-[var(--antique)] text-[var(--antique)] hover:bg-[var(--antique)] hover:text-[var(--ink)] hover:brightness-95 rounded-xl px-8 py-3 text-lg font-medium transition"
-            >
-              See Pricing
-            </Link>
+            <Button size="lg" asChild>
+              <Link to="/session">
+                Start a Demo <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild>
+              <Link to="/pricing">
+                See Pricing
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
