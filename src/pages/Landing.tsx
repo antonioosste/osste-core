@@ -38,10 +38,10 @@ export default function Landing() {
       <section
         className="relative bg-cover bg-center bg-no-repeat py-16 sm:py-24 md:py-28"
         style={{
-          backgroundImage: "url('/images/backgrounds/library-hero.jpg')",
+          background: "linear-gradient(rgba(20, 10, 0, 0.6), rgba(20, 10, 0, 0.7)), url('/images/backgrounds/library-hero.jpg') center/cover no-repeat",
+          filter: "sepia(15%) contrast(95%) brightness(90%)",
         }}
       >
-        <div className="absolute inset-0 bg-black/30" />
         <div className="relative z-10">
           <LandingHeroTitle />
           
