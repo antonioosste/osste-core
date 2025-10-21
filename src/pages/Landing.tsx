@@ -41,8 +41,8 @@ export default function Landing() {
           backgroundImage: "url('/images/backgrounds/library-hero.jpg')",
         }}
       >
-        {/* Warm overlay to improve contrast on top of the photo */}
-        <div className="section-overlay-warm absolute inset-0" />
+        {/* The warm overlay lives INSIDE this section only */}
+        <div className="overlay-warm" />
 
         {/* Content sits above overlays */}
         <div className="relative z-10 py-16 sm:py-24 md:py-28">
