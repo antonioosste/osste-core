@@ -49,21 +49,12 @@ export default function Landing() {
           <LandingHeroTitle />
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-            <Button 
-              size="lg" 
-              className="bg-antique text-ink hover:brightness-95 focus-visible:ring-2 focus-visible:ring-antique/60"
-              asChild
-            >
+            <Button size="lg" asChild>
               <Link to="/session">
                 Start a Demo <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </Button>
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="border border-antique/50 text-antique hover:bg-antique/10"
-              asChild
-            >
+            <Button variant="outline" size="lg" asChild>
               <Link to="/pricing">
                 See Pricing
               </Link>
@@ -216,11 +207,7 @@ export default function Landing() {
                 Don't let precious memories fade away. Begin capturing the stories 
                 that matter most to your family.
               </p>
-              <Button 
-                size="lg" 
-                className="bg-antique text-ink hover:brightness-95 focus-visible:ring-2 focus-visible:ring-antique/60"
-                asChild
-              >
+              <Button size="lg" asChild>
                 <Link to="/session">
                   Start a Demo <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
