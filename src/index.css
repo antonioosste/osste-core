@@ -222,6 +222,14 @@ All colors MUST be HSL.
   .no-grain::before {
     opacity: 0 !important;
   }
+
+  /* Paper card styling */
+  .paper-card {
+    background: color-mix(in srgb, hsl(var(--paper)) 92%, white 8%);
+    box-shadow: 0 1px 0 rgba(0,0,0,.06), 0 12px 32px rgba(0,0,0,.06);
+    border: 1px solid rgba(0,0,0,.06);
+    backdrop-filter: saturate(105%);
+  }
 }
 
 /* Accessibility: reduce texture for better experience */
