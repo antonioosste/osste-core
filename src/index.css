@@ -168,16 +168,6 @@ All colors MUST be HSL.
     font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
   }
 
-  /* Fixed grain layer across the whole site */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: url('/textures/grain.png') repeat;
-    opacity: var(--grain-opacity);
-    pointer-events: none;
-    z-index: 0; /* behind everything */
-  }
 }
 
 /* ---------- Section helpers ---------- */
@@ -223,15 +213,3 @@ All colors MUST be HSL.
   }
 }
 
-/* Accessibility */
-@media (prefers-reduced-motion: reduce) {
-  body::before {
-    opacity: 0.20;
-  }
-}
-
-@media (prefers-contrast: more) {
-  body::before {
-    opacity: 0.25;
-  }
-}
