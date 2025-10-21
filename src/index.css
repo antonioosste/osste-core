@@ -9,7 +9,7 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Core Neutral Palette */
-    --background: 48 80% 94%;
+    --background: 45 46% 53%;
     --foreground: 210 20% 15%;
 
     /* Card & Surface Colors */
