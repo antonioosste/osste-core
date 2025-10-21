@@ -213,6 +213,15 @@ All colors MUST be HSL.
     );
     pointer-events: none;
   }
+
+  /* Grain control utilities */
+  .subtle-grain::before {
+    opacity: 0.18;
+  }
+
+  .no-grain::before {
+    opacity: 0 !important;
+  }
 }
 
 /* Accessibility: reduce texture for better experience */
