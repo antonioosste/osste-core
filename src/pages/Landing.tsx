@@ -36,17 +36,16 @@ export default function Landing() {
       
       {/* Hero Section */}
       <section
-        className="relative py-16 sm:py-24 md:py-28"
+        className="relative overflow-hidden bg-cover bg-center"
         style={{
-          backgroundImage: "url('/textures/grain.png'), linear-gradient(rgba(20, 10, 0, 0.6), rgba(20, 10, 0, 0.7)), url('/images/backgrounds/library-hero.jpg')",
-          backgroundPosition: "center, center, center",
-          backgroundSize: "auto, cover, cover",
-          backgroundRepeat: "repeat, no-repeat, no-repeat",
-          backgroundBlendMode: "overlay",
-          opacity: 0.9,
+          backgroundImage: "url('/images/backgrounds/library-hero.jpg')",
         }}
       >
-        <div className="relative z-10">
+        {/* Warm overlay to improve contrast on top of the photo */}
+        <div className="section-overlay-warm absolute inset-0" />
+
+        {/* Content sits above overlays */}
+        <div className="relative z-10 py-16 sm:py-24 md:py-28">
           <LandingHeroTitle />
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
