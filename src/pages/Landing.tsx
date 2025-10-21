@@ -41,24 +41,24 @@ export default function Landing() {
           backgroundImage: "url('/images/backgrounds/library-hero.jpg')",
         }}
       >
-        {/* Warm overlay to improve contrast on top of the photo */}
-        <div className="section-overlay-warm absolute inset-0" />
+        {/* The warm overlay lives INSIDE this section only */}
+        <div className="overlay-warm" />
 
         {/* Content sits above overlays */}
         <div className="relative z-10 py-16 sm:py-24 md:py-28">
           <LandingHeroTitle />
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-            <Link to="/session">
-              <button className="bg-[var(--antique)] text-[var(--ink)] hover:brightness-95 rounded-xl px-8 py-3 text-lg font-medium transition inline-flex items-center gap-2">
-                Start a Demo <ArrowRight className="w-4 h-4" />
-              </button>
-            </Link>
-            <Link to="/pricing">
-              <button className="bg-transparent border-2 border-[var(--antique)] text-[var(--antique)] hover:bg-[var(--antique)] hover:text-[var(--ink)] rounded-xl px-8 py-3 text-lg font-medium transition">
+            <Button size="lg" asChild>
+              <Link to="/session">
+                Start a Demo <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild>
+              <Link to="/pricing">
                 See Pricing
-              </button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -207,11 +207,11 @@ export default function Landing() {
                 Don't let precious memories fade away. Begin capturing the stories 
                 that matter most to your family.
               </p>
-              <Link to="/session">
-                <button className="bg-[var(--antique)] text-[var(--ink)] hover:brightness-95 rounded-xl px-8 py-3 text-lg font-medium transition inline-flex items-center gap-2">
-                  Start a Demo <ArrowRight className="w-4 h-4" />
-                </button>
-              </Link>
+              <Button size="lg" asChild>
+                <Link to="/session">
+                  Start a Demo <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </Button>
             </div>
           </div>
         </section>
