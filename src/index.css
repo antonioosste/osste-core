@@ -8,13 +8,13 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Core Neutral Palette */
-    --background: 45 46% 53%;
-    --foreground: 210 20% 15%;
+    /* Core Neutral Palette - Paper Theme */
+    --background: 44 56% 94%;
+    --foreground: 0 0% 10%;
 
     /* Card & Surface Colors */
-    --card: 0 0% 100%;
-    --card-foreground: 210 20% 15%;
+    --card: 44 56% 94%;
+    --card-foreground: 0 0% 10%;
 
     /* Popover Colors */
     --popover: 0 0% 100%;

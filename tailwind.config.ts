@@ -17,6 +17,9 @@ export default {
         container: "1280px",
       },
       colors: {
+        paper: "hsl(44, 56%, 94%)",
+        ink: "hsl(0, 0%, 10%)",
+        antique: "hsl(39, 58%, 60%)",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -83,6 +86,9 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      backgroundImage: {
+        paperTexture: "url('/textures/grain.png')",
       },
       keyframes: {
         "accordion-down": {
