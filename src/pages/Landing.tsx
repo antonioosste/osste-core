@@ -61,7 +61,7 @@ export default function Landing() {
             <Button 
               variant="outline" 
               size="lg" 
-              className="border-antique text-antique hover:bg-antique/10"
+              className="border border-antique/50 text-antique hover:bg-antique/10"
               asChild
             >
               <Link to="/pricing">
