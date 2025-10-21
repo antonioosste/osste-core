@@ -168,6 +168,15 @@ All colors MUST be HSL.
     background-blend-mode: overlay, normal, normal;
   }
 
+  /* Typography */
+  h1, h2, h3 {
+    font-family: "Lora", serif;
+  }
+
+  body, p, a, button, input {
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  }
+
   /* Control grain opacity */
   body {
     isolation: isolate;
@@ -186,6 +195,10 @@ All colors MUST be HSL.
 
 /* Utility for sections with warm overlay */
 @layer components {
+  .accent {
+    color: hsl(var(--antique));
+  }
+
   .section-overlay-warm {
     position: relative;
   }
