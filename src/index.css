@@ -8,6 +8,14 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    /* Paper Theme Base Palette */
+    --paper: 44 56% 94%;
+    --ink: 0 0% 10%;
+    --antique: 39 58% 60%;
+    --paper-overlay: rgba(20, 10, 0, 0.04);
+    --paper-vignette: radial-gradient(120% 70% at 50% -10%, transparent 60%, rgba(0,0,0,0.12) 100%);
+    --grain-opacity: 0.35;
+
     /* Core Neutral Palette - Paper Theme */
     --background: 44 56% 94%;
     --foreground: 0 0% 10%;
@@ -17,20 +25,20 @@ All colors MUST be HSL.
     --card-foreground: 0 0% 10%;
 
     /* Popover Colors */
-    --popover: 0 0% 100%;
-    --popover-foreground: 210 20% 15%;
+    --popover: 44 56% 96%;
+    --popover-foreground: 0 0% 10%;
 
-    /* Primary Brand - OSSTE Orange */
-    --primary: 16 60% 50%;
-    --primary-foreground: 28 35% 90%;
-    --primary-soft: 16 60% 95%;
-    --primary-muted: 16 60% 88%;
+    /* Primary Brand - Antique Gold */
+    --primary: 39 58% 60%;
+    --primary-foreground: 0 0% 10%;
+    --primary-soft: 39 58% 90%;
+    --primary-muted: 39 58% 80%;
 
-    /* Secondary - OSSTE Cream */
-    --secondary: 28 35% 90%;
-    --secondary-foreground: 16 60% 50%;
-    --secondary-soft: 28 35% 97%;
-    --secondary-muted: 28 35% 85%;
+    /* Secondary - Paper Tones */
+    --secondary: 44 40% 85%;
+    --secondary-foreground: 0 0% 10%;
+    --secondary-soft: 44 40% 92%;
+    --secondary-muted: 44 40% 78%;
 
     /* Success - Ocean Green */
     --success: 158 64% 42%;
@@ -43,21 +51,21 @@ All colors MUST be HSL.
     --warning-soft: 35 84% 94%;
 
     /* Muted Grays */
-    --muted: 210 14% 96%;
-    --muted-foreground: 48 40% 65%;
+    --muted: 44 20% 90%;
+    --muted-foreground: 0 0% 40%;
 
-    /* Accent - Lighter Ocean */
-    --accent: 206 84% 96%;
-    --accent-foreground: 206 84% 22%;
+    /* Accent - Antique Highlight */
+    --accent: 39 58% 88%;
+    --accent-foreground: 0 0% 10%;
 
     /* Destructive - Warm Red */
     --destructive: 0 72% 62%;
     --destructive-foreground: 0 0% 100%;
 
     /* Borders & Inputs */
-    --border: 210 14% 89%;
-    --input: 210 14% 89%;
-    --ring: 206 84% 22%;
+    --border: 44 20% 85%;
+    --input: 44 20% 85%;
+    --ring: 39 58% 60%;
 
     /* Design System Tokens */
     --radius: 0.75rem;
@@ -146,10 +154,63 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html, body {
+    height: 100%;
+    background-color: hsl(var(--paper));
+    color: hsl(var(--ink));
+    /* Multiple layers: texture, vignette, warm tint */
+    background-image:
+      url('/textures/grain.png'),
+      var(--paper-vignette),
+      linear-gradient(var(--paper-overlay), var(--paper-overlay));
+    background-repeat: repeat, no-repeat, no-repeat;
+    background-size: auto, cover, cover;
+    background-blend-mode: overlay, normal, normal;
+  }
+
+  /* Control grain opacity */
   body {
-    @apply bg-background text-foreground;
-    background-image: url('/textures/subtle-pattern.png');
-    background-repeat: repeat;
-    background-attachment: fixed;
+    isolation: isolate;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: url('/textures/grain.png') repeat;
+    opacity: var(--grain-opacity);
+    pointer-events: none;
+    z-index: -1;
+  }
+}
+
+/* Utility for sections with warm overlay */
+@layer components {
+  .section-overlay-warm {
+    position: relative;
+  }
+  
+  .section-overlay-warm::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      rgba(20, 10, 0, 0.50),
+      rgba(20, 10, 0, 0.55)
+    );
+    pointer-events: none;
+  }
+}
+
+/* Accessibility: reduce texture for better experience */
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    opacity: 0.2;
+  }
+}
+
+@media (prefers-contrast: more) {
+  body::before {
+    opacity: 0.25;
   }
 }
