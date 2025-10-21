@@ -49,16 +49,16 @@ export default function Landing() {
           <LandingHeroTitle />
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-            <Button size="lg" asChild>
-              <Link to="/session">
-                Start a Demo <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
-            </Button>
-            <Button variant="outline" size="lg" asChild>
-              <Link to="/pricing">
+            <Link to="/session">
+              <button className="bg-[var(--antique)] text-[var(--ink)] hover:brightness-95 rounded-xl px-8 py-3 text-lg font-medium transition inline-flex items-center gap-2">
+                Start a Demo <ArrowRight className="w-4 h-4" />
+              </button>
+            </Link>
+            <Link to="/pricing">
+              <button className="bg-transparent border-2 border-[var(--antique)] text-[var(--antique)] hover:bg-[var(--antique)] hover:text-[var(--ink)] rounded-xl px-8 py-3 text-lg font-medium transition">
                 See Pricing
-              </Link>
-            </Button>
+              </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -207,11 +207,11 @@ export default function Landing() {
                 Don't let precious memories fade away. Begin capturing the stories 
                 that matter most to your family.
               </p>
-              <Button size="lg" asChild>
-                <Link to="/session">
-                  Start a Demo <ArrowRight className="w-4 h-4 ml-2" />
-                </Link>
-              </Button>
+              <Link to="/session">
+                <button className="bg-[var(--antique)] text-[var(--ink)] hover:brightness-95 rounded-xl px-8 py-3 text-lg font-medium transition inline-flex items-center gap-2">
+                  Start a Demo <ArrowRight className="w-4 h-4" />
+                </button>
+              </Link>
             </div>
           </div>
         </section>
