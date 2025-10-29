@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { 
   Clock, 
@@ -7,12 +6,10 @@ import {
   Play, 
   CheckCircle, 
   Circle,
-  BarChart3,
-  CreditCard,
   Settings,
-  Users,
   ArrowRight,
-  Crown
+  Crown,
+  FileAudio
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,24 +19,28 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { useSessions } from "@/hooks/useSessions";
+import { useStories } from "@/hooks/useStories";
+import { useProfile } from "@/hooks/useProfile";
+import { useRecordings } from "@/hooks/useRecordings";
 
 export default function Dashboard() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [userPaid, setUserPaid] = useState(false); // Mock: user hasn't paid
+  const { sessions, loading: sessionsLoading } = useSessions();
+  const { stories, loading: storiesLoading } = useStories();
+  const { profile } = useProfile();
+  const { recordings, loading: recordingsLoading } = useRecordings();
   
-  // Mock data
-  const stats = {
-    storiesRecorded: 3,
-    minutesUsed: 47,
-    minutesLimit: 120,
-    completedStories: 1
-  };
+  const isLoading = sessionsLoading || storiesLoading || recordingsLoading;
+  const userPaid = profile?.plan !== 'free';
+  
+  // Calculate stats from real data
+  const totalRecordings = recordings.length;
+  const totalSessions = sessions.length;
+  const completedStories = stories.filter(s => s.approved).length;
+  const totalMinutes = recordings.reduce((sum, r) => sum + (r.duration_seconds || 0), 0) / 60;
+  const minutesLimit = userPaid ? 500 : 120;
 
-  const recentStories = [
-    { id: 1, title: "Childhood Summer Adventures", status: "completed", duration: "15 min", date: "2024-01-15" },
-    { id: 2, title: "Meeting Your Grandmother", status: "draft", duration: "12 min", date: "2024-01-14" },
-    { id: 3, title: "First Day at Work", status: "in-progress", duration: "20 min", date: "2024-01-13" },
-  ];
+  const recentStories = stories.slice(0, 5);
 
   const onboardingSteps = [
     { id: 1, title: "Complete your profile", completed: true, link: "/settings" },
@@ -103,34 +104,47 @@ export default function Dashboard() {
           {/* Left Column */}
           <div className="lg:col-span-8 space-y-6">
             {/* Progress Stats */}
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Stories Recorded</CardTitle>
+                  <CardTitle className="text-sm font-medium">Stories</CardTitle>
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.storiesRecorded}</div>
+                  <div className="text-2xl font-bold">{stories.length}</div>
                   <p className="text-xs text-muted-foreground">
-                    {stats.completedStories} completed
+                    {completedStories} approved
                   </p>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Recording Time</CardTitle>
-                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium">Sessions</CardTitle>
+                  <Mic className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.minutesUsed} min</div>
+                  <div className="text-2xl font-bold">{totalSessions}</div>
+                  <p className="text-xs text-muted-foreground">
+                    recording sessions
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Recordings</CardTitle>
+                  <FileAudio className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{totalRecordings}</div>
                   <div className="mt-2">
                     <Progress 
-                      value={(stats.minutesUsed / stats.minutesLimit) * 100} 
+                      value={(totalMinutes / minutesLimit) * 100} 
                       className="h-2"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      {stats.minutesLimit - stats.minutesUsed} minutes remaining
+                      {Math.round(totalMinutes)}/{minutesLimit} minutes
                     </p>
                   </div>
                 </CardContent>
@@ -189,12 +203,18 @@ export default function Dashboard() {
                         <TableRow key={story.id} className="cursor-pointer hover:bg-muted/50">
                           <TableCell className="font-medium">
                             <Link to={`/stories/${story.id}`} className="hover:text-primary">
-                              {story.title}
+                              {story.title || "Untitled Story"}
                             </Link>
                           </TableCell>
-                          <TableCell>{getStatusBadge(story.status)}</TableCell>
-                          <TableCell className="text-muted-foreground">{story.duration}</TableCell>
-                          <TableCell className="text-muted-foreground">{story.date}</TableCell>
+                          <TableCell>
+                            <Badge variant={story.approved ? 'default' : 'secondary'}>
+                              {story.approved ? 'Approved' : 'Draft'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">N/A</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {story.created_at ? new Date(story.created_at).toLocaleDateString() : 'N/A'}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -263,6 +283,12 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button variant="outline" size="sm" asChild className="w-full justify-start">
+                  <Link to="/sessions">
+                    <Mic className="w-4 h-4 mr-2" />
+                    View All Sessions
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm" asChild className="w-full justify-start">
                   <Link to="/book/preview">
                     <BookOpen className="w-4 h-4 mr-2" />
                     Preview Book
@@ -272,12 +298,6 @@ export default function Dashboard() {
                   <Link to="/settings">
                     <Settings className="w-4 h-4 mr-2" />
                     Account Settings
-                  </Link>
-                </Button>
-                <Button variant="outline" size="sm" asChild className="w-full justify-start">
-                  <Link to="/pricing">
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Billing & Plans
                   </Link>
                 </Button>
               </CardContent>
