@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      chapters: {
+        Row: {
+          created_at: string | null
+          id: string
+          image_hints: Json | null
+          order_index: number | null
+          overall_summary: string | null
+          quotes: Json | null
+          recording_id: string
+          suggested_cover_title: string | null
+          summary: string | null
+          title: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          image_hints?: Json | null
+          order_index?: number | null
+          overall_summary?: string | null
+          quotes?: Json | null
+          recording_id: string
+          suggested_cover_title?: string | null
+          summary?: string | null
+          title?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          image_hints?: Json | null
+          order_index?: number | null
+          overall_summary?: string | null
+          quotes?: Json | null
+          recording_id?: string
+          suggested_cover_title?: string | null
+          summary?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapters_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "recordings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pages: {
         Row: {
           body_markdown: string | null
@@ -52,54 +99,125 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string | null
           id: string
           name: string | null
           plan: string | null
+          role: Database["public"]["Enums"]["user_role_type"] | null
+          updated_at: string | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string | null
           id: string
           name?: string | null
           plan?: string | null
+          role?: Database["public"]["Enums"]["user_role_type"] | null
+          updated_at?: string | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string | null
           id?: string
           name?: string | null
           plan?: string | null
+          role?: Database["public"]["Enums"]["user_role_type"] | null
+          updated_at?: string | null
         }
         Relationships: []
+      }
+      recordings: {
+        Row: {
+          created_at: string | null
+          duration_seconds: number | null
+          id: string
+          language: string | null
+          mime_type: string | null
+          processed_at: string | null
+          session_id: string | null
+          status: string | null
+          storage_path: string
+          transcribed_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          language?: string | null
+          mime_type?: string | null
+          processed_at?: string | null
+          session_id?: string | null
+          status?: string | null
+          storage_path: string
+          transcribed_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          language?: string | null
+          mime_type?: string | null
+          processed_at?: string | null
+          session_id?: string | null
+          status?: string | null
+          storage_path?: string
+          transcribed_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recordings_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sessions: {
         Row: {
           ended_at: string | null
           id: string
           language: string | null
+          last_activity_at: string | null
+          mode: string | null
           persona: string | null
           started_at: string | null
           status: string | null
+          summary: string | null
           themes: string[] | null
+          title: string | null
           user_id: string
         }
         Insert: {
           ended_at?: string | null
           id?: string
           language?: string | null
+          last_activity_at?: string | null
+          mode?: string | null
           persona?: string | null
           started_at?: string | null
           status?: string | null
+          summary?: string | null
           themes?: string[] | null
+          title?: string | null
           user_id: string
         }
         Update: {
           ended_at?: string | null
           id?: string
           language?: string | null
+          last_activity_at?: string | null
+          mode?: string | null
           persona?: string | null
           started_at?: string | null
           status?: string | null
+          summary?: string | null
           themes?: string[] | null
+          title?: string | null
           user_id?: string
         }
         Relationships: []
@@ -112,6 +230,7 @@ export type Database = {
           id: string
           order_index: number | null
           raw_text: string | null
+          recording_id: string | null
           session_id: string | null
           title: string | null
         }
@@ -122,6 +241,7 @@ export type Database = {
           id?: string
           order_index?: number | null
           raw_text?: string | null
+          recording_id?: string | null
           session_id?: string | null
           title?: string | null
         }
@@ -132,10 +252,18 @@ export type Database = {
           id?: string
           order_index?: number | null
           raw_text?: string | null
+          recording_id?: string | null
           session_id?: string | null
           title?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "stories_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "recordings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "stories_session_id_fkey"
             columns: ["session_id"]
@@ -147,15 +275,21 @@ export type Database = {
       }
       story_embeddings: {
         Row: {
+          created_at: string | null
           embedding: string | null
+          id: string
           story_id: string | null
         }
         Insert: {
+          created_at?: string | null
           embedding?: string | null
+          id?: string
           story_id?: string | null
         }
         Update: {
+          created_at?: string | null
           embedding?: string | null
+          id?: string
           story_id?: string | null
         }
         Relationships: [
@@ -168,38 +302,104 @@ export type Database = {
           },
         ]
       }
-      turns: {
+      transcripts: {
         Row: {
           created_at: string | null
-          entities: Json | null
           id: string
+          language: string | null
+          model_used: string | null
+          recording_id: string
+          text: string | null
+          word_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          language?: string | null
+          model_used?: string | null
+          recording_id: string
+          text?: string | null
+          word_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          language?: string | null
+          model_used?: string | null
+          recording_id?: string
+          text?: string | null
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transcripts_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "recordings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      turns: {
+        Row: {
+          answer_text: string | null
+          created_at: string | null
+          entities: Json | null
+          follow_up_needed: boolean | null
+          id: string
+          images: Json | null
+          prompt_text: string | null
+          recording_id: string | null
           sentiment: string | null
           session_id: string | null
+          status: string | null
           stt_text: string | null
+          tts_audio_path: string | null
           tts_voice: string | null
           turn_index: number | null
         }
         Insert: {
+          answer_text?: string | null
           created_at?: string | null
           entities?: Json | null
+          follow_up_needed?: boolean | null
           id?: string
+          images?: Json | null
+          prompt_text?: string | null
+          recording_id?: string | null
           sentiment?: string | null
           session_id?: string | null
+          status?: string | null
           stt_text?: string | null
+          tts_audio_path?: string | null
           tts_voice?: string | null
           turn_index?: number | null
         }
         Update: {
+          answer_text?: string | null
           created_at?: string | null
           entities?: Json | null
+          follow_up_needed?: boolean | null
           id?: string
+          images?: Json | null
+          prompt_text?: string | null
+          recording_id?: string | null
           sentiment?: string | null
           session_id?: string | null
+          status?: string | null
           stt_text?: string | null
+          tts_audio_path?: string | null
           tts_voice?: string | null
           turn_index?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "turns_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "recordings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "turns_session_id_fkey"
             columns: ["session_id"]
@@ -245,6 +445,8 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      recording_status: "uploaded" | "transcribed" | "processed" | "failed"
+      user_role_type: "user" | "admin" | "editor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -373,6 +575,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      recording_status: ["uploaded", "transcribed", "processed", "failed"],
+      user_role_type: ["user", "admin", "editor"],
     },
   },
 } as const
