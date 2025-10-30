@@ -1,1 +1,7 @@
 project_id = "hptflpqaskbuzivynjvb"
+
+[functions.get-questions]
+verify_jwt = false
+
+[functions.get-followups]
+verify_jwt = false

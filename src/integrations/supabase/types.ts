@@ -61,6 +61,27 @@ export type Database = {
           },
         ]
       }
+      followup_templates: {
+        Row: {
+          created_at: string | null
+          id: number
+          prompt: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          prompt: string
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          prompt?: string
+          type?: string
+        }
+        Relationships: []
+      }
       pages: {
         Row: {
           body_markdown: string | null
@@ -124,6 +145,39 @@ export type Database = {
           plan?: string | null
           role?: Database["public"]["Enums"]["user_role_type"] | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      questions: {
+        Row: {
+          category: string
+          created_at: string | null
+          depth_level: number | null
+          emotion_tags: string | null
+          followup_type: string | null
+          id: number
+          locale_variant: string | null
+          question: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          depth_level?: number | null
+          emotion_tags?: string | null
+          followup_type?: string | null
+          id?: number
+          locale_variant?: string | null
+          question: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          depth_level?: number | null
+          emotion_tags?: string | null
+          followup_type?: string | null
+          id?: number
+          locale_variant?: string | null
+          question?: string
         }
         Relationships: []
       }
