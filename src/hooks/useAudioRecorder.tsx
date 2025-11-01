@@ -163,7 +163,7 @@ export function useAudioRecorder(sessionId: string | null) {
         description: "AI is processing your response...",
       });
 
-      return result;
+      return { ...result, storage_path: storagePath };
 
     } catch (error) {
       console.error('❌ Upload and process error:', error);

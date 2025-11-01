@@ -168,20 +168,14 @@ export default function Session() {
       // Stop recording and get blob
       const recording = await stopRecording();
       
-      // Create storage path for this recording (WITHOUT 'recordings/' prefix - Supabase adds it)
-      const timestamp = Date.now();
-      const extension = recording.mimeType.includes('webm') ? 'webm' : 'mp4';
-      const storagePath = `${user?.id}/${sessionId}/${timestamp}.${extension}`;
-      
-      // Add user message placeholder
+      // Add user message placeholder (recordingPath set after upload completes)
       const userMsgId = Date.now().toString();
       setMessages(prev => [...prev, {
         id: userMsgId,
         type: "user",
         content: "Processing your response...",
         timestamp: new Date(),
-        isPartial: true,
-        recordingPath: storagePath
+        isPartial: true
       }]);
       
       // Upload and process (triggers transcription + AI response + TTS)
@@ -210,10 +204,17 @@ export default function Session() {
       }
       
       if (transcriptionText) {
-        // Update user message with transcription
+        // Update user message with transcription and attach actual storage path
         setMessages(prev => prev.map(msg => 
           msg.id === userMsgId 
-            ? { ...msg, content: transcriptionText, isPartial: false }
+            ? { ...msg, content: transcriptionText, isPartial: false, recordingPath: result.storage_path }
+            : msg
+        ));
+      } else {
+        // Even without transcription, attach storage path and finalize message
+        setMessages(prev => prev.map(msg => 
+          msg.id === userMsgId 
+            ? { ...msg, isPartial: false, recordingPath: result.storage_path }
             : msg
         ));
       }
