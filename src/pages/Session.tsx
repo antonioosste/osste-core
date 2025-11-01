@@ -8,7 +8,8 @@ import {
   X,
   WifiOff,
   AlertCircle,
-  Loader2
+  Loader2,
+  Volume2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +30,7 @@ interface Message {
   content: string;
   timestamp: Date;
   isPartial?: boolean;
+  ttsUrl?: string | null;
 }
 
 export default function Session() {
@@ -69,6 +71,10 @@ export default function Session() {
   // Waveform animation
   const [waveformData, setWaveformData] = useState<number[]>(new Array(20).fill(0));
   const intervalRef = useRef<NodeJS.Timeout>();
+
+  // TTS audio playback
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Timer effect
   useEffect(() => {
@@ -175,6 +181,7 @@ export default function Session() {
       // Extract data from backend response
       const transcriptionText = result.transcript?.text || result.turn?.answer_text;
       const followUpQuestion = result.follow_up?.question;
+      const ttsUrl = result.follow_up?.tts_url;
       
       if (transcriptionText) {
         // Update user message with transcription
@@ -186,16 +193,24 @@ export default function Session() {
       }
       
       if (followUpQuestion) {
-        // Add AI follow-up question
+        const aiMessageId = `ai-${Date.now()}`;
+        
+        // Add AI follow-up question with TTS URL
         setMessages(prev => [...prev, {
-          id: `ai-${Date.now()}`,
+          id: aiMessageId,
           type: "ai",
           content: followUpQuestion,
-          timestamp: new Date()
+          timestamp: new Date(),
+          ttsUrl: ttsUrl
         }]);
         
         // Update prompt with AI's follow-up question
         setCurrentPrompt(followUpQuestion);
+        
+        // Auto-play TTS if available
+        if (ttsUrl) {
+          playAudio(aiMessageId, ttsUrl);
+        }
       }
       
       setStatus("idle");
@@ -218,6 +233,43 @@ export default function Session() {
     }
   };
 
+
+  const playAudio = async (messageId: string, ttsUrl: string) => {
+    try {
+      // Stop any currently playing audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+
+      setPlayingAudioId(messageId);
+      
+      const audio = new Audio(ttsUrl);
+      audioRef.current = audio;
+
+      audio.onended = () => {
+        setPlayingAudioId(null);
+        audioRef.current = null;
+      };
+
+      audio.onerror = (err) => {
+        console.error("TTS playback error:", err);
+        setPlayingAudioId(null);
+        audioRef.current = null;
+        toast({
+          title: "Playback failed",
+          description: "Failed to play audio response.",
+          variant: "destructive"
+        });
+      };
+
+      await audio.play();
+    } catch (err) {
+      console.error("Error playing TTS audio:", err);
+      setPlayingAudioId(null);
+      audioRef.current = null;
+    }
+  };
 
   const saveAndExit = async () => {
     if (isRecording) {
@@ -423,20 +475,38 @@ export default function Session() {
                       key={message.id}
                       className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
                     >
-                      <div
-                        className={`max-w-[80%] rounded-lg p-3 ${
-                          message.type === "user"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-foreground"
-                        }`}
-                      >
-                        <p className="text-sm">{message.content}</p>
-                        <div className="text-xs opacity-70 mt-1">
-                          {message.timestamp.toLocaleTimeString([], { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          })}
+                      <div className="flex items-start gap-2">
+                        <div
+                          className={`max-w-[80%] rounded-lg p-3 ${
+                            message.type === "user"
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-foreground"
+                          }`}
+                        >
+                          <p className="text-sm">{message.content}</p>
+                          <div className="text-xs opacity-70 mt-1">
+                            {message.timestamp.toLocaleTimeString([], { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
+                          </div>
                         </div>
+                        
+                        {message.type === "ai" && message.ttsUrl && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            onClick={() => playAudio(message.id, message.ttsUrl!)}
+                            disabled={playingAudioId === message.id}
+                          >
+                            {playingAudioId === message.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Volume2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}
