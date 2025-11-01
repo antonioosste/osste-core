@@ -4,24 +4,20 @@ import {
   Mic, 
   MicOff, 
   Square, 
-  Play, 
-  Pause,
   Save,
   X,
-  Volume2,
   WifiOff,
   AlertCircle,
-  CheckCircle
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
 import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/hooks/useSession";
+import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 
 type SessionStatus = "idle" | "listening" | "thinking" | "speaking" | "paused" | "error";
 type PermissionState = "granted" | "denied" | "pending" | "prompt";
@@ -38,10 +34,17 @@ export default function Session() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { sessionId, startSession: startSessionDb, endSession } = useSession();
+  const { 
+    isRecording, 
+    isProcessing, 
+    startRecording: startAudioRecording, 
+    stopRecording, 
+    uploadAndProcess,
+    cancelRecording 
+  } = useAudioRecorder(sessionId);
   
   // Core session state
   const [status, setStatus] = useState<SessionStatus>("idle");
-  const [isRecording, setIsRecording] = useState(false);
   const [sessionTime, setSessionTime] = useState(0);
   const [currentPrompt, setCurrentPrompt] = useState("Tell me about your earliest childhood memory. What stands out most vividly?");
   
@@ -137,46 +140,48 @@ export default function Session() {
       }
     }
 
-    setIsRecording(true);
-    setStatus("listening");
-    
-    // Simulate user speaking after 3 seconds
-    setTimeout(() => {
-      if (status === "listening") {
-        setStatus("thinking");
-        // Add user message
-        const userMessage: Message = {
-          id: Date.now().toString(),
-          type: "user",
-          content: "Well, I remember when I was about five years old, we lived in this small house with a big oak tree in the backyard...",
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, userMessage]);
-        
-        // Simulate AI processing
-        setTimeout(() => {
-          setStatus("speaking");
-          const aiMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            type: "ai",
-            content: "That sounds like a wonderful memory! Can you tell me more about that oak tree and what made it special to you?",
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, aiMessage]);
-          
-          // Move to next prompt
-          setTimeout(() => {
-            setStatus("idle");
-            setCurrentPrompt(prompts[Math.floor(Math.random() * prompts.length)]);
-          }, 3000);
-        }, 2000);
-      }
-    }, 3000);
+    try {
+      await startAudioRecording();
+      setStatus("listening");
+    } catch (error) {
+      console.error('Failed to start recording:', error);
+      setStatus("error");
+    }
   };
 
-  const stopRecording = () => {
-    setIsRecording(false);
-    setStatus("idle");
+  const handleStopRecording = async () => {
+    try {
+      setStatus("thinking");
+      
+      // Stop recording and get blob
+      const recording = await stopRecording();
+      
+      // Upload and process (triggers transcription + AI response + TTS)
+      const result = await uploadAndProcess(recording, currentPrompt);
+      
+      // Add user message placeholder
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        type: "user",
+        content: "Processing your response...",
+        timestamp: new Date(),
+        isPartial: true
+      }]);
+
+      setStatus("speaking");
+      
+      // Poll for AI response or handle via websocket in production
+      // For now, show processing state
+      setTimeout(() => {
+        setStatus("idle");
+        setCurrentPrompt(prompts[Math.floor(Math.random() * prompts.length)]);
+      }, 3000);
+
+    } catch (error) {
+      console.error('Failed to process recording:', error);
+      setStatus("error");
+      setHasNetworkError(true);
+    }
   };
 
   const handleEndSession = () => {
@@ -221,6 +226,14 @@ export default function Session() {
   };
 
   const getStatusBadge = () => {
+    if (isProcessing) {
+      return (
+        <Badge variant="secondary" className="animate-pulse">
+          Processing
+        </Badge>
+      );
+    }
+
     const statusConfig = {
       idle: { variant: "secondary" as const, text: "Ready" },
       listening: { variant: "default" as const, text: "Listening" },
@@ -276,10 +289,12 @@ export default function Session() {
                       size="lg"
                       variant={isRecording ? "destructive" : "default"}
                       className={`w-24 h-24 rounded-full ${isRecording ? 'animate-pulse' : 'hover-scale'}`}
-                      onClick={isRecording ? stopRecording : startRecording}
-                      disabled={micPermission === "denied" || hasNetworkError}
+                      onClick={isRecording ? handleStopRecording : startRecording}
+                      disabled={micPermission === "denied" || hasNetworkError || isProcessing}
                     >
-                      {isRecording ? (
+                      {isProcessing ? (
+                        <Loader2 className="w-8 h-8 animate-spin" />
+                      ) : isRecording ? (
                         <Square className="w-8 h-8" />
                       ) : (
                         <Mic className="w-8 h-8" />
