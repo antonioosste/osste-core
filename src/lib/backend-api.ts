@@ -72,6 +72,12 @@ export async function createTurn(
     synthesize_tts: boolean;
   }
 ) {
+  console.log('🌐 Backend API Call:', {
+    url: `${BACKEND_BASE}/api/turns/upload`,
+    method: 'POST',
+    data
+  });
+
   const response = await fetchWithRetry(
     `${BACKEND_BASE}/api/turns/upload`,
     {
@@ -84,13 +90,19 @@ export async function createTurn(
     }
   );
 
+  console.log('📡 Backend response status:', response.status);
+
   if (!response.ok) {
+    const errorText = await response.text();
+    console.error('❌ Backend error response:', errorText);
     const error = new Error(`Turn creation failed: ${response.statusText}`) as BackendError;
     error.status = response.status;
     throw error;
   }
 
-  return response.json();
+  const result = await response.json();
+  console.log('✅ Backend success response:', result);
+  return result;
 }
 
 export async function transcribeRecording(token: string, recordingId: string) {
