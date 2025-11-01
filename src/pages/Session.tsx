@@ -34,6 +34,9 @@ interface Message {
   isPartial?: boolean;
   ttsUrl?: string | null;
   recordingPath?: string;
+  recordingId?: string;
+  turnId?: string;
+  isResolvingTts?: boolean;
 }
 
 export default function Session() {
@@ -79,6 +82,7 @@ export default function Session() {
   // TTS audio playback
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [resolvingTtsIds, setResolvingTtsIds] = useState<Set<string>>(new Set());
 
   // Timer effect
   useEffect(() => {
@@ -130,6 +134,90 @@ export default function Session() {
       setMicPermission("denied");
       setShowPermissionDialog(true);
     }
+  };
+
+  // TTS resolver with polling
+  const resolveTtsForMessage = async (
+    messageId: string, 
+    recordingId: string, 
+    options: { autoplay?: boolean } = {}
+  ) => {
+    console.log('🔄 Starting TTS resolution for message:', messageId, 'recordingId:', recordingId);
+    
+    setResolvingTtsIds(prev => new Set(prev).add(messageId));
+    setMessages(prev => prev.map(m => 
+      m.id === messageId ? { ...m, isResolvingTts: true } : m
+    ));
+
+    for (let attempt = 0; attempt < 20; attempt++) {
+      try {
+        const { data, error } = await supabase
+          .from('turns')
+          .select('tts_audio_path')
+          .eq('recording_id', recordingId)
+          .maybeSingle();
+
+        console.log(`🔍 Attempt ${attempt + 1}/20 - TTS path:`, data?.tts_audio_path);
+
+        if (error) {
+          console.error('❌ Error fetching turns:', error);
+          break;
+        }
+
+        const path = data?.tts_audio_path;
+        if (path) {
+          console.log('✅ Found TTS path, creating signed URL:', path);
+          
+          const { data: signed, error: signErr } = await supabase.storage
+            .from('recordings')
+            .createSignedUrl(path, 3600);
+
+          if (!signErr && signed?.signedUrl) {
+            console.log('🎵 TTS signed URL created successfully:', signed.signedUrl);
+            
+            setMessages(prev => prev.map(m => 
+              m.id === messageId ? { ...m, ttsUrl: signed.signedUrl, isResolvingTts: false } : m
+            ));
+            setResolvingTtsIds(prev => {
+              const next = new Set(prev);
+              next.delete(messageId);
+              return next;
+            });
+
+            if (options.autoplay) {
+              console.log('🔊 Auto-playing TTS audio');
+              playAudio(messageId, signed.signedUrl);
+            }
+            return;
+          }
+          
+          console.error('❌ Error creating signed URL:', signErr);
+          break;
+        }
+
+        // Wait before next attempt with gentle backoff
+        await new Promise(r => setTimeout(r, 1500 + attempt * 250));
+      } catch (err) {
+        console.error('❌ Exception during TTS resolution:', err);
+        break;
+      }
+    }
+
+    console.log('⏱️ TTS resolution timed out or failed for message:', messageId);
+    setMessages(prev => prev.map(m => 
+      m.id === messageId ? { ...m, isResolvingTts: false } : m
+    ));
+    setResolvingTtsIds(prev => {
+      const next = new Set(prev);
+      next.delete(messageId);
+      return next;
+    });
+    
+    toast({
+      title: "Audio not ready yet",
+      description: "The AI audio is still being generated. Please try again in a moment.",
+      variant: "default",
+    });
   };
 
   const startRecording = async () => {
@@ -185,31 +273,7 @@ export default function Session() {
       // Extract data from backend response
       const transcriptionText = result.transcript?.text || result.turn?.answer_text;
       const followUpQuestion = result.follow_up?.question;
-      
-      // Get TTS URL - check both follow_up.tts_url and turn.tts_audio_path
-      console.log('🔍 Checking TTS audio paths:', {
-        follow_up_tts_url: result.follow_up?.tts_url,
-        turn_tts_audio_path: result.turn?.tts_audio_path
-      });
-      
-      let ttsUrl = result.follow_up?.tts_url;
-      if (!ttsUrl && result.turn?.tts_audio_path) {
-        // Convert storage path to signed URL from 'recordings' bucket
-        // Path format: tts/<user_id>/<session_id>/<filename>.mp3
-        console.log('🎵 Creating signed URL for TTS path:', result.turn.tts_audio_path);
-        const { data, error: ttsError } = await supabase.storage
-          .from('recordings')
-          .createSignedUrl(result.turn.tts_audio_path, 3600);
-        
-        if (ttsError) {
-          console.error('❌ Error creating TTS signed URL:', ttsError);
-        } else {
-          ttsUrl = data?.signedUrl || null;
-          console.log('✅ TTS signed URL created:', ttsUrl);
-        }
-      }
-      
-      console.log('🎤 Final TTS URL for AI message:', ttsUrl);
+      const recordingIdForTts = result.turn?.recording_id;
       
       if (transcriptionText) {
         // Update user message with transcription and attach actual storage path
@@ -227,24 +291,32 @@ export default function Session() {
         ));
       }
       
+      // Add AI message and start TTS resolution
       if (followUpQuestion) {
         const aiMessageId = `ai-${Date.now()}`;
         
-        // Add AI follow-up question with TTS URL
-        setMessages(prev => [...prev, {
-          id: aiMessageId,
-          type: "ai",
-          content: followUpQuestion,
-          timestamp: new Date(),
-          ttsUrl: ttsUrl
-        }]);
-        
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: aiMessageId,
+            type: "ai",
+            content: followUpQuestion,
+            timestamp: new Date(),
+            ttsUrl: null,
+            recordingId: recordingIdForTts,
+            isResolvingTts: false,
+          },
+        ]);
+
         // Update prompt with AI's follow-up question
         setCurrentPrompt(followUpQuestion);
-        
-        // Auto-play TTS if available
-        if (ttsUrl) {
-          playAudio(aiMessageId, ttsUrl);
+
+        // Start resolving TTS in background with autoplay
+        if (recordingIdForTts) {
+          console.log('🎬 Starting background TTS resolution for AI message');
+          resolveTtsForMessage(aiMessageId, recordingIdForTts, { autoplay: true });
+        } else {
+          console.warn('⚠️ No recording ID available for TTS resolution');
         }
       }
       
@@ -587,16 +659,32 @@ export default function Session() {
                           </div>
                         </div>
                         
-                        {message.type === "ai" && message.ttsUrl && (
+                        {message.type === "ai" && (
                           <Button
                             size="sm"
                             variant="ghost"
                             className="h-8 w-8 p-0"
-                            onClick={() => playAudio(message.id, message.ttsUrl!)}
-                            disabled={playingAudioId === message.id}
-                            title="Play AI response audio"
+                            onClick={() => {
+                              if (message.ttsUrl) {
+                                playAudio(message.id, message.ttsUrl);
+                              } else if (message.recordingId && !message.isResolvingTts) {
+                                toast({
+                                  title: "Loading audio",
+                                  description: "We'll play it as soon as it's ready.",
+                                });
+                                resolveTtsForMessage(message.id, message.recordingId, { autoplay: true });
+                              }
+                            }}
+                            disabled={playingAudioId === message.id || message.isResolvingTts}
+                            title={
+                              message.isResolvingTts 
+                                ? "Audio is generating..." 
+                                : message.ttsUrl 
+                                ? "Play AI response audio" 
+                                : "Load and play audio"
+                            }
                           >
-                            {playingAudioId === message.id ? (
+                            {playingAudioId === message.id || message.isResolvingTts ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
                               <Volume2 className="h-4 w-4 text-primary" />
