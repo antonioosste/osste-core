@@ -172,55 +172,38 @@ export default function Session() {
       const result = await uploadAndProcess(recording, currentPrompt);
       console.log('📋 Turn created:', result);
       
-      // Poll for the turn to be processed (transcription + AI response)
-      let attempts = 0;
-      const maxAttempts = 30; // 30 seconds max
-      const pollInterval = setInterval(async () => {
-        attempts++;
+      // Extract data from backend response
+      const transcriptionText = result.transcript?.text || result.turn?.answer_text;
+      const followUpQuestion = result.follow_up?.question;
+      
+      if (transcriptionText) {
+        // Update user message with transcription
+        setMessages(prev => prev.map(msg => 
+          msg.id === userMsgId 
+            ? { ...msg, content: transcriptionText, isPartial: false }
+            : msg
+        ));
+      }
+      
+      if (followUpQuestion) {
+        // Add AI follow-up question
+        setMessages(prev => [...prev, {
+          id: `ai-${Date.now()}`,
+          type: "ai",
+          content: followUpQuestion,
+          timestamp: new Date()
+        }]);
         
-        try {
-          await refetchTurns();
-          
-          // Find the latest turn
-          const latestTurn = turns[turns.length - 1];
-          
-          if (latestTurn?.stt_text && latestTurn?.answer_text) {
-            clearInterval(pollInterval);
-            
-            // Update user message with transcription
-            setMessages(prev => prev.map(msg => 
-              msg.id === userMsgId 
-                ? { ...msg, content: latestTurn.stt_text!, isPartial: false }
-                : msg
-            ));
-            
-            // Add AI response
-            setMessages(prev => [...prev, {
-              id: `ai-${Date.now()}`,
-              type: "ai",
-              content: latestTurn.answer_text!,
-              timestamp: new Date()
-            }]);
-            
-            // Update prompt with AI's follow-up question
-            if (latestTurn.answer_text) {
-              setCurrentPrompt(latestTurn.answer_text);
-            }
-            
-            setStatus("idle");
-            
-            toast({
-              title: "Turn completed",
-              description: "Your response has been processed successfully."
-            });
-          } else if (attempts >= maxAttempts) {
-            throw new Error('Processing timeout - please try again');
-          }
-        } catch (pollError) {
-          clearInterval(pollInterval);
-          throw pollError;
-        }
-      }, 1000);
+        // Update prompt with AI's follow-up question
+        setCurrentPrompt(followUpQuestion);
+      }
+      
+      setStatus("idle");
+      
+      toast({
+        title: "Turn completed",
+        description: "Your response has been processed successfully."
+      });
 
     } catch (error) {
       console.error('❌ Failed to process recording:', error);
