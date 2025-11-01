@@ -164,28 +164,3 @@ export async function assembleStory(token: string, sessionId: string) {
 
   return response.json();
 }
-
-export async function synthesizeSpeech(
-  token: string,
-  text: string
-): Promise<Blob> {
-  const response = await fetchWithRetry(
-    `${BACKEND_BASE}/api/ai/tts`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({ text }),
-    }
-  );
-
-  if (!response.ok) {
-    const error = new Error(`TTS failed: ${response.statusText}`) as BackendError;
-    error.status = response.status;
-    throw error;
-  }
-
-  return response.blob();
-}

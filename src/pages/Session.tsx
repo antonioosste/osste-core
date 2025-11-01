@@ -8,8 +8,7 @@ import {
   X,
   WifiOff,
   AlertCircle,
-  Loader2,
-  Volume2
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,8 +19,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/hooks/useSession";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { useTurns } from "@/hooks/useTurns";
-import { synthesizeSpeech } from "@/lib/backend-api";
-import { useAuth } from "@/hooks/useAuth";
 
 type SessionStatus = "idle" | "listening" | "thinking" | "speaking" | "paused" | "error";
 type PermissionState = "granted" | "denied" | "pending" | "prompt";
@@ -37,7 +34,6 @@ interface Message {
 export default function Session() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { session } = useAuth();
   const { sessionId, startSession: startSessionDb, endSession } = useSession();
   const { 
     isRecording, 
@@ -69,10 +65,6 @@ export default function Session() {
       timestamp: new Date()
     }
   ]);
-  
-  // Audio playback state
-  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   
   // Waveform animation
   const [waveformData, setWaveformData] = useState<number[]>(new Array(20).fill(0));
@@ -226,40 +218,6 @@ export default function Session() {
     }
   };
 
-  const playAudio = async (messageId: string, text: string) => {
-    try {
-      if (!session?.access_token) {
-        throw new Error('Authentication required');
-      }
-      
-      setPlayingAudioId(messageId);
-      
-      const audioBlob = await synthesizeSpeech(session.access_token, text);
-      const audioUrl = URL.createObjectURL(audioBlob);
-      
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      
-      const audio = new Audio(audioUrl);
-      audioRef.current = audio;
-      
-      audio.onended = () => {
-        setPlayingAudioId(null);
-        URL.revokeObjectURL(audioUrl);
-      };
-      
-      await audio.play();
-    } catch (error) {
-      console.error('Failed to play audio:', error);
-      toast({
-        title: "Audio playback failed",
-        description: "Could not play the audio. Please try again.",
-        variant: "destructive"
-      });
-      setPlayingAudioId(null);
-    }
-  };
 
   const saveAndExit = async () => {
     if (isRecording) {
@@ -472,31 +430,12 @@ export default function Session() {
                             : "bg-muted text-foreground"
                         }`}
                       >
-                        <div className="flex items-start gap-2">
-                          <div className="flex-1">
-                            <p className={`text-sm ${message.isPartial ? 'italic opacity-70' : ''}`}>{message.content}</p>
-                            <div className="text-xs opacity-70 mt-1">
-                              {message.timestamp.toLocaleTimeString([], { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
-                            </div>
-                          </div>
-                          {message.type === "ai" && !message.isPartial && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 flex-shrink-0 -mt-1"
-                              onClick={() => playAudio(message.id, message.content)}
-                              disabled={playingAudioId === message.id}
-                            >
-                              {playingAudioId === message.id ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <Volume2 className="h-3.5 w-3.5" />
-                              )}
-                            </Button>
-                          )}
+                        <p className="text-sm">{message.content}</p>
+                        <div className="text-xs opacity-70 mt-1">
+                          {message.timestamp.toLocaleTimeString([], { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
                         </div>
                       </div>
                     </div>
