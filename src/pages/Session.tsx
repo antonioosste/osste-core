@@ -18,6 +18,7 @@ import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/hooks/useSession";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
+import { useTurns } from "@/hooks/useTurns";
 
 type SessionStatus = "idle" | "listening" | "thinking" | "speaking" | "paused" | "error";
 type PermissionState = "granted" | "denied" | "pending" | "prompt";
@@ -42,6 +43,7 @@ export default function Session() {
     uploadAndProcess,
     cancelRecording 
   } = useAudioRecorder(sessionId);
+  const { turns, refetch: refetchTurns } = useTurns(sessionId || undefined);
   
   // Core session state
   const [status, setStatus] = useState<SessionStatus>("idle");
@@ -156,31 +158,80 @@ export default function Session() {
       // Stop recording and get blob
       const recording = await stopRecording();
       
-      // Upload and process (triggers transcription + AI response + TTS)
-      const result = await uploadAndProcess(recording, currentPrompt);
-      
       // Add user message placeholder
+      const userMsgId = Date.now().toString();
       setMessages(prev => [...prev, {
-        id: Date.now().toString(),
+        id: userMsgId,
         type: "user",
         content: "Processing your response...",
         timestamp: new Date(),
         isPartial: true
       }]);
-
-      setStatus("speaking");
       
-      // Poll for AI response or handle via websocket in production
-      // For now, show processing state
-      setTimeout(() => {
-        setStatus("idle");
-        setCurrentPrompt(prompts[Math.floor(Math.random() * prompts.length)]);
-      }, 3000);
+      // Upload and process (triggers transcription + AI response + TTS)
+      const result = await uploadAndProcess(recording, currentPrompt);
+      console.log('📋 Turn created:', result);
+      
+      // Poll for the turn to be processed (transcription + AI response)
+      let attempts = 0;
+      const maxAttempts = 30; // 30 seconds max
+      const pollInterval = setInterval(async () => {
+        attempts++;
+        
+        try {
+          await refetchTurns();
+          
+          // Find the latest turn
+          const latestTurn = turns[turns.length - 1];
+          
+          if (latestTurn?.stt_text && latestTurn?.answer_text) {
+            clearInterval(pollInterval);
+            
+            // Update user message with transcription
+            setMessages(prev => prev.map(msg => 
+              msg.id === userMsgId 
+                ? { ...msg, content: latestTurn.stt_text!, isPartial: false }
+                : msg
+            ));
+            
+            // Add AI response
+            setMessages(prev => [...prev, {
+              id: `ai-${Date.now()}`,
+              type: "ai",
+              content: latestTurn.answer_text!,
+              timestamp: new Date()
+            }]);
+            
+            // Update prompt with AI's follow-up question
+            if (latestTurn.answer_text) {
+              setCurrentPrompt(latestTurn.answer_text);
+            }
+            
+            setStatus("idle");
+            
+            toast({
+              title: "Turn completed",
+              description: "Your response has been processed successfully."
+            });
+          } else if (attempts >= maxAttempts) {
+            throw new Error('Processing timeout - please try again');
+          }
+        } catch (pollError) {
+          clearInterval(pollInterval);
+          throw pollError;
+        }
+      }, 1000);
 
     } catch (error) {
-      console.error('Failed to process recording:', error);
+      console.error('❌ Failed to process recording:', error);
       setStatus("error");
       setHasNetworkError(true);
+      
+      toast({
+        title: "Processing failed",
+        description: error instanceof Error ? error.message : "Failed to process your recording",
+        variant: "destructive"
+      });
     }
   };
 
@@ -200,11 +251,24 @@ export default function Session() {
   };
 
   const saveAndExit = async () => {
+    if (isRecording) {
+      cancelRecording();
+    }
+    
     if (sessionId) {
       try {
         await endSession(sessionId);
+        toast({
+          title: "Session saved",
+          description: "Your recording session has been saved successfully."
+        });
       } catch (error) {
         console.error('Error saving session:', error);
+        toast({
+          title: "Save failed",
+          description: "Failed to save session, but your recordings are stored.",
+          variant: "destructive"
+        });
       }
     }
     navigate("/dashboard");
