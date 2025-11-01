@@ -53,7 +53,7 @@ export default function Session() {
   // Permission and error states
   const [micPermission, setMicPermission] = useState<PermissionState>("prompt");
   const [hasNetworkError, setHasNetworkError] = useState(false);
-  const [showEndDialog, setShowEndDialog] = useState(false);
+  
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
   
   // Conversation state
@@ -235,20 +235,6 @@ export default function Session() {
     }
   };
 
-  const handleEndSession = () => {
-    setShowEndDialog(true);
-  };
-
-  const confirmEndSession = async () => {
-    if (sessionId) {
-      try {
-        await endSession(sessionId);
-      } catch (error) {
-        console.error('Error ending session:', error);
-      }
-    }
-    navigate("/dashboard");
-  };
 
   const saveAndExit = async () => {
     if (isRecording) {
@@ -410,15 +396,6 @@ export default function Session() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handleEndSession}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      End Session
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
                       onClick={saveAndExit}
                     >
                       <Save className="w-4 h-4 mr-2" />
@@ -499,25 +476,6 @@ export default function Session() {
         </div>
       </div>
 
-      {/* End Session Confirmation Dialog */}
-      <Dialog open={showEndDialog} onOpenChange={setShowEndDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>End Session?</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to end this recording session? Your progress will be saved automatically.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEndDialog(false)}>
-              Continue Session
-            </Button>
-            <Button onClick={confirmEndSession}>
-              End Session
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Microphone Permission Dialog */}
       <Dialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
