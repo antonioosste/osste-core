@@ -9,11 +9,16 @@ interface SessionParams {
   language?: string;
 }
 
-export function useSession() {
+export function useSession(initialSessionId?: string | null) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(initialSessionId || null);
   const [loading, setLoading] = useState(false);
+
+  const loadSession = async (id: string) => {
+    setSessionId(id);
+    return id;
+  };
 
   const startSession = async (params: SessionParams = {}) => {
     if (!user) {
@@ -132,5 +137,6 @@ export function useSession() {
     loading,
     startSession,
     endSession,
+    loadSession,
   };
 }

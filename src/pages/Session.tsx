@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { 
   Mic, 
   MicOff, 
@@ -42,9 +42,12 @@ interface Message {
 
 export default function Session() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const existingSessionId = searchParams.get('id');
+  
   const { toast } = useToast();
   const { user } = useAuth();
-  const { sessionId, startSession: startSessionDb, endSession } = useSession();
+  const { sessionId, startSession: startSessionDb, endSession, loadSession } = useSession(existingSessionId);
   const { 
     isRecording, 
     isProcessing, 
@@ -85,6 +88,63 @@ export default function Session() {
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [resolvingTtsIds, setResolvingTtsIds] = useState<Set<string>>(new Set());
+
+  // Load existing session data on mount
+  useEffect(() => {
+    const loadExistingSession = async () => {
+      if (existingSessionId && turns.length > 0) {
+        console.log('📥 Loading existing session:', existingSessionId);
+        
+        // Load turns into messages
+        const loadedMessages: Message[] = [{
+          id: "welcome",
+          type: "ai",
+          content: "Welcome back! Let's continue your story.",
+          timestamp: new Date()
+        }];
+
+        for (const turn of turns) {
+          // Add AI prompt
+          if (turn.prompt_text) {
+            loadedMessages.push({
+              id: `ai-${turn.id}`,
+              type: "ai",
+              content: turn.prompt_text,
+              timestamp: new Date(turn.created_at || Date.now()),
+              ttsUrl: null,
+              recordingId: turn.recording_id || undefined,
+            });
+          }
+
+          // Add user answer
+          if (turn.answer_text) {
+            loadedMessages.push({
+              id: `user-${turn.id}`,
+              type: "user",
+              content: turn.answer_text,
+              timestamp: new Date(turn.created_at || Date.now()),
+              recordingPath: turn.recording_id || undefined,
+            });
+          }
+        }
+
+        setMessages(loadedMessages);
+        
+        // Set the last AI prompt as current
+        const lastAiMessage = loadedMessages.reverse().find(m => m.type === 'ai');
+        if (lastAiMessage) {
+          setCurrentPrompt(lastAiMessage.content);
+        }
+
+        toast({
+          title: "Session loaded",
+          description: "Continuing from where you left off.",
+        });
+      }
+    };
+
+    loadExistingSession();
+  }, [existingSessionId, turns]);
 
   // Timer effect
   useEffect(() => {

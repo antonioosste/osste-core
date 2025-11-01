@@ -114,10 +114,10 @@ export default function Sessions() {
                       <TableCell className="text-muted-foreground">
                         {formatDate(session.started_at)}
                       </TableCell>
-                      <TableCell className="text-right">
+                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button variant="ghost" size="sm" asChild>
-                            <Link to={`/recordings/${session.id}`}>
+                            <Link to={`/session?id=${session.id}`}>
                               <Edit className="w-4 h-4" />
                             </Link>
                           </Button>
