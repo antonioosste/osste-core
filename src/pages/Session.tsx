@@ -168,7 +168,7 @@ export default function Session() {
       // Stop recording and get blob
       const recording = await stopRecording();
       
-      // Create storage path for this recording
+      // Create storage path for this recording (WITHOUT 'recordings/' prefix - Supabase adds it)
       const timestamp = Date.now();
       const extension = recording.mimeType.includes('webm') ? 'webm' : 'mp4';
       const storagePath = `${user?.id}/${sessionId}/${timestamp}.${extension}`;
@@ -195,11 +195,18 @@ export default function Session() {
       // Get TTS URL - check both follow_up.tts_url and turn.tts_audio_path
       let ttsUrl = result.follow_up?.tts_url;
       if (!ttsUrl && result.turn?.tts_audio_path) {
-        // Convert storage path to signed URL
-        const { data } = await supabase.storage
-          .from('tts')
-          .createSignedUrl(result.turn.tts_audio_path.replace('tts/', ''), 3600);
-        ttsUrl = data?.signedUrl || null;
+        // Convert storage path to signed URL from 'recordings' bucket
+        // Path format: tts/<user_id>/<session_id>/<filename>.mp3
+        const { data, error: ttsError } = await supabase.storage
+          .from('recordings')
+          .createSignedUrl(result.turn.tts_audio_path, 3600);
+        
+        if (ttsError) {
+          console.error('❌ Error creating TTS signed URL:', ttsError);
+        } else {
+          ttsUrl = data?.signedUrl || null;
+          console.log('✅ TTS signed URL created:', ttsUrl);
+        }
       }
       
       if (transcriptionText) {
