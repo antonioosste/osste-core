@@ -300,14 +300,23 @@ export default function Session() {
 
       setPlayingAudioId(messageId);
 
+      console.log('🎵 Attempting to play recording:', recordingPath);
+
       // Get signed URL from Supabase Storage (valid for 1 hour)
       const { data, error } = await supabase.storage
         .from('recordings')
         .createSignedUrl(recordingPath, 3600);
 
-      if (error || !data?.signedUrl) {
-        throw new Error('Failed to get recording URL');
+      if (error) {
+        console.error('❌ Error creating signed URL:', error);
+        throw error;
       }
+
+      if (!data?.signedUrl) {
+        throw new Error('No signed URL returned');
+      }
+
+      console.log('✅ Signed URL created:', data.signedUrl);
 
       const audio = new Audio(data.signedUrl);
       audioRef.current = audio;
