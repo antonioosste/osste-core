@@ -16,6 +16,7 @@ import Sessions from "./pages/Sessions";
 import Stories from "./pages/Stories";
 import StoryDetail from "./pages/StoryDetail";
 import RecordingDetail from "./pages/RecordingDetail";
+import Chapters from "./pages/Chapters";
 import ChapterDetail from "./pages/ChapterDetail";
 import BookPreview from "./pages/BookPreview";
 import Checkout from "./pages/Checkout";
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/stories" element={<ProtectedRoute><Stories /></ProtectedRoute>} />
             <Route path="/stories/:id" element={<ProtectedRoute><StoryDetail /></ProtectedRoute>} />
             <Route path="/recordings/:id" element={<ProtectedRoute><RecordingDetail /></ProtectedRoute>} />
+            <Route path="/chapters" element={<ProtectedRoute><Chapters /></ProtectedRoute>} />
             <Route path="/chapters/:id" element={<ProtectedRoute><ChapterDetail /></ProtectedRoute>} />
             <Route path="/book/preview" element={<ProtectedRoute><BookPreview /></ProtectedRoute>} />
             <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />

@@ -289,6 +289,12 @@ export default function Dashboard() {
                   </Link>
                 </Button>
                 <Button variant="outline" size="sm" asChild className="w-full justify-start">
+                  <Link to="/chapters">
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    View Chapters
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm" asChild className="w-full justify-start">
                   <Link to="/book/preview">
                     <BookOpen className="w-4 h-4 mr-2" />
                     Preview Book
