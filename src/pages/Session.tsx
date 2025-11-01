@@ -389,6 +389,24 @@ export default function Session() {
 
                   {/* Controls */}
                   <div className="flex items-center space-x-4">
+                    {isRecording && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          cancelRecording();
+                          setStatus("idle");
+                          toast({
+                            title: "Recording cancelled",
+                            description: "Your recording has been discarded."
+                          });
+                        }}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Cancel Recording
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
