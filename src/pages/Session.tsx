@@ -191,7 +191,16 @@ export default function Session() {
       // Extract data from backend response
       const transcriptionText = result.transcript?.text || result.turn?.answer_text;
       const followUpQuestion = result.follow_up?.question;
-      const ttsUrl = result.follow_up?.tts_url;
+      
+      // Get TTS URL - check both follow_up.tts_url and turn.tts_audio_path
+      let ttsUrl = result.follow_up?.tts_url;
+      if (!ttsUrl && result.turn?.tts_audio_path) {
+        // Convert storage path to signed URL
+        const { data } = await supabase.storage
+          .from('tts')
+          .createSignedUrl(result.turn.tts_audio_path.replace('tts/', ''), 3600);
+        ttsUrl = data?.signedUrl || null;
+      }
       
       if (transcriptionText) {
         // Update user message with transcription
@@ -291,16 +300,16 @@ export default function Session() {
 
       setPlayingAudioId(messageId);
 
-      // Get public URL from Supabase Storage
-      const { data } = supabase.storage
+      // Get signed URL from Supabase Storage (valid for 1 hour)
+      const { data, error } = await supabase.storage
         .from('recordings')
-        .getPublicUrl(recordingPath);
+        .createSignedUrl(recordingPath, 3600);
 
-      if (!data?.publicUrl) {
+      if (error || !data?.signedUrl) {
         throw new Error('Failed to get recording URL');
       }
 
-      const audio = new Audio(data.publicUrl);
+      const audio = new Audio(data.signedUrl);
       audioRef.current = audio;
 
       audio.onended = () => {
