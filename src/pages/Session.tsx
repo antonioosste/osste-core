@@ -187,10 +187,16 @@ export default function Session() {
       const followUpQuestion = result.follow_up?.question;
       
       // Get TTS URL - check both follow_up.tts_url and turn.tts_audio_path
+      console.log('🔍 Checking TTS audio paths:', {
+        follow_up_tts_url: result.follow_up?.tts_url,
+        turn_tts_audio_path: result.turn?.tts_audio_path
+      });
+      
       let ttsUrl = result.follow_up?.tts_url;
       if (!ttsUrl && result.turn?.tts_audio_path) {
         // Convert storage path to signed URL from 'recordings' bucket
         // Path format: tts/<user_id>/<session_id>/<filename>.mp3
+        console.log('🎵 Creating signed URL for TTS path:', result.turn.tts_audio_path);
         const { data, error: ttsError } = await supabase.storage
           .from('recordings')
           .createSignedUrl(result.turn.tts_audio_path, 3600);
@@ -202,6 +208,8 @@ export default function Session() {
           console.log('✅ TTS signed URL created:', ttsUrl);
         }
       }
+      
+      console.log('🎤 Final TTS URL for AI message:', ttsUrl);
       
       if (transcriptionText) {
         // Update user message with transcription and attach actual storage path
@@ -586,11 +594,12 @@ export default function Session() {
                             className="h-8 w-8 p-0"
                             onClick={() => playAudio(message.id, message.ttsUrl!)}
                             disabled={playingAudioId === message.id}
+                            title="Play AI response audio"
                           >
                             {playingAudioId === message.id ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                              <Volume2 className="h-4 w-4" />
+                              <Volume2 className="h-4 w-4 text-primary" />
                             )}
                           </Button>
                         )}
