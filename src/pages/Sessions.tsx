@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Trash2, Edit, Calendar, Clock } from "lucide-react";
+import { Plus, Trash2, Edit, Calendar, Clock, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,10 +11,18 @@ import { useSessions } from "@/hooks/useSessions";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-states/EmptyState";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { assembleStory } from "@/lib/backend-api";
+import { useStories } from "@/hooks/useStories";
 
 export default function Sessions() {
   const { sessions, loading, deleteSession } = useSessions();
+  const { session } = useAuth();
+  const { toast } = useToast();
+  const { refetch: refetchStories } = useStories();
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [assemblingId, setAssemblingId] = useState<string | null>(null);
 
   const handleDelete = async () => {
     if (deleteId) {
@@ -34,6 +42,37 @@ export default function Sessions() {
     const duration = new Date(end).getTime() - new Date(start).getTime();
     const minutes = Math.floor(duration / 60000);
     return `${minutes} min`;
+  };
+
+  const handleAssembleStory = async (sessionId: string) => {
+    if (!session?.access_token) return;
+    
+    setAssemblingId(sessionId);
+    try {
+      toast({
+        title: "Assembling story...",
+        description: "Please wait while we generate your story.",
+      });
+
+      await assembleStory(session.access_token, sessionId);
+      
+      toast({
+        title: "Story assembled",
+        description: "Your story has been generated successfully!",
+      });
+
+      // Refresh stories list
+      refetchStories();
+    } catch (error) {
+      console.error('Error assembling story:', error);
+      toast({
+        title: "Assembly failed",
+        description: error instanceof Error ? error.message : "Failed to assemble story",
+        variant: "destructive",
+      });
+    } finally {
+      setAssemblingId(null);
+    }
   };
 
   return (
@@ -116,6 +155,14 @@ export default function Sessions() {
                       </TableCell>
                        <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleAssembleStory(session.id)}
+                            disabled={assemblingId === session.id}
+                          >
+                            <BookOpen className="w-4 h-4" />
+                          </Button>
                           <Button variant="ghost" size="sm" asChild>
                             <Link to={`/session?id=${session.id}`}>
                               <Edit className="w-4 h-4" />
