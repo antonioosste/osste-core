@@ -20,6 +20,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/hooks/useSession";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { useTurns } from "@/hooks/useTurns";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 type SessionStatus = "idle" | "listening" | "thinking" | "speaking" | "paused" | "error";
 type PermissionState = "granted" | "denied" | "pending" | "prompt";
@@ -31,11 +33,13 @@ interface Message {
   timestamp: Date;
   isPartial?: boolean;
   ttsUrl?: string | null;
+  recordingPath?: string;
 }
 
 export default function Session() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const { sessionId, startSession: startSessionDb, endSession } = useSession();
   const { 
     isRecording, 
@@ -164,6 +168,11 @@ export default function Session() {
       // Stop recording and get blob
       const recording = await stopRecording();
       
+      // Create storage path for this recording
+      const timestamp = Date.now();
+      const extension = recording.mimeType.includes('webm') ? 'webm' : 'mp4';
+      const storagePath = `${user?.id}/${sessionId}/${timestamp}.${extension}`;
+      
       // Add user message placeholder
       const userMsgId = Date.now().toString();
       setMessages(prev => [...prev, {
@@ -171,7 +180,8 @@ export default function Session() {
         type: "user",
         content: "Processing your response...",
         timestamp: new Date(),
-        isPartial: true
+        isPartial: true,
+        recordingPath: storagePath
       }]);
       
       // Upload and process (triggers transcription + AI response + TTS)
@@ -268,6 +278,57 @@ export default function Session() {
       console.error("Error playing TTS audio:", err);
       setPlayingAudioId(null);
       audioRef.current = null;
+    }
+  };
+
+  const playRecording = async (messageId: string, recordingPath: string) => {
+    try {
+      // Stop any currently playing audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+
+      setPlayingAudioId(messageId);
+
+      // Get public URL from Supabase Storage
+      const { data } = supabase.storage
+        .from('recordings')
+        .getPublicUrl(recordingPath);
+
+      if (!data?.publicUrl) {
+        throw new Error('Failed to get recording URL');
+      }
+
+      const audio = new Audio(data.publicUrl);
+      audioRef.current = audio;
+
+      audio.onended = () => {
+        setPlayingAudioId(null);
+        audioRef.current = null;
+      };
+
+      audio.onerror = (err) => {
+        console.error("Recording playback error:", err);
+        setPlayingAudioId(null);
+        audioRef.current = null;
+        toast({
+          title: "Playback failed",
+          description: "Failed to play recording.",
+          variant: "destructive"
+        });
+      };
+
+      await audio.play();
+    } catch (err) {
+      console.error("Error playing recording:", err);
+      setPlayingAudioId(null);
+      audioRef.current = null;
+      toast({
+        title: "Playback failed",
+        description: "Failed to load recording.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -475,7 +536,7 @@ export default function Session() {
                       key={message.id}
                       className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
                     >
-                      <div className="flex items-start gap-2">
+                      <div className={`flex items-start gap-2 ${message.type === "user" ? "flex-row-reverse" : ""}`}>
                         <div
                           className={`max-w-[80%] rounded-lg p-3 ${
                             message.type === "user"
@@ -498,6 +559,22 @@ export default function Session() {
                             variant="ghost"
                             className="h-8 w-8 p-0"
                             onClick={() => playAudio(message.id, message.ttsUrl!)}
+                            disabled={playingAudioId === message.id}
+                          >
+                            {playingAudioId === message.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Volume2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        )}
+
+                        {message.type === "user" && message.recordingPath && !message.isPartial && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            onClick={() => playRecording(message.id, message.recordingPath!)}
                             disabled={playingAudioId === message.id}
                           >
                             {playingAudioId === message.id ? (
