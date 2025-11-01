@@ -22,6 +22,7 @@ import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { useTurns } from "@/hooks/useTurns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { generateChapters } from "@/lib/backend-api";
 
 type SessionStatus = "idle" | "listening" | "thinking" | "speaking" | "paused" | "error";
 type PermissionState = "granted" | "denied" | "pending" | "prompt";
@@ -64,6 +65,7 @@ export default function Session() {
   const [hasNetworkError, setHasNetworkError] = useState(false);
   
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
+  const [isGeneratingChapters, setIsGeneratingChapters] = useState(false);
   
   // Conversation state
   const [messages, setMessages] = useState<Message[]>([
@@ -445,11 +447,37 @@ export default function Session() {
     
     if (sessionId) {
       try {
+        // End the session first
         await endSession(sessionId);
-        toast({
-          title: "Session saved",
-          description: "Your recording session has been saved successfully."
-        });
+        
+        // Generate chapters for the session
+        setIsGeneratingChapters(true);
+        
+        try {
+          const session = await supabase.auth.getSession();
+          const token = session.data.session?.access_token;
+          
+          if (!token) {
+            throw new Error('No authentication token available');
+          }
+          
+          console.log('🔄 Generating chapters for session:', sessionId);
+          await generateChapters(token, sessionId);
+          
+          toast({
+            title: "Session saved",
+            description: "Your recording session and chapters have been generated successfully."
+          });
+        } catch (chapterError) {
+          console.error('Error generating chapters:', chapterError);
+          toast({
+            title: "Session saved",
+            description: "Session saved, but chapter generation failed. You can retry later.",
+            variant: "default"
+          });
+        } finally {
+          setIsGeneratingChapters(false);
+        }
       } catch (error) {
         console.error('Error saving session:', error);
         toast({
@@ -599,9 +627,19 @@ export default function Session() {
                       variant="outline"
                       size="sm"
                       onClick={saveAndExit}
+                      disabled={isGeneratingChapters}
                     >
-                      <Save className="w-4 h-4 mr-2" />
-                      Save & Exit
+                      {isGeneratingChapters ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Generating Chapters...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" />
+                          Save & Exit
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>

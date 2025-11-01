@@ -125,13 +125,14 @@ export async function transcribeRecording(token: string, recordingId: string) {
   return response.json();
 }
 
-export async function generateChapters(token: string, recordingId: string) {
+export async function generateChapters(token: string, sessionId: string) {
   const response = await fetchWithRetry(
-    `${BACKEND_BASE}/api/ai/chapters/generate/${recordingId}`,
+    `${BACKEND_BASE}/api/ai/chapters/generate/${sessionId}`,
     {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
     }
   );
