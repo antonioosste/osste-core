@@ -127,7 +127,7 @@ export async function transcribeRecording(token: string, recordingId: string) {
 
 export async function generateChapters(token: string, sessionId: string) {
   const response = await fetchWithRetry(
-    `${BACKEND_BASE}/api/ai/chapters/generate/${sessionId}`,
+    `${BACKEND_BASE}/api/ai/chapters/by-session/${sessionId}`,
     {
       method: 'POST',
       headers: {
