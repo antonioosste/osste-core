@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -7,33 +5,18 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, Sparkles, Shuffle, BookOpen } from "lucide-react";
+import { ChevronRight, Sparkles, Shuffle, BookOpen, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-/** Topic → list of prompts. You can extend or load from DB. */
-const QUESTION_BANK: Record<string, string[]> = {
-  "Childhood": [
-    "Tell me about your earliest childhood memory. What stands out most vividly?",
-    "Who was your best friend growing up? What did you love doing together?",
-    "What was a typical day like in your home when you were 10?",
-    "What did your parents or grandparents teach you that stuck for life?"
-  ],
-  "Family & Traditions": [
-    "What's a family tradition you still cherish? How did it start?",
-    "Tell me the story behind a recipe, song, or object your family treasures.",
-    "Describe a time your family overcame a tough challenge together."
-  ],
-  "Love & Relationships": [
-    "How did you meet your partner? What do you remember about the first moments?",
-    "What's a small gesture that made you feel deeply loved?"
-  ],
-  "Career & Purpose": [
-    "What was your first job and what did it teach you?",
-    "When did you feel most proud of your work? What happened?"
-  ],
-  "Wisdom & Advice": [
-    "If you could leave one lesson for future generations, what would it be?",
-    "What's a belief you changed your mind about—and why?"
-  ],
+type Topic = {
+  id: string;
+  name: string;
+};
+
+type Prompt = {
+  id: string;
+  topic_id: string | null;
+  text: string;
 };
 
 export type QuestionSwitcherProps = {
@@ -55,52 +38,122 @@ export function QuestionSwitcher({
   onQuestionChange,
   onNewPrompt,
 }: QuestionSwitcherProps) {
-  // Uncontrolled fallbacks
-  const initialTopic = controlledTopic ?? Object.keys(QUESTION_BANK)[0];
-  const [topic, setTopic] = React.useState<string>(initialTopic);
+  const [topics, setTopics] = React.useState<Topic[]>([]);
+  const [prompts, setPrompts] = React.useState<Prompt[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  
+  const [selectedTopicId, setSelectedTopicId] = React.useState<string>("");
   const [question, setQuestion] = React.useState<string>(
-    controlledQuestion ?? QUESTION_BANK[initialTopic][0]
+    controlledQuestion ?? ""
   );
+
+  // Load topics and prompts from database
+  React.useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        
+        // Load topics
+        const { data: topicsData, error: topicsError } = await supabase
+          .from("topics")
+          .select("*")
+          .order("name");
+
+        if (topicsError) throw topicsError;
+
+        // Load all prompts
+        const { data: promptsData, error: promptsError } = await supabase
+          .from("prompts")
+          .select("*")
+          .order("created_at");
+
+        if (promptsError) throw promptsError;
+
+        setTopics(topicsData || []);
+        setPrompts(promptsData || []);
+
+        // Set initial topic and question if not controlled
+        if (!controlledTopic && topicsData && topicsData.length > 0) {
+          const firstTopic = topicsData[0];
+          setSelectedTopicId(firstTopic.id);
+          
+          const firstPrompt = promptsData?.find(p => p.topic_id === firstTopic.id);
+          if (firstPrompt && !controlledQuestion) {
+            setQuestion(firstPrompt.text);
+            onQuestionChange?.(firstPrompt.text);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading topics/prompts:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   // Keep controlled values in sync if parent passes them
   React.useEffect(() => {
-    if (controlledTopic) setTopic(controlledTopic);
-  }, [controlledTopic]);
+    if (controlledTopic) {
+      const topic = topics.find(t => t.name === controlledTopic);
+      if (topic) setSelectedTopicId(topic.id);
+    }
+  }, [controlledTopic, topics]);
+  
   React.useEffect(() => {
     if (controlledQuestion) setQuestion(controlledQuestion);
   }, [controlledQuestion]);
 
-  const questionsForTopic = QUESTION_BANK[topic] ?? [];
+  const questionsForTopic = prompts.filter(p => p.topic_id === selectedTopicId);
+  const currentTopic = topics.find(t => t.id === selectedTopicId);
 
   const pickRandom = React.useCallback(() => {
-    const list = QUESTION_BANK[topic] ?? [];
+    const list = questionsForTopic;
     if (!list.length) return;
-    const others = list.filter((q) => q !== question);
-    const next = others.length ? others[Math.floor(Math.random() * others.length)] : question;
-    if (!controlledQuestion) setQuestion(next);
-    onQuestionChange?.(next);
-    onNewPrompt?.(topic, next);
-  }, [topic, question, controlledQuestion, onQuestionChange, onNewPrompt]);
+    const others = list.filter((q) => q.text !== question);
+    const next = others.length ? others[Math.floor(Math.random() * others.length)] : list[0];
+    if (!controlledQuestion) setQuestion(next.text);
+    onQuestionChange?.(next.text);
+    onNewPrompt?.(currentTopic?.name || "", next.text);
+  }, [questionsForTopic, question, currentTopic, controlledQuestion, onQuestionChange, onNewPrompt]);
 
   const nextSequential = React.useCallback(() => {
-    const list = QUESTION_BANK[topic] ?? [];
+    const list = questionsForTopic;
     if (!list.length) return;
-    const idx = Math.max(0, list.indexOf(question));
+    const idx = Math.max(0, list.findIndex(q => q.text === question));
     const next = list[(idx + 1) % list.length];
-    if (!controlledQuestion) setQuestion(next);
-    onQuestionChange?.(next);
-    onNewPrompt?.(topic, next);
-  }, [topic, question, controlledQuestion, onQuestionChange, onNewPrompt]);
+    if (!controlledQuestion) setQuestion(next.text);
+    onQuestionChange?.(next.text);
+    onNewPrompt?.(currentTopic?.name || "", next.text);
+  }, [questionsForTopic, question, currentTopic, controlledQuestion, onQuestionChange, onNewPrompt]);
 
-  const handleTopicChange = (value: string) => {
-    if (!controlledTopic) setTopic(value);
-    onTopicChange?.(value);
+  const handleTopicChange = (topicId: string) => {
+    const topic = topics.find(t => t.id === topicId);
+    if (!topic) return;
+    
+    if (!controlledTopic) setSelectedTopicId(topicId);
+    onTopicChange?.(topic.name);
+    
     // Reset question to first item of the new topic
-    const first = (QUESTION_BANK[value] ?? [])[0] ?? "";
-    if (!controlledQuestion) setQuestion(first);
-    onQuestionChange?.(first);
-    onNewPrompt?.(value, first);
+    const firstPrompt = prompts.find(p => p.topic_id === topicId);
+    if (firstPrompt) {
+      if (!controlledQuestion) setQuestion(firstPrompt.text);
+      onQuestionChange?.(firstPrompt.text);
+      onNewPrompt?.(topic.name, firstPrompt.text);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className={cn("rounded-xl border bg-card backdrop-blur p-4 sm:p-5", className)}>
+        <div className="flex items-center justify-center gap-2 py-8">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Loading questions...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("rounded-xl border bg-card backdrop-blur p-4 sm:p-5", className)}>
@@ -125,13 +178,13 @@ export function QuestionSwitcher({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-[260px_1fr] gap-3 sm:gap-4">
-          <Select value={topic} onValueChange={handleTopicChange}>
+          <Select value={selectedTopicId} onValueChange={handleTopicChange}>
             <SelectTrigger className="bg-background">
               <SelectValue placeholder="Select a topic…" />
             </SelectTrigger>
             <SelectContent>
-              {Object.keys(QUESTION_BANK).map((t) => (
-                <SelectItem key={t} value={t}>{t}</SelectItem>
+              {topics.map((t) => (
+                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -139,32 +192,36 @@ export function QuestionSwitcher({
           <div className="rounded-lg border bg-background p-3">
             <div className="flex items-start gap-2">
               <Sparkles className="mt-0.5 h-5 w-5 text-primary shrink-0" />
-              <p className="text-[15px] leading-relaxed">{question}</p>
+              <p className="text-[15px] leading-relaxed">
+                {question || "Select a topic to see questions"}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* (Optional) quick list of topic questions */}
-        <div className="flex flex-wrap gap-2 pt-1">
-          {questionsForTopic.slice(0, 6).map((q) => (
-            <button
-              key={q}
-              onClick={() => {
-                if (!controlledQuestion) setQuestion(q);
-                onQuestionChange?.(q);
-                onNewPrompt?.(topic, q);
-              }}
-              className={cn(
-                "text-left px-3 py-1.5 rounded-full border text-sm transition-colors",
-                q === question
-                  ? "bg-primary/10 border-primary text-primary"
-                  : "hover:bg-accent"
-              )}
-            >
-              {q}
-            </button>
-          ))}
-        </div>
+        {/* Quick list of topic questions */}
+        {questionsForTopic.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {questionsForTopic.slice(0, 6).map((q) => (
+              <button
+                key={q.id}
+                onClick={() => {
+                  if (!controlledQuestion) setQuestion(q.text);
+                  onQuestionChange?.(q.text);
+                  onNewPrompt?.(currentTopic?.name || "", q.text);
+                }}
+                className={cn(
+                  "text-left px-3 py-1.5 rounded-full border text-sm transition-colors",
+                  q.text === question
+                    ? "bg-primary/10 border-primary text-primary"
+                    : "hover:bg-accent"
+                )}
+              >
+                {q.text.length > 60 ? q.text.substring(0, 60) + "..." : q.text}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
