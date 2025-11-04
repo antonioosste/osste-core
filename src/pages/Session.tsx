@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Header } from "@/components/layout/Header";
+import { QuestionSwitcher } from "@/components/ui/question-switcher";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/hooks/useSession";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
@@ -596,11 +597,11 @@ export default function Session() {
       <Header isAuthenticated={true} />
       
       <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Header with current prompt */}
+        {/* Session Header */}
         <div className="mb-6">
           <Card className="border-primary/20">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between">
                 <h1 className="text-xl font-semibold text-foreground">Voice Interview Session</h1>
                 <div className="flex items-center space-x-3">
                   {getStatusBadge()}
@@ -609,11 +610,16 @@ export default function Session() {
                   </div>
                 </div>
               </div>
-              <p className="text-lg text-foreground leading-relaxed">
-                {currentPrompt}
-              </p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Question Switcher */}
+        <div className="mb-6">
+          <QuestionSwitcher
+            question={currentPrompt}
+            onQuestionChange={setCurrentPrompt}
+          />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
