@@ -17,7 +17,6 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Header } from "@/components/layout/Header";
 import { QuestionSwitcher } from "@/components/ui/question-switcher";
-import { SessionImageUploader } from "@/components/ui/session-image-uploader";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/hooks/useSession";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
@@ -622,17 +621,6 @@ export default function Session() {
             onQuestionChange={setCurrentPrompt}
           />
         </div>
-
-        {/* Image Uploader */}
-        {sessionId && (
-          <div className="mb-6">
-            <SessionImageUploader
-              sessionId={sessionId}
-              currentPrompt={currentPrompt}
-              userId={user?.id}
-            />
-          </div>
-        )}
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Recording Controls - Left/Top */}
