@@ -22,7 +22,8 @@ export type Database = {
           order_index: number | null
           overall_summary: string | null
           quotes: Json | null
-          recording_id: string
+          recording_id: string | null
+          session_id: string | null
           suggested_cover_title: string | null
           summary: string | null
           title: string | null
@@ -34,7 +35,8 @@ export type Database = {
           order_index?: number | null
           overall_summary?: string | null
           quotes?: Json | null
-          recording_id: string
+          recording_id?: string | null
+          session_id?: string | null
           suggested_cover_title?: string | null
           summary?: string | null
           title?: string | null
@@ -46,7 +48,8 @@ export type Database = {
           order_index?: number | null
           overall_summary?: string | null
           quotes?: Json | null
-          recording_id?: string
+          recording_id?: string | null
+          session_id?: string | null
           suggested_cover_title?: string | null
           summary?: string | null
           title?: string | null
@@ -57,6 +60,13 @@ export type Database = {
             columns: ["recording_id"]
             isOneToOne: false
             referencedRelation: "recordings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapters_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -147,6 +157,35 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      prompts: {
+        Row: {
+          created_at: string | null
+          id: string
+          text: string
+          topic_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          text: string
+          topic_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          text?: string
+          topic_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompts_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       questions: {
         Row: {
@@ -355,6 +394,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      topics: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       transcripts: {
         Row: {
