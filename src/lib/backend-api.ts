@@ -1,4 +1,4 @@
-const BACKEND_BASE = 'https://osste-backend-15t8u3w6i-antha-osstes-projects.vercel.app';
+const BACKEND_BASE = 'https://osste-backend-git-main-antha-osstes-projects.vercel.app';
 const MAX_RETRIES = 2;
 
 interface BackendError extends Error {
