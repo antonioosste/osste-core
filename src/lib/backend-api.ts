@@ -165,3 +165,23 @@ export async function assembleStory(token: string, sessionId: string) {
 
   return response.json();
 }
+
+export async function getFollowUpQuestions(token: string, sessionId: string) {
+  const response = await fetchWithRetry(
+    `${BACKEND_BASE}/api/ai/followups/${sessionId}`,
+    {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const error = new Error(`Follow-up questions fetch failed: ${response.statusText}`) as BackendError;
+    error.status = response.status;
+    throw error;
+  }
+
+  return response.json();
+}

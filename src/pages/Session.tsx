@@ -25,7 +25,7 @@ import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { useTurns } from "@/hooks/useTurns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { generateChapters } from "@/lib/backend-api";
+import { generateChapters, getFollowUpQuestions } from "@/lib/backend-api";
 
 type SessionStatus = "idle" | "listening" | "thinking" | "speaking" | "paused" | "error";
 type PermissionState = "granted" | "denied" | "pending" | "prompt";
@@ -355,24 +355,27 @@ export default function Session() {
         if (questions.length > 0) {
           setCurrentPrompt(questions[0]);
         }
-      } else if (mode === 'non-guided') {
-        // Generate questions using AI based on conversation history
-        const conversationHistory = turns.map(turn => ({
-          prompt: turn.prompt_text,
-          answer: turn.answer_text
-        }));
-
-        const { data, error } = await supabase.functions.invoke('suggest-questions', {
-          body: { conversationHistory }
-        });
-
-        if (error) throw error;
+      } else if (mode === 'non-guided' && sessionId) {
+        // Fetch AI-generated follow-up questions from backend
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
         
+        if (!token) {
+          throw new Error('No authentication token available');
+        }
+
+        const data = await getFollowUpQuestions(token, sessionId);
+        
+        // Backend returns: { questions: string[], active_question: string }
         const questions = data?.questions || [];
+        const activeQuestion = data?.active_question;
+        
         setSuggestedQuestions(questions);
         
-        // Set first question as current
-        if (questions.length > 0) {
+        // Set active question as current prompt
+        if (activeQuestion) {
+          setCurrentPrompt(activeQuestion);
+        } else if (questions.length > 0) {
           setCurrentPrompt(questions[0]);
         }
       }
@@ -488,6 +491,11 @@ export default function Session() {
         } else {
           console.warn('⚠️ No recording ID available for TTS resolution');
         }
+      }
+      
+      // Reload follow-up questions for non-guided mode
+      if (sessionMode === 'non-guided' && sessionId) {
+        await loadQuestions('non-guided');
       }
       
       setStatus("idle");

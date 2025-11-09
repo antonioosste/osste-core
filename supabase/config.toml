@@ -8,6 +8,3 @@ verify_jwt = false
 
 [functions.seed-questions]
 verify_jwt = false
-
-[functions.suggest-questions]
-verify_jwt = false
