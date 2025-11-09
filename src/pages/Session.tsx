@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Header } from "@/components/layout/Header";
 import { QuestionSwitcher } from "@/components/ui/question-switcher";
 import { SessionImageUploader } from "@/components/ui/session-image-uploader";
+import { SessionModeSelector } from "@/components/session/SessionModeSelector";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/hooks/useSession";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
@@ -65,6 +66,11 @@ export default function Session() {
   const [sessionTime, setSessionTime] = useState(0);
   const [currentPrompt, setCurrentPrompt] = useState("Tell me about your earliest childhood memory. What stands out most vividly?");
   
+  // Session mode state
+  const [showModeSelector, setShowModeSelector] = useState(!existingSessionId);
+  const [sessionMode, setSessionMode] = useState<'guided' | 'non-guided'>('guided');
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
+  
   // Permission and error states
   const [micPermission, setMicPermission] = useState<PermissionState>("prompt");
   const [hasNetworkError, setHasNetworkError] = useState(false);
@@ -96,6 +102,22 @@ export default function Session() {
     const loadExistingSession = async () => {
       if (existingSessionId && turns.length > 0) {
         console.log('📥 Loading existing session:', existingSessionId);
+        
+        // Fetch session data to get mode
+        const { data: sessionData } = await supabase
+          .from('sessions')
+          .select('mode, themes')
+          .eq('id', existingSessionId)
+          .single();
+        
+        if (sessionData) {
+          const mode = sessionData.mode as 'guided' | 'non-guided' | null;
+          setSessionMode(mode === 'non-guided' ? 'non-guided' : 'guided');
+          if (sessionData.themes && sessionData.themes.length > 0) {
+            setSelectedCategory(sessionData.themes[0]);
+          }
+          setShowModeSelector(false);
+        }
         
         // Load turns into messages
         const loadedMessages: Message[] = [{
@@ -284,6 +306,25 @@ export default function Session() {
     });
   };
 
+  const handleModeSelect = async (mode: 'guided' | 'non-guided', category?: string) => {
+    setSessionMode(mode);
+    setSelectedCategory(category);
+    setShowModeSelector(false);
+
+    // Start session in database with selected mode
+    try {
+      await startSessionDb({
+        persona: 'friendly',
+        themes: category ? [category] : [],
+        language: 'en',
+        mode: mode,
+        category: category
+      });
+    } catch (error) {
+      console.error('Error starting session:', error);
+    }
+  };
+
   const startRecording = async () => {
     if (micPermission !== "granted") {
       await requestMicPermission();
@@ -292,11 +333,13 @@ export default function Session() {
 
     // Start session in database if not already started
     if (!sessionId) {
+      // This shouldn't happen if mode selector works correctly
       try {
         await startSessionDb({
           persona: 'friendly',
-          themes: ['family', 'memories'],
-          language: 'en'
+          themes: selectedCategory ? [selectedCategory] : [],
+          language: 'en',
+          mode: sessionMode
         });
       } catch (error) {
         console.error('Error starting session:', error);
@@ -610,6 +653,12 @@ export default function Session() {
     <div className="min-h-screen bg-background">
       <Header isAuthenticated={true} />
       
+      {/* Session Mode Selector Dialog */}
+      <SessionModeSelector 
+        open={showModeSelector} 
+        onSelect={handleModeSelect}
+      />
+      
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Session Header */}
         <div className="mb-6">
@@ -628,13 +677,16 @@ export default function Session() {
           </Card>
         </div>
 
-        {/* Question Switcher */}
-        <div className="mb-6">
-          <QuestionSwitcher
-            question={currentPrompt}
-            onQuestionChange={setCurrentPrompt}
-          />
-        </div>
+        {/* Question Switcher - Only show in guided mode */}
+        {sessionMode === 'guided' && (
+          <div className="mb-6">
+            <QuestionSwitcher
+              question={currentPrompt}
+              onQuestionChange={setCurrentPrompt}
+              topic={selectedCategory}
+            />
+          </div>
+        )}
 
         {/* Image Uploader */}
         {sessionId && (

@@ -7,6 +7,8 @@ interface SessionParams {
   persona?: string;
   themes?: string[];
   language?: string;
+  mode?: 'guided' | 'non-guided';
+  category?: string;
 }
 
 export function useSession(initialSessionId?: string | null) {
@@ -50,7 +52,9 @@ export function useSession(initialSessionId?: string | null) {
             body: JSON.stringify({
               persona: params.persona || 'friendly',
               themes: params.themes || [],
-              language: params.language || 'en'
+              language: params.language || 'en',
+              mode: params.mode || 'guided',
+              category: params.category
             })
           });
 
@@ -76,6 +80,7 @@ export function useSession(initialSessionId?: string | null) {
           persona: params.persona || 'friendly',
           themes: params.themes || [],
           language: params.language || 'en',
+          mode: params.mode || 'guided',
           status: 'active',
           started_at: new Date().toISOString()
         })
