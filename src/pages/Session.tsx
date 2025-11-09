@@ -70,6 +70,8 @@ export default function Session() {
   const [showModeSelector, setShowModeSelector] = useState(!existingSessionId);
   const [sessionMode, setSessionMode] = useState<'guided' | 'non-guided'>('guided');
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   
   // Permission and error states
   const [micPermission, setMicPermission] = useState<PermissionState>("prompt");
@@ -112,11 +114,18 @@ export default function Session() {
         
         if (sessionData) {
           const mode = sessionData.mode as 'guided' | 'non-guided' | null;
-          setSessionMode(mode === 'non-guided' ? 'non-guided' : 'guided');
+          const loadedMode = mode === 'non-guided' ? 'non-guided' : 'guided';
+          setSessionMode(loadedMode);
+          
+          let category: string | undefined;
           if (sessionData.themes && sessionData.themes.length > 0) {
-            setSelectedCategory(sessionData.themes[0]);
+            category = sessionData.themes[0];
+            setSelectedCategory(category);
           }
           setShowModeSelector(false);
+          
+          // Load questions for the session mode
+          await loadQuestions(loadedMode, category);
         }
         
         // Load turns into messages
@@ -320,8 +329,62 @@ export default function Session() {
         mode: mode,
         category: category
       });
+      
+      // Load questions based on mode
+      await loadQuestions(mode, category);
     } catch (error) {
       console.error('Error starting session:', error);
+    }
+  };
+
+  const loadQuestions = async (mode: 'guided' | 'non-guided', category?: string) => {
+    setIsLoadingQuestions(true);
+    try {
+      if (mode === 'guided' && category) {
+        // Fetch questions from database based on category
+        const { data, error } = await supabase.functions.invoke('get-questions', {
+          body: { category, limit: 10 }
+        });
+
+        if (error) throw error;
+        
+        const questions = data?.map((q: any) => q.question) || [];
+        setSuggestedQuestions(questions);
+        
+        // Set first question as current
+        if (questions.length > 0) {
+          setCurrentPrompt(questions[0]);
+        }
+      } else if (mode === 'non-guided') {
+        // Generate questions using AI based on conversation history
+        const conversationHistory = turns.map(turn => ({
+          prompt: turn.prompt_text,
+          answer: turn.answer_text
+        }));
+
+        const { data, error } = await supabase.functions.invoke('suggest-questions', {
+          body: { conversationHistory }
+        });
+
+        if (error) throw error;
+        
+        const questions = data?.questions || [];
+        setSuggestedQuestions(questions);
+        
+        // Set first question as current
+        if (questions.length > 0) {
+          setCurrentPrompt(questions[0]);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading questions:', error);
+      toast({
+        title: "Failed to load questions",
+        description: error instanceof Error ? error.message : "Could not load questions",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingQuestions(false);
     }
   };
 
@@ -677,16 +740,17 @@ export default function Session() {
           </Card>
         </div>
 
-        {/* Question Switcher - Only show in guided mode */}
-        {sessionMode === 'guided' && (
-          <div className="mb-6">
-            <QuestionSwitcher
-              question={currentPrompt}
-              onQuestionChange={setCurrentPrompt}
-              topic={selectedCategory}
-            />
-          </div>
-        )}
+        {/* Question Switcher - Always show, but configure based on mode */}
+        <div className="mb-6">
+          <QuestionSwitcher
+            question={currentPrompt}
+            onQuestionChange={setCurrentPrompt}
+            topic={selectedCategory}
+            hideTopicSelector={true}
+            questions={suggestedQuestions.length > 0 ? suggestedQuestions : undefined}
+            isLoadingQuestions={isLoadingQuestions}
+          />
+        </div>
 
         {/* Image Uploader */}
         {sessionId && (

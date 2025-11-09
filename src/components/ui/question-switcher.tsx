@@ -45,6 +45,12 @@ export type QuestionSwitcherProps = {
   onQuestionChange?: (question: string) => void;
   /** Called whenever a new question is chosen (good place to reset timers) */
   onNewPrompt?: (topic: string, question: string) => void;
+  /** Hide the topic selector (when topic is pre-selected) */
+  hideTopicSelector?: boolean;
+  /** Custom questions list to use instead of QUESTION_BANK */
+  questions?: string[];
+  /** Loading state for questions */
+  isLoadingQuestions?: boolean;
 };
 
 export function QuestionSwitcher({
@@ -54,12 +60,15 @@ export function QuestionSwitcher({
   question: controlledQuestion,
   onQuestionChange,
   onNewPrompt,
+  hideTopicSelector = false,
+  questions: customQuestions,
+  isLoadingQuestions = false,
 }: QuestionSwitcherProps) {
   // Uncontrolled fallbacks
   const initialTopic = controlledTopic ?? Object.keys(QUESTION_BANK)[0];
   const [topic, setTopic] = React.useState<string>(initialTopic);
   const [question, setQuestion] = React.useState<string>(
-    controlledQuestion ?? QUESTION_BANK[initialTopic][0]
+    controlledQuestion ?? (customQuestions?.[0] || QUESTION_BANK[initialTopic]?.[0] || "")
   );
 
   // Keep controlled values in sync if parent passes them
@@ -70,27 +79,28 @@ export function QuestionSwitcher({
     if (controlledQuestion) setQuestion(controlledQuestion);
   }, [controlledQuestion]);
 
-  const questionsForTopic = QUESTION_BANK[topic] ?? [];
+  // Use custom questions if provided, otherwise fallback to QUESTION_BANK
+  const questionsForTopic = customQuestions ?? QUESTION_BANK[topic] ?? [];
 
   const pickRandom = React.useCallback(() => {
-    const list = QUESTION_BANK[topic] ?? [];
+    const list = questionsForTopic;
     if (!list.length) return;
     const others = list.filter((q) => q !== question);
     const next = others.length ? others[Math.floor(Math.random() * others.length)] : question;
     if (!controlledQuestion) setQuestion(next);
     onQuestionChange?.(next);
     onNewPrompt?.(topic, next);
-  }, [topic, question, controlledQuestion, onQuestionChange, onNewPrompt]);
+  }, [questionsForTopic, question, controlledQuestion, onQuestionChange, onNewPrompt, topic]);
 
   const nextSequential = React.useCallback(() => {
-    const list = QUESTION_BANK[topic] ?? [];
+    const list = questionsForTopic;
     if (!list.length) return;
     const idx = Math.max(0, list.indexOf(question));
     const next = list[(idx + 1) % list.length];
     if (!controlledQuestion) setQuestion(next);
     onQuestionChange?.(next);
     onNewPrompt?.(topic, next);
-  }, [topic, question, controlledQuestion, onQuestionChange, onNewPrompt]);
+  }, [questionsForTopic, question, controlledQuestion, onQuestionChange, onNewPrompt, topic]);
 
   const handleTopicChange = (value: string) => {
     if (!controlledTopic) setTopic(value);
@@ -124,23 +134,35 @@ export function QuestionSwitcher({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-[260px_1fr] gap-3 sm:gap-4">
-          <Select value={topic} onValueChange={handleTopicChange}>
-            <SelectTrigger className="bg-background">
-              <SelectValue placeholder="Select a topic…" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.keys(QUESTION_BANK).map((t) => (
-                <SelectItem key={t} value={t}>{t}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className={cn(
+          "grid grid-cols-1 gap-3 sm:gap-4",
+          hideTopicSelector ? "" : "sm:grid-cols-[260px_1fr]"
+        )}>
+          {!hideTopicSelector && (
+            <Select value={topic} onValueChange={handleTopicChange}>
+              <SelectTrigger className="bg-background">
+                <SelectValue placeholder="Select a topic…" />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                {Object.keys(QUESTION_BANK).map((t) => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
 
           <div className="rounded-lg border bg-background p-3">
-            <div className="flex items-start gap-2">
-              <Sparkles className="mt-0.5 h-5 w-5 text-primary shrink-0" />
-              <p className="text-[15px] leading-relaxed">{question}</p>
-            </div>
+            {isLoadingQuestions ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Sparkles className="h-5 w-5 animate-pulse" />
+                <p className="text-[15px]">Loading questions...</p>
+              </div>
+            ) : (
+              <div className="flex items-start gap-2">
+                <Sparkles className="mt-0.5 h-5 w-5 text-primary shrink-0" />
+                <p className="text-[15px] leading-relaxed">{question}</p>
+              </div>
+            )}
           </div>
         </div>
 
