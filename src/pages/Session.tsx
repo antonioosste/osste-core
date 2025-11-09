@@ -502,6 +502,19 @@ export default function Session() {
     }
   };
 
+  const cancelAndExit = () => {
+    if (isRecording) {
+      cancelRecording();
+    }
+    
+    toast({
+      title: "Session cancelled",
+      description: "Exiting without saving."
+    });
+    
+    navigate("/dashboard");
+  };
+
   const saveAndExit = async () => {
     if (isRecording) {
       cancelRecording();
@@ -701,6 +714,15 @@ export default function Session() {
                         Cancel Recording
                       </Button>
                     )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={cancelAndExit}
+                      disabled={isGeneratingChapters}
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Cancel & Exit
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
