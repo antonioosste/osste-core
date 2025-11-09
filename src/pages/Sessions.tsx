@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Trash2, Edit, Calendar, Clock, BookOpen } from "lucide-react";
+import { Plus, Trash2, Edit, Calendar, Clock, BookOpen, Compass, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -128,6 +128,7 @@ export default function Sessions() {
                   <TableRow>
                     <TableHead>Title</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Mode</TableHead>
                     <TableHead>Duration</TableHead>
                     <TableHead>Started</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -143,6 +144,21 @@ export default function Sessions() {
                         <Badge variant={session.status === 'completed' ? 'default' : 'secondary'}>
                           {session.status || 'active'}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1.5">
+                          {(session as any).mode === 'non-guided' ? (
+                            <>
+                              <Sparkles className="w-4 h-4 text-primary" />
+                              <span className="text-sm">Non-Guided</span>
+                            </>
+                          ) : (
+                            <>
+                              <Compass className="w-4 h-4 text-muted-foreground" />
+                              <span className="text-sm">Guided</span>
+                            </>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         <div className="flex items-center">
