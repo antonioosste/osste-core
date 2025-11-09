@@ -445,8 +445,9 @@ export default function Session() {
       
       // Extract data from backend response
       const transcriptionText = result.transcript?.text || result.turn?.answer_text;
-      const followUpQuestion = result.follow_up?.question;
-      const recordingIdForTts = result.turn?.recording_id;
+      const suggestions = result.follow_up?.suggestions || [];
+      const ttsUrl = result.follow_up?.tts_url;
+      const firstSuggestion = suggestions[0];
       
       if (transcriptionText) {
         // Update user message with transcription and attach actual storage path
@@ -464,8 +465,8 @@ export default function Session() {
         ));
       }
       
-      // Add AI message and start TTS resolution
-      if (followUpQuestion) {
+      // Add AI message with TTS URL
+      if (firstSuggestion) {
         const aiMessageId = `ai-${Date.now()}`;
         
         setMessages((prev) => [
@@ -473,29 +474,27 @@ export default function Session() {
           {
             id: aiMessageId,
             type: "ai",
-            content: followUpQuestion,
+            content: firstSuggestion,
             timestamp: new Date(),
-            ttsUrl: null,
-            recordingId: recordingIdForTts,
+            ttsUrl: ttsUrl || null,
             isResolvingTts: false,
           },
         ]);
 
-        // Update prompt with AI's follow-up question
-        setCurrentPrompt(followUpQuestion);
+        // Update prompt with first suggestion
+        setCurrentPrompt(firstSuggestion);
 
-        // Start resolving TTS in background with autoplay
-        if (recordingIdForTts) {
-          console.log('🎬 Starting background TTS resolution for AI message');
-          resolveTtsForMessage(aiMessageId, recordingIdForTts, { autoplay: true });
-        } else {
-          console.warn('⚠️ No recording ID available for TTS resolution');
+        // Auto-play TTS if available
+        if (ttsUrl) {
+          console.log('🔊 Playing TTS audio from follow_up.tts_url');
+          playAudio(aiMessageId, ttsUrl);
         }
       }
       
-      // Reload follow-up questions for non-guided mode
-      if (sessionMode === 'non-guided' && sessionId) {
-        await loadQuestions('non-guided');
+      // Update suggested questions in non-guided mode
+      if (sessionMode === 'non-guided' && suggestions.length > 0) {
+        setSuggestedQuestions(suggestions);
+        setIsLoadingQuestions(false);
       }
       
       setStatus("idle");
