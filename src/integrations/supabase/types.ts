@@ -135,7 +135,6 @@ export type Database = {
           id: string
           name: string | null
           plan: string | null
-          role: Database["public"]["Enums"]["user_role_type"] | null
           updated_at: string | null
         }
         Insert: {
@@ -144,7 +143,6 @@ export type Database = {
           id: string
           name?: string | null
           plan?: string | null
-          role?: Database["public"]["Enums"]["user_role_type"] | null
           updated_at?: string | null
         }
         Update: {
@@ -153,7 +151,6 @@ export type Database = {
           id?: string
           name?: string | null
           plan?: string | null
-          role?: Database["public"]["Enums"]["user_role_type"] | null
           updated_at?: string | null
         }
         Relationships: []
@@ -269,6 +266,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      session_media: {
+        Row: {
+          chapter_id: string | null
+          created_at: string
+          file_name: string
+          id: string
+          mime_type: string
+          prompt: string | null
+          session_id: string
+          size_bytes: number
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          chapter_id?: string | null
+          created_at?: string
+          file_name: string
+          id?: string
+          mime_type: string
+          prompt?: string | null
+          session_id: string
+          size_bytes: number
+          url: string
+          user_id?: string | null
+        }
+        Update: {
+          chapter_id?: string | null
+          created_at?: string
+          file_name?: string
+          id?: string
+          mime_type?: string
+          prompt?: string | null
+          session_id?: string
+          size_bytes?: number
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       sessions: {
         Row: {
