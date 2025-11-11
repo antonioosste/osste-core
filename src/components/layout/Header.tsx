@@ -40,12 +40,15 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
       <div className="max-w-screen-xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="shrink-0">
+          <Link to="/" className="shrink-0 inline-flex items-center gap-3">
             <img 
-              src="/brand/osste-logo-main.png" 
+              src="/logo-v2.png" 
               alt="OSSTE Logo" 
-              className="h-12 md:h-14 w-auto block"
+              className="block h-12 md:h-14 w-auto shrink-0"
             />
+            <span className="text-[22px] md:text-[26px] font-semibold tracking-wide text-foreground">
+              OSSTE
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
