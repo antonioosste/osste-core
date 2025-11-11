@@ -36,15 +36,15 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
                      location.pathname.startsWith("/settings");
 
   return (
-    <header className="w-full border-b bg-background/80 backdrop-blur-sm">
-      <div className="max-w-screen-xl mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
+    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="h-20 sm:h-24 lg:h-28 flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="shrink-0">
+          <Link to="/" className="inline-flex items-center shrink-0">
             <img 
               src="/brand/osste-logo-main.png" 
               alt="OSSTE Logo" 
-              className="h-12 md:h-14 w-auto block"
+              className="h-10 w-auto sm:h-12 lg:h-14"
             />
           </Link>
 
