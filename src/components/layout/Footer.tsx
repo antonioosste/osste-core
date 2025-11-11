@@ -26,11 +26,12 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
           {/* Brand */}
           <div className="col-span-1">
-            <Link to="/" className="flex items-center space-x-2 mb-4">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary">
-                <Mic className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold text-foreground">OSSTE</span>
+            <Link to="/" className="flex items-center mb-4">
+              <img 
+                src="/brand/osste-logo-main.png" 
+                alt="OSSTE" 
+                className="h-10 w-auto"
+              />
             </Link>
             <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
               Capture and preserve your stories through voice interviews. 
