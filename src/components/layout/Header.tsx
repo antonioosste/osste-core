@@ -42,9 +42,9 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
           {/* Logo */}
           <Link to="/" className="shrink-0">
             <img
-              src="/logo-v2.png?v=4"
+              src="/logo-v3.png?v=5"
               alt="OSSTE"
-              className="block h-[64px] md:h-[72px] w-auto shrink-0 outline outline-2 outline-red-500"
+              className="block h-[64px] md:h-[72px] w-auto shrink-0"
             />
           </Link>
 
