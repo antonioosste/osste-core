@@ -41,7 +41,11 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="shrink-0">
-            <img src="/logo-v2.png" alt="OSSTE" className="block h-12 md:h-14 w-auto shrink-0" />
+            <img
+              src="/logo-v2.png?v=4"
+              alt="OSSTE"
+              className="block h-[64px] md:h-[72px] w-auto shrink-0 outline outline-2 outline-red-500"
+            />
           </Link>
 
           {/* Desktop Navigation */}
