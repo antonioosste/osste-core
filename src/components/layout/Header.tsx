@@ -38,13 +38,13 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
   return (
     <header className="w-full border-b bg-background/80 backdrop-blur-sm">
       <div className="max-w-screen-xl mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20 sm:h-24 md:h-28">
           {/* Logo */}
           <Link to="/" className="shrink-0">
             <img 
               src="/brand/osste-logo-main.png" 
               alt="OSSTE Logo" 
-              className="h-12 md:h-14 w-auto block"
+              className="h-16 sm:h-20 md:h-24 w-auto block"
             />
           </Link>
 
