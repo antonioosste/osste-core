@@ -8,6 +8,7 @@ import { BookOpen, Mic } from "lucide-react";
 interface SessionModeSelectorProps {
   open: boolean;
   onSelect: (mode: 'guided' | 'non-guided', category?: string) => void;
+  onClose: () => void;
 }
 
 const CATEGORIES = [
@@ -21,7 +22,7 @@ const CATEGORIES = [
   "Dreams & Aspirations"
 ];
 
-export function SessionModeSelector({ open, onSelect }: SessionModeSelectorProps) {
+export function SessionModeSelector({ open, onSelect, onClose }: SessionModeSelectorProps) {
   const [selectedMode, setSelectedMode] = useState<'guided' | 'non-guided' | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
 
@@ -36,7 +37,7 @@ export function SessionModeSelector({ open, onSelect }: SessionModeSelectorProps
   const canContinue = selectedMode === 'non-guided' || (selectedMode === 'guided' && selectedCategory);
 
   return (
-    <Dialog open={open}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-2xl">Choose Your Recording Path</DialogTitle>
