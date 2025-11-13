@@ -4,6 +4,7 @@ import { ArrowRight, Check, Mail, Instagram, Twitter, Linkedin, ChevronDown } fr
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { GridBackground } from "@/components/ui/grid-background";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -82,17 +83,9 @@ export function OssteWaitlist() {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-[hsl(44,56%,94%)] via-[hsl(39,45%,88%)] to-[hsl(35,50%,85%)] overflow-hidden">
-      {/* Animated grid background */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            linear-gradient(to right, hsl(39, 58%, 60%) 1px, transparent 1px),
-            linear-gradient(to bottom, hsl(39, 58%, 60%) 1px, transparent 1px)
-          `,
-          backgroundSize: '60px 60px'
-        }}></div>
-      </div>
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Grid background */}
+      <GridBackground />
 
       {/* Floating shapes */}
       <motion.div
