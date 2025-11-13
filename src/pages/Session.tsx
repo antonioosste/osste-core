@@ -445,7 +445,11 @@ export default function Session() {
       
       // Extract data from backend response
       const transcriptionText = result.transcript?.text || result.turn?.answer_text;
-      const suggestions = result.follow_up?.suggestions || [];
+      
+      // Handle both response formats from AI service:
+      // - { questions: [...] } when prompt_text is provided
+      // - { topic: "...", follow_up_suggestions: [...] } when prompt_text is NOT provided
+      const suggestions = result.follow_up?.questions || result.follow_up?.follow_up_suggestions || result.follow_up?.suggestions || [];
       const ttsUrl = result.follow_up?.tts_url;
       const firstSuggestion = suggestions[0];
       
