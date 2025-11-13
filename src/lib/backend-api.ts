@@ -1,4 +1,4 @@
-const BACKEND_BASE = import.meta.env.VITE_BACKEND_URL || 'https://osste-backend-git-main-antha-osstes-projects.vercel.app';
+const BACKEND_BASE = 'https://osste-backend-git-main-antha-osstes-projects.vercel.app';
 const MAX_RETRIES = 2;
 
 interface BackendError extends Error {
