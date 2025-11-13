@@ -41,6 +41,7 @@ interface Message {
   recordingId?: string;
   turnId?: string;
   isResolvingTts?: boolean;
+  suggestions?: string[];
 }
 
 export default function Session() {
@@ -469,7 +470,7 @@ export default function Session() {
         ));
       }
       
-      // Add AI message with TTS URL
+      // Add AI message with TTS URL and inline suggestions
       if (firstSuggestion) {
         const aiMessageId = `ai-${Date.now()}`;
         
@@ -483,11 +484,15 @@ export default function Session() {
             ttsUrl: ttsUrl || null,
             isResolvingTts: !ttsUrl,
             recordingId: result.recording_id,
+            suggestions: suggestions.length > 0 ? suggestions : undefined
           },
         ]);
 
         // Update prompt with first suggestion
         setCurrentPrompt(firstSuggestion);
+        
+        // Also store in QuestionSwitcher for manual selection
+        setSuggestedQuestions(suggestions);
 
         // Auto-play TTS if available, otherwise resolve it
         if (ttsUrl) {
@@ -497,12 +502,6 @@ export default function Session() {
           console.log('🔄 TTS URL not ready, resolving from database...');
           resolveTtsForMessage(aiMessageId, result.recording_id, { autoplay: true });
         }
-      }
-      
-      // Update suggested questions in non-guided mode
-      if (sessionMode === 'non-guided' && suggestions.length > 0) {
-        setSuggestedQuestions(suggestions);
-        setIsLoadingQuestions(false);
       }
       
       setStatus("idle");
@@ -738,99 +737,85 @@ export default function Session() {
         onClose={() => setShowModeSelector(false)}
       />
       
-      <div className="flex-1 container mx-auto px-4 py-4 max-w-7xl flex flex-col gap-4">
-        {/* Compact Session Header */}
-        <div className="flex items-center justify-between bg-card border border-border rounded-lg px-4 py-3">
-          <div className="flex items-center gap-4">
-            <h1 className="text-lg font-semibold text-foreground">Voice Interview</h1>
-            {getStatusBadge()}
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">{formatTime(sessionTime)}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={cancelAndExit}
-              disabled={isGeneratingChapters}
-            >
-              <X className="w-4 h-4 mr-1" />
-              Cancel
-            </Button>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={saveAndExit}
-              disabled={isGeneratingChapters}
-            >
-              {isGeneratingChapters ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 mr-1" />
-                  Save & Exit
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-
-        {/* Main Content Area - Single Column on Mobile, Two Column on Desktop */}
-        <div className="flex-1 grid lg:grid-cols-2 gap-4 min-h-0">
-          {/* Left Column: Recording + Suggestions */}
-          <div className="flex flex-col gap-4 min-h-0">
-            {/* Question Switcher - Compact */}
-            <QuestionSwitcher
-              question={currentPrompt}
-              onQuestionChange={setCurrentPrompt}
-              topic={selectedCategory}
-              hideTopicSelector={true}
-              questions={suggestedQuestions.length > 0 ? suggestedQuestions : undefined}
-              isLoadingQuestions={isLoadingQuestions}
-            />
-
-            {/* Image Uploader - Compact */}
-            {sessionId && (
-              <SessionImageUploader
-                sessionId={sessionId}
-                currentPrompt={currentPrompt}
-                userId={user?.id}
-              />
-            )}
-
-            {/* Recording Controls - Compact */}
-            <Card className="flex-shrink-0">
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center space-y-4">
-                  {/* Microphone Button - Smaller */}
-                  <div className="relative">
+      {/* Single Column Scrollable Layout */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="container mx-auto px-4 py-4 max-w-4xl space-y-4">
+          {/* Compact Sticky Header */}
+          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pb-2">
+            <Card className="border-primary/20">
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-base font-semibold text-foreground">Voice Interview</h1>
+                    {getStatusBadge()}
+                    <span className="text-sm text-muted-foreground">{formatTime(sessionTime)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <Button
-                      size="lg"
-                      variant={isRecording ? "destructive" : "default"}
-                      className={`w-20 h-20 rounded-full ${isRecording ? 'animate-pulse' : ''}`}
-                      onClick={isRecording ? handleStopRecording : startRecording}
-                      disabled={micPermission === "denied" || hasNetworkError || isProcessing}
+                      variant="outline"
+                      size="sm"
+                      onClick={cancelAndExit}
+                      disabled={isGeneratingChapters}
                     >
-                      {isProcessing ? (
-                        <Loader2 className="w-7 h-7 animate-spin" />
-                      ) : isRecording ? (
-                        <Square className="w-7 h-7" />
+                      <X className="w-3 h-3 mr-1" />
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={saveAndExit}
+                      disabled={isGeneratingChapters}
+                    >
+                      {isGeneratingChapters ? (
+                        <>
+                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                          Saving...
+                        </>
                       ) : (
-                        <Mic className="w-7 h-7" />
+                        <>
+                          <Save className="w-3 h-3 mr-1" />
+                          Save & Exit
+                        </>
                       )}
                     </Button>
-                    {micPermission === "denied" && (
-                      <div className="absolute -top-1 -right-1">
-                        <div className="w-5 h-5 bg-destructive rounded-full flex items-center justify-center">
-                          <MicOff className="w-3 h-3 text-destructive-foreground" />
-                        </div>
-                      </div>
-                    )}
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-                  {/* Waveform Visualization - Compact */}
+          {/* Recording Controls - Collapsible when not in use */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center space-y-4">
+                {/* Microphone Button */}
+                <div className="relative">
+                  <Button
+                    size="lg"
+                    variant={isRecording ? "destructive" : "default"}
+                    className={`w-20 h-20 rounded-full ${isRecording ? 'animate-pulse' : ''}`}
+                    onClick={isRecording ? handleStopRecording : startRecording}
+                    disabled={micPermission === "denied" || hasNetworkError || isProcessing}
+                  >
+                    {isProcessing ? (
+                      <Loader2 className="w-7 h-7 animate-spin" />
+                    ) : isRecording ? (
+                      <Square className="w-7 h-7" />
+                    ) : (
+                      <Mic className="w-7 h-7" />
+                    )}
+                  </Button>
+                  {micPermission === "denied" && (
+                    <div className="absolute -top-1 -right-1">
+                      <div className="w-5 h-5 bg-destructive rounded-full flex items-center justify-center">
+                        <MicOff className="w-3 h-3 text-destructive-foreground" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Waveform - Only show when recording */}
+                {isRecording && (
                   <div className="flex items-center justify-center space-x-1 h-12">
                     {waveformData.map((height, index) => (
                       <div
@@ -843,9 +828,11 @@ export default function Session() {
                       />
                     ))}
                   </div>
+                )}
 
-                  {/* Cancel Recording Button */}
-                  {isRecording && (
+                {/* Recording Controls */}
+                {isRecording && (
+                  <div className="flex items-center gap-3">
                     <Button
                       variant="outline"
                       size="sm"
@@ -862,113 +849,188 @@ export default function Session() {
                       <X className="w-4 h-4 mr-2" />
                       Cancel Recording
                     </Button>
-                  )}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Error States */}
+          {hasNetworkError && (
+            <Card className="border-destructive/50">
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-3">
+                  <WifiOff className="w-5 h-5 text-destructive" />
+                  <div className="flex-1">
+                    <h3 className="font-medium text-sm text-foreground">Connection Lost</h3>
+                    <p className="text-xs text-muted-foreground">Unable to connect to the server.</p>
+                  </div>
+                  <Button onClick={retryConnection} size="sm">Retry</Button>
                 </div>
               </CardContent>
             </Card>
+          )}
 
-            {/* Error States */}
-            {hasNetworkError && (
-              <Card className="border-destructive/50 flex-shrink-0">
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-3">
-                    <WifiOff className="w-5 h-5 text-destructive" />
-                    <div className="flex-1">
-                      <h3 className="font-medium text-sm text-foreground">Connection Lost</h3>
-                      <p className="text-xs text-muted-foreground">
-                        Unable to connect to the server.
-                      </p>
+          {/* Question Switcher - Collapsible */}
+          {suggestedQuestions.length > 0 && (
+            <details className="group" open>
+              <summary className="cursor-pointer list-none">
+                <Card className="hover:border-primary/40 transition-colors">
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-foreground">Browse All Questions</span>
+                      <span className="text-xs text-muted-foreground group-open:rotate-180 transition-transform">▼</span>
                     </div>
-                    <Button onClick={retryConnection} size="sm">
-                      Retry
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                  </CardContent>
+                </Card>
+              </summary>
+              <div className="mt-2">
+                <QuestionSwitcher
+                  question={currentPrompt}
+                  onQuestionChange={setCurrentPrompt}
+                  topic={selectedCategory}
+                  hideTopicSelector={true}
+                  questions={suggestedQuestions}
+                  isLoadingQuestions={isLoadingQuestions}
+                />
+              </div>
+            </details>
+          )}
 
-          {/* Right Column: Conversation Thread - Full Height */}
-          <Card className="flex flex-col min-h-0">
-            <CardHeader className="flex-shrink-0 border-b border-border">
-              <CardTitle className="text-lg">Conversation</CardTitle>
+          {/* Image Uploader - Collapsible */}
+          {sessionId && (
+            <details className="group">
+              <summary className="cursor-pointer list-none">
+                <Card className="hover:border-primary/40 transition-colors">
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-foreground">Add Photos/Context</span>
+                      <span className="text-xs text-muted-foreground group-open:rotate-180 transition-transform">▼</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </summary>
+              <div className="mt-2">
+                <SessionImageUploader
+                  sessionId={sessionId}
+                  currentPrompt={currentPrompt}
+                  userId={user?.id}
+                />
+              </div>
+            </details>
+          )}
+
+          {/* Conversation Thread - Main Focus */}
+          <Card>
+            <CardHeader className="border-b border-border pb-3">
+              <CardTitle className="text-base">Conversation</CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 p-4 overflow-y-auto min-h-0">
-              <div className="space-y-3">
+            <CardContent className="p-4">
+              <div className="space-y-6">
                 {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
-                  >
-                    <div className={`flex items-start gap-2 max-w-[85%] ${message.type === "user" ? "flex-row-reverse" : ""}`}>
-                      <div
-                        className={`rounded-lg p-3 ${
-                          message.type === "user"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-foreground"
-                        }`}
-                      >
-                        <p className="text-sm leading-relaxed">{message.content}</p>
-                        <div className="text-xs opacity-70 mt-1">
-                          {message.timestamp.toLocaleTimeString([], { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          })}
+                  <div key={message.id} className="space-y-3">
+                    {/* Message Bubble */}
+                    <div className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
+                      <div className={`flex items-start gap-2 max-w-[85%] ${message.type === "user" ? "flex-row-reverse" : ""}`}>
+                        <div
+                          className={`rounded-lg p-3 ${
+                            message.type === "user"
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-foreground"
+                          }`}
+                        >
+                          <p className="text-sm leading-relaxed">{message.content}</p>
+                          <div className="text-xs opacity-70 mt-1">
+                            {message.timestamp.toLocaleTimeString([], { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
+                          </div>
+                        </div>
+                        
+                        {/* Audio Playback Buttons */}
+                        {message.type === "ai" && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 flex-shrink-0"
+                            onClick={() => {
+                              if (message.ttsUrl) {
+                                playAudio(message.id, message.ttsUrl);
+                              } else if (message.recordingId && !message.isResolvingTts) {
+                                toast({
+                                  title: "Loading audio",
+                                  description: "We'll play it as soon as it's ready.",
+                                });
+                                resolveTtsForMessage(message.id, message.recordingId, { autoplay: true });
+                              }
+                            }}
+                            disabled={playingAudioId === message.id || message.isResolvingTts}
+                            title={
+                              message.isResolvingTts 
+                                ? "Audio is generating..." 
+                                : message.ttsUrl 
+                                ? "Play AI response audio" 
+                                : "Load and play audio"
+                            }
+                          >
+                            {playingAudioId === message.id || message.isResolvingTts ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Volume2 className="h-4 w-4 text-primary" />
+                            )}
+                          </Button>
+                        )}
+
+                        {message.type === "user" && message.recordingPath && !message.isPartial && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 flex-shrink-0"
+                            onClick={() => playRecording(message.id, message.recordingPath!)}
+                            disabled={playingAudioId === message.id}
+                          >
+                            {playingAudioId === message.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Volume2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* AI Suggestions - Inline after AI messages */}
+                    {message.type === "ai" && message.suggestions && message.suggestions.length > 0 && (
+                      <div className="pl-10">
+                        <div className="bg-accent/30 border border-primary/20 rounded-lg p-3">
+                          <p className="text-xs font-medium text-muted-foreground mb-2">Follow-up suggestions:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {message.suggestions.map((suggestion, idx) => (
+                              <Button
+                                key={idx}
+                                variant="outline"
+                                size="sm"
+                                className="text-xs h-auto py-2 px-3 bg-background hover:bg-primary hover:text-primary-foreground transition-colors"
+                                onClick={() => {
+                                  setCurrentPrompt(suggestion);
+                                  toast({
+                                    title: "Question selected",
+                                    description: "Ready to record your answer"
+                                  });
+                                }}
+                              >
+                                {suggestion}
+                              </Button>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                      
-                      {message.type === "ai" && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0 flex-shrink-0"
-                          onClick={() => {
-                            if (message.ttsUrl) {
-                              playAudio(message.id, message.ttsUrl);
-                            } else if (message.recordingId && !message.isResolvingTts) {
-                              toast({
-                                title: "Loading audio",
-                                description: "We'll play it as soon as it's ready.",
-                              });
-                              resolveTtsForMessage(message.id, message.recordingId, { autoplay: true });
-                            }
-                          }}
-                          disabled={playingAudioId === message.id || message.isResolvingTts}
-                          title={
-                            message.isResolvingTts 
-                              ? "Audio is generating..." 
-                              : message.ttsUrl 
-                              ? "Play AI response audio" 
-                              : "Load and play audio"
-                          }
-                        >
-                          {playingAudioId === message.id || message.isResolvingTts ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Volume2 className="h-4 w-4 text-primary" />
-                          )}
-                        </Button>
-                      )}
-
-                      {message.type === "user" && message.recordingPath && !message.isPartial && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0 flex-shrink-0"
-                          onClick={() => playRecording(message.id, message.recordingPath!)}
-                          disabled={playingAudioId === message.id}
-                        >
-                          {playingAudioId === message.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Volume2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                      )}
-                    </div>
+                    )}
                   </div>
                 ))}
                 
+                {/* Thinking Indicator */}
                 {status === "thinking" && (
                   <div className="flex justify-start">
                     <div className="bg-muted rounded-lg p-3">
@@ -986,22 +1048,18 @@ export default function Session() {
         </div>
       </div>
 
-
       {/* Microphone Permission Dialog */}
       <Dialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Microphone Access Required</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-warning" />
+              Microphone Permission Required
+            </DialogTitle>
             <DialogDescription>
-              To record your story, we need access to your microphone. Please allow microphone access when prompted by your browser.
+              To record your stories, we need access to your microphone. Please grant permission when prompted by your browser.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center space-x-3 p-4 bg-muted rounded-lg">
-            <AlertCircle className="w-5 h-5 text-muted-foreground" />
-            <div className="text-sm text-muted-foreground">
-              Click "Allow" in your browser's permission dialog to continue.
-            </div>
-          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowPermissionDialog(false)}>
               Cancel
