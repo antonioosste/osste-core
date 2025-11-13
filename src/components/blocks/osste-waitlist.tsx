@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Check, Mail, Instagram, Twitter, Linkedin, ChevronDown } from "lucide-react";
+import { ArrowRight, Check, Mail, Twitter, Linkedin, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { GridBackground } from "@/components/ui/grid-background";
+import { Icons } from "@/components/ui/icons";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -268,7 +269,7 @@ export function OssteWaitlist() {
               rel="noopener noreferrer"
               className="w-10 h-10 rounded-full bg-background/60 backdrop-blur-sm border border-border/50 hover:border-primary/50 flex items-center justify-center transition-colors"
             >
-              <Instagram className="w-5 h-5 text-foreground" />
+              <Icons.instagram className="w-5 h-5 text-foreground" />
             </a>
             <a
               href="https://linkedin.com/company/osste"
