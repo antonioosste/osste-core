@@ -42,25 +42,27 @@ export function OssteWaitlist() {
   }
 
   return (
-    <div className="relative min-h-[85vh] flex items-center justify-center bg-[#fdf4e3]">
+    <div className="relative min-h-[85vh] flex items-center justify-center bg-background">
       <GridBackground />
 
       <div className="relative z-10 w-full max-w-3xl px-6 py-16">
         <div className="text-center mb-10">
-          <span className="text-4xl font-semibold tracking-[0.35em] text-orange-500">
-            OSSTE
-          </span>
+          <img
+            src="/logo-v3.png"
+            alt="OSSTE"
+            className="h-16 mx-auto mb-4"
+          />
         </div>
 
-        <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-lg border border-orange-100 px-10 py-12 space-y-10">
+        <div className="bg-card/80 backdrop-blur-lg rounded-3xl shadow-lg border border-border px-10 py-12 space-y-10">
           <h1 className="text-4xl font-semibold text-center">
             Join the{" "}
-            <span className="bg-gradient-to-r from-orange-500 to-amber-600 text-transparent bg-clip-text">
+            <span className="bg-gradient-to-r from-primary to-warning text-transparent bg-clip-text">
               OSSTE Early Access Waitlist
             </span>
           </h1>
 
-          <p className="text-lg text-slate-600 text-center">
+          <p className="text-lg text-muted-foreground text-center">
             AI-guided voice interviews that turn real conversations into
             beautifully written family chapters and keepsake books.
           </p>
@@ -72,12 +74,12 @@ export function OssteWaitlist() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
-              className="h-12 bg-[#fff7ea] border-orange-200"
+              className="h-12 bg-secondary/50 border-border"
             />
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="h-12 px-6 bg-orange-600 hover:bg-orange-700 text-white"
+              className="h-12 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
             >
               {isSubmitting ? "Adding..." : "Join waitlist"}
             </Button>
@@ -86,8 +88,8 @@ export function OssteWaitlist() {
           {message && (
             <p
               className={cn(
-                "text-center text-sm",
-                message.type === "success" ? "text-green-700" : "text-red-600"
+                "text-center text-sm font-medium",
+                message.type === "success" ? "text-success" : "text-destructive"
               )}
             >
               {message.text}
@@ -96,26 +98,26 @@ export function OssteWaitlist() {
 
           <div className="flex flex-col items-center gap-6">
             <div className="flex -space-x-3">
-              <Avatar className="border w-12 h-12 bg-orange-400/80">
-                <AvatarFallback className="text-white">SC</AvatarFallback>
+              <Avatar className="border-2 border-background w-12 h-12 bg-primary/80">
+                <AvatarFallback className="text-primary-foreground font-semibold">SC</AvatarFallback>
               </Avatar>
-              <Avatar className="border w-12 h-12 bg-amber-500/80">
-                <AvatarFallback className="text-white">LM</AvatarFallback>
+              <Avatar className="border-2 border-background w-12 h-12 bg-warning/80">
+                <AvatarFallback className="text-primary-foreground font-semibold">LM</AvatarFallback>
               </Avatar>
-              <Avatar className="border w-12 h-12 bg-rose-500/80">
-                <AvatarFallback className="text-white">JP</AvatarFallback>
+              <Avatar className="border-2 border-background w-12 h-12 bg-destructive/80">
+                <AvatarFallback className="text-destructive-foreground font-semibold">JP</AvatarFallback>
               </Avatar>
             </div>
 
-            <span className="text-slate-700">
-              Join the first <strong className="text-orange-600">100 families</strong> using OSSTE.
+            <span className="text-foreground">
+              Join the first <strong className="text-primary">100 families</strong> using OSSTE.
             </span>
 
-            <div className="flex gap-5 text-slate-500">
+            <div className="flex gap-5 text-muted-foreground">
               <button
                 type="button"
                 onClick={() => window.open("https://x.com/osste", "_blank")}
-                className="hover:text-orange-600 transition-colors"
+                className="hover:text-primary transition-colors"
               >
                 <Icons.twitter className="w-6 h-6" />
               </button>
@@ -123,7 +125,7 @@ export function OssteWaitlist() {
               <button
                 type="button"
                 onClick={() => window.open("https://instagram.com/osste", "_blank")}
-                className="hover:text-orange-600 transition-colors"
+                className="hover:text-primary transition-colors"
               >
                 <Icons.instagram className="w-6 h-6" />
               </button>
@@ -131,7 +133,7 @@ export function OssteWaitlist() {
           </div>
 
           <div className="text-center">
-            <Link to="/home" className="underline text-sm text-slate-600 hover:text-orange-600">
+            <Link to="/home" className="underline text-sm text-muted-foreground hover:text-primary transition-colors">
               Skip to the full site
             </Link>
           </div>
