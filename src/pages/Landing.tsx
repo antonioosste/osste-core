@@ -7,6 +7,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { HomeTestimonials } from "@/components/sections/HomeTestimonials";
 import { LandingHeroTitle } from "@/components/sections/LandingHeroTitle";
+import { OssteWaitlist } from "@/components/blocks/osste-waitlist";
 
 const valueProps = [
   {
@@ -32,6 +33,12 @@ export default function Landing() {
   return (
     <ReactLenis root>
       <div className="min-h-screen">
+        {/* Waitlist Section */}
+        <OssteWaitlist />
+        
+        {/* Full Site Anchor */}
+        <div id="full-site"></div>
+        
         <Header />
       
       {/* Hero Section */}
