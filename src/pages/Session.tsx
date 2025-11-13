@@ -477,17 +477,21 @@ export default function Session() {
             content: firstSuggestion,
             timestamp: new Date(),
             ttsUrl: ttsUrl || null,
-            isResolvingTts: false,
+            isResolvingTts: !ttsUrl,
+            recordingId: result.recording_id,
           },
         ]);
 
         // Update prompt with first suggestion
         setCurrentPrompt(firstSuggestion);
 
-        // Auto-play TTS if available
+        // Auto-play TTS if available, otherwise resolve it
         if (ttsUrl) {
           console.log('🔊 Playing TTS audio from follow_up.tts_url');
           playAudio(aiMessageId, ttsUrl);
+        } else if (result.recording_id) {
+          console.log('🔄 TTS URL not ready, resolving from database...');
+          resolveTtsForMessage(aiMessageId, result.recording_id, { autoplay: true });
         }
       }
       
