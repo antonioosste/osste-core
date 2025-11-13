@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import Waitlist from "./pages/Waitlist";
 import Landing from "./pages/Landing";
 import Pricing from "./pages/Pricing";
 import Login from "./pages/Login";
@@ -45,7 +46,8 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<Landing />} />
+            <Route path="/" element={<Waitlist />} />
+            <Route path="/home" element={<Landing />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />

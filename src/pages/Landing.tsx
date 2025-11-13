@@ -7,7 +7,6 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { HomeTestimonials } from "@/components/sections/HomeTestimonials";
 import { LandingHeroTitle } from "@/components/sections/LandingHeroTitle";
-import { OssteWaitlist } from "@/components/blocks/osste-waitlist";
 
 const valueProps = [
   {
@@ -31,12 +30,10 @@ const valueProps = [
 export default function Landing() {
   return (
     <ReactLenis root>
-      <>
-        <OssteWaitlist />
-        <div id="main-site" className="min-h-screen">
-          <Header />
-        
-          {/* Hero Section */}
+      <div className="min-h-screen">
+        <Header />
+      
+        {/* Hero Section */}
       <section
         className="relative overflow-hidden bg-cover bg-center"
         style={{
@@ -218,9 +215,8 @@ export default function Landing() {
           </div>
         </section>
 
-          <Footer />
-        </div>
-      </>
+        <Footer />
+      </div>
     </ReactLenis>
   );
 }

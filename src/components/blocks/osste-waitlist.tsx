@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { Link } from "react-router-dom"
 import { GridBackground } from "@/components/ui/grid-background"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -130,9 +131,9 @@ export function OssteWaitlist() {
           </div>
 
           <div className="text-center">
-            <a href="#full-site" className="underline text-sm text-slate-600 hover:text-orange-600">
+            <Link to="/home" className="underline text-sm text-slate-600 hover:text-orange-600">
               Skip to the full site
-            </a>
+            </Link>
           </div>
         </div>
       </div>
