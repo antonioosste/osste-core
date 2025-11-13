@@ -29,19 +29,14 @@ const valueProps = [
 
 
 export default function Landing() {
-
   return (
     <ReactLenis root>
-      <div className="min-h-screen">
-        {/* Waitlist Section */}
+      <>
         <OssteWaitlist />
+        <div id="main-site" className="min-h-screen">
+          <Header />
         
-        {/* Full Site Anchor */}
-        <div id="full-site"></div>
-        
-        <Header />
-      
-      {/* Hero Section */}
+          {/* Hero Section */}
       <section
         className="relative overflow-hidden bg-cover bg-center"
         style={{
@@ -223,8 +218,9 @@ export default function Landing() {
           </div>
         </section>
 
-        <Footer />
-      </div>
+          <Footer />
+        </div>
+      </>
     </ReactLenis>
   );
 }
