@@ -891,8 +891,26 @@ export default function Session() {
               </Button>
             )}
 
+            {/* AI Thinking Animation - Shows when processing */}
+            {status === "thinking" && !isRecording && (
+              <div className="w-full max-w-2xl animate-fade-in mb-4">
+                <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-card via-card to-muted/20 shadow-xl backdrop-blur-sm">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+                  
+                  <div className="relative p-6 flex items-center justify-center gap-4">
+                    <div className="flex space-x-2">
+                      <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" />
+                      <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
+                      <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
+                    </div>
+                    <p className="text-sm font-medium text-foreground">Generating follow-up questions...</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* AI-Inspired Follow-up Suggestions - Directly below Record Button */}
-            {messages.length > 0 && messages[messages.length - 1]?.suggestions && !isRecording && (
+            {messages.length > 0 && messages[messages.length - 1]?.suggestions && !isRecording && status !== "thinking" && (
               <div className="w-full max-w-2xl animate-fade-in mb-4">
                 <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-card via-card to-muted/20 shadow-xl backdrop-blur-sm">
                   {/* Subtle gradient overlay */}
@@ -906,10 +924,10 @@ export default function Session() {
                         <div className="absolute inset-0 w-2 h-2 rounded-full bg-primary animate-ping" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+                        <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
                           Suggested Next Steps
                         </h3>
-                        <p className="text-[10px] text-muted-foreground/50 mt-0.5">
+                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">
                           AI-generated follow-up questions
                         </p>
                       </div>
@@ -933,7 +951,7 @@ export default function Session() {
                             <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold mt-0.5 group-hover:bg-primary/20 transition-colors">
                               {index + 1}
                             </div>
-                            <p className="flex-1 text-sm text-foreground/90 leading-relaxed font-medium group-hover:text-foreground transition-colors">
+                            <p className="flex-1 text-sm text-foreground leading-relaxed font-medium">
                               {suggestion}
                             </p>
                             <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1021,7 +1039,7 @@ export default function Session() {
                     </div>
                   ) : (
                     <>
-                  {messages.map((message) => (
+                  {messages.filter(m => !m.isPartial).map((message) => (
                     <div key={message.id} className="space-y-2">
                       {/* Message */}
                       <div className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
@@ -1069,7 +1087,7 @@ export default function Session() {
                             </Button>
                           )}
 
-                          {message.type === "user" && message.recordingPath && !message.isPartial && (
+                          {message.type === "user" && message.recordingPath && (
                             <Button
                               size="sm"
                               variant="ghost"
@@ -1092,19 +1110,6 @@ export default function Session() {
                       </div>
                     </div>
                   ))}
-                  
-                  {/* Thinking Indicator */}
-                  {status === "thinking" && (
-                    <div className="flex justify-start">
-                      <div className="bg-muted/50 rounded-2xl p-3 border border-border/50">
-                        <div className="flex space-x-1">
-                          <div className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" />
-                          <div className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
-                          <div className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </>
               )}
               <div ref={conversationEndRef} />
