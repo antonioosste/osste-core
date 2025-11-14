@@ -9,7 +9,9 @@ import {
   WifiOff,
   AlertCircle,
   Loader2,
-  Volume2
+  Volume2,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +22,7 @@ import { QuestionSwitcher } from "@/components/ui/question-switcher";
 import { SessionImageUploader } from "@/components/ui/session-image-uploader";
 import { SessionModeSelector } from "@/components/session/SessionModeSelector";
 import { ConversationSkeleton } from "@/components/loaders/ConversationSkeleton";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/hooks/useSession";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
@@ -92,6 +95,7 @@ export default function Session() {
       timestamp: new Date()
     }
   ]);
+  const [conversationOpen, setConversationOpen] = useState(true);
   
   // Waveform animation
   const [waveformData, setWaveformData] = useState<number[]>(new Array(20).fill(0));
@@ -989,15 +993,34 @@ export default function Session() {
             </div>
           </div>
 
-          {/* Conversation History - Scrollable Bottom Section */}
-          <div className="flex-1 overflow-y-auto py-6">
-            <div className="space-y-6">
-              {messages.length === 0 ? (
-                <div className="text-center py-16 text-muted-foreground">
-                  <p>Start recording to begin your conversation</p>
-                </div>
-              ) : (
-                <>
+          {/* Conversation History - Collapsible Section */}
+          <Collapsible
+            open={conversationOpen}
+            onOpenChange={setConversationOpen}
+            className="flex-shrink-0"
+          >
+            <div className="flex items-center justify-between py-3 border-b border-border/30">
+              <h3 className="text-sm font-medium text-muted-foreground">Conversation History</h3>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  {conversationOpen ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+            </div>
+            
+            <CollapsibleContent>
+              <div className="overflow-y-auto py-4 max-h-[25vh]">
+                <div className="space-y-6">
+                  {messages.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>Start recording to begin your conversation</p>
+                    </div>
+                  ) : (
+                    <>
                   {messages.map((message) => (
                     <div key={message.id} className="space-y-2">
                       {/* Message */}
@@ -1087,8 +1110,10 @@ export default function Session() {
               <div ref={conversationEndRef} />
             </div>
           </div>
-        </div>
-      </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
+  </div>
 
       {/* Microphone Permission Dialog */}
       <Dialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
