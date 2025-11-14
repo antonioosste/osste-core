@@ -150,6 +150,12 @@ export default function Session() {
         for (const turn of turns) {
           // Add AI prompt
           if (turn.prompt_text) {
+            const suggestions = turn.follow_up_suggestions 
+              ? (Array.isArray(turn.follow_up_suggestions) 
+                  ? turn.follow_up_suggestions as string[]
+                  : [])
+              : undefined;
+            
             loadedMessages.push({
               id: `ai-${turn.id}`,
               type: "ai",
@@ -157,6 +163,7 @@ export default function Session() {
               timestamp: new Date(turn.created_at || Date.now()),
               ttsUrl: null,
               recordingId: turn.recording_id || undefined,
+              suggestions: suggestions,
             });
           }
 
@@ -174,10 +181,15 @@ export default function Session() {
 
         setMessages(loadedMessages);
         
-        // Set the last AI prompt as current
+        // Set the last AI prompt as current and load its suggestions
         const lastAiMessage = loadedMessages.reverse().find(m => m.type === 'ai');
         if (lastAiMessage) {
           setCurrentPrompt(lastAiMessage.content);
+          
+          // If the last AI message has suggestions, load them
+          if (lastAiMessage.suggestions) {
+            setSuggestedQuestions(lastAiMessage.suggestions);
+          }
         }
 
         toast({
@@ -903,7 +915,6 @@ export default function Session() {
                       <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
                       <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
                     </div>
-                    <p className="text-sm font-medium text-foreground">Generating follow-up questions...</p>
                   </div>
                 </div>
               </div>
@@ -970,7 +981,7 @@ export default function Session() {
 
             {/* Additional Options - Minimalistic */}
             <div className="flex items-center justify-center gap-4 text-xs">
-              {suggestedQuestions.length > 0 && (
+              {sessionMode === 'guided' && suggestedQuestions.length > 0 && (
                 <details className="group">
                   <summary className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors list-none">
                     <span className="flex items-center gap-2">
@@ -1031,7 +1042,7 @@ export default function Session() {
             </div>
             
             <CollapsibleContent>
-              <div className="overflow-y-auto py-4 max-h-[25vh]">
+              <div className="overflow-y-auto py-4 max-h-[25vh] conversation-history-scroll">
                 <div className="space-y-6">
                   {messages.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
