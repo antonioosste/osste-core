@@ -1028,17 +1028,53 @@ export default function Session() {
             onOpenChange={setConversationOpen}
             className="flex-shrink-0"
           >
-            <div className="flex items-center justify-between py-3 border-b border-border/30">
-              <h3 className="text-sm font-medium text-muted-foreground">Conversation History</h3>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  {conversationOpen ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </Button>
-              </CollapsibleTrigger>
+            <div className="relative overflow-hidden group">
+              {/* Gradient background */}
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              
+              <div className="relative flex items-center justify-between py-4 px-2 border-b border-border/40 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  {/* Chat icon with subtle animation */}
+                  <div className="p-1.5 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors duration-200">
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="16" 
+                      height="16" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                      className="text-primary"
+                    >
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-foreground">Conversation History</h3>
+                    {/* Message count badge */}
+                    {messages.filter(m => !m.isPartial).length > 0 && (
+                      <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold text-primary-foreground bg-primary rounded-full animate-scale-in">
+                        {messages.filter(m => !m.isPartial).length}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                <CollapsibleTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0 hover:bg-primary/10 transition-all duration-200 group/button"
+                  >
+                    <div className={`transition-transform duration-300 ${conversationOpen ? 'rotate-180' : 'rotate-0'}`}>
+                      <ChevronDown className="h-4 w-4 group-hover/button:text-primary transition-colors" />
+                    </div>
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
             </div>
             
             <CollapsibleContent>
