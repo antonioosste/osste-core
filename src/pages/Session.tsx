@@ -760,214 +760,189 @@ export default function Session() {
       
       {/* Single Column Scrollable Layout */}
       <div className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-4 py-4 max-w-4xl space-y-4">
-          {/* Compact Sticky Header */}
-          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pb-2">
-            <Card className="border-primary/20">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-base font-semibold text-foreground">Voice Interview</h1>
-                    {getStatusBadge()}
-                    <span className="text-sm text-muted-foreground">{formatTime(sessionTime)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={cancelAndExit}
-                      disabled={isGeneratingChapters}
-                    >
-                      <X className="w-3 h-3 mr-1" />
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={saveAndExit}
-                      disabled={isGeneratingChapters}
-                    >
-                      {isGeneratingChapters ? (
-                        <>
-                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="w-3 h-3 mr-1" />
-                          Save & Exit
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="container mx-auto px-4 py-8 max-w-3xl">
+          {/* Minimalistic Header */}
+          <div className="flex items-center justify-between mb-8 pb-4 border-b border-border/50">
+            <div className="flex items-center gap-4">
+              <h1 className="text-lg font-medium text-foreground">Recording Session</h1>
+              {getStatusBadge()}
+              <span className="text-sm text-muted-foreground tabular-nums">{formatTime(sessionTime)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={cancelAndExit}
+                disabled={isGeneratingChapters}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={saveAndExit}
+                disabled={isGeneratingChapters}
+              >
+                {isGeneratingChapters ? (
+                  <>
+                    <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                    Saving
+                  </>
+                ) : (
+                  'Save & Exit'
+                )}
+              </Button>
+            </div>
           </div>
 
-          {/* Recording Controls - Collapsible when not in use */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex flex-col items-center space-y-4">
-                {/* Microphone Button */}
-                <div className="relative">
-                  <Button
-                    size="lg"
-                    variant={isRecording ? "destructive" : "default"}
-                    className={`w-20 h-20 rounded-full ${isRecording ? 'animate-pulse' : ''}`}
-                    onClick={isRecording ? handleStopRecording : startRecording}
-                    disabled={micPermission === "denied" || hasNetworkError || isProcessing}
-                  >
-                    {isProcessing ? (
-                      <Loader2 className="w-7 h-7 animate-spin" />
-                    ) : isRecording ? (
-                      <Square className="w-7 h-7" />
-                    ) : (
-                      <Mic className="w-7 h-7" />
-                    )}
-                  </Button>
-                  {micPermission === "denied" && (
-                    <div className="absolute -top-1 -right-1">
-                      <div className="w-5 h-5 bg-destructive rounded-full flex items-center justify-center">
-                        <MicOff className="w-3 h-3 text-destructive-foreground" />
-                      </div>
-                    </div>
-                  )}
+          {/* Central Recording Control - Main Focal Point */}
+          <div className="flex flex-col items-center mb-12">
+            {/* Large Microphone Button */}
+            <div className="relative mb-6">
+              <Button
+                size="lg"
+                variant={isRecording ? "destructive" : "default"}
+                className={`w-32 h-32 rounded-full shadow-lg hover:shadow-xl transition-all ${
+                  isRecording ? 'animate-pulse' : 'hover:scale-105'
+                }`}
+                onClick={isRecording ? handleStopRecording : startRecording}
+                disabled={micPermission === "denied" || hasNetworkError || isProcessing}
+              >
+                {isProcessing ? (
+                  <Loader2 className="w-12 h-12 animate-spin" />
+                ) : isRecording ? (
+                  <Square className="w-12 h-12" />
+                ) : (
+                  <Mic className="w-12 h-12" />
+                )}
+              </Button>
+              {micPermission === "denied" && (
+                <div className="absolute top-0 right-0">
+                  <div className="w-8 h-8 bg-destructive rounded-full flex items-center justify-center">
+                    <MicOff className="w-4 h-4 text-destructive-foreground" />
+                  </div>
                 </div>
+              )}
+            </div>
 
-                {/* Waveform - Only show when recording */}
-                {isRecording && (
-                  <div className="flex items-center justify-center space-x-1 h-12">
-                    {waveformData.map((height, index) => (
-                      <div
-                        key={index}
-                        className="bg-primary rounded-full transition-all duration-100"
-                        style={{
-                          width: '3px',
-                          height: `${Math.max(3, height * 0.5)}px`
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
+            {/* Current Question Display */}
+            <div className="text-center max-w-xl mb-4">
+              <p className="text-base text-muted-foreground leading-relaxed">
+                {currentPrompt}
+              </p>
+            </div>
 
-                {/* Recording Controls */}
-                {isRecording && (
-                  <div className="flex items-center gap-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        cancelRecording();
-                        setStatus("idle");
-                        toast({
-                          title: "Recording cancelled",
-                          description: "Your recording has been discarded."
-                        });
-                      }}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      Cancel Recording
-                    </Button>
-                  </div>
-                )}
+            {/* Waveform - Only show when recording */}
+            {isRecording && (
+              <div className="flex items-center justify-center space-x-1 h-16 mb-4">
+                {waveformData.map((height, index) => (
+                  <div
+                    key={index}
+                    className="w-1 bg-primary rounded-full transition-all duration-100"
+                    style={{ height: `${Math.max(4, height / 2)}px` }}
+                  />
+                ))}
               </div>
-            </CardContent>
-          </Card>
+            )}
+
+            {/* Recording Actions */}
+            {isRecording && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  cancelRecording();
+                  setStatus("idle");
+                  toast({
+                    title: "Recording cancelled",
+                    description: "Your recording has been discarded."
+                  });
+                }}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Cancel Recording
+              </Button>
+            )}
+          </div>
 
           {/* Error States */}
           {hasNetworkError && (
-            <Card className="border-destructive/50">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
-                  <WifiOff className="w-5 h-5 text-destructive" />
-                  <div className="flex-1">
-                    <h3 className="font-medium text-sm text-foreground">Connection Lost</h3>
-                    <p className="text-xs text-muted-foreground">Unable to connect to the server.</p>
-                  </div>
-                  <Button onClick={retryConnection} size="sm">Retry</Button>
+            <div className="mb-8 p-4 rounded-lg border border-destructive/50 bg-destructive/5">
+              <div className="flex items-center space-x-3">
+                <WifiOff className="w-5 h-5 text-destructive" />
+                <div className="flex-1">
+                  <h3 className="font-medium text-sm text-foreground">Connection Lost</h3>
+                  <p className="text-xs text-muted-foreground">Unable to connect to the server.</p>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Question Switcher - Collapsible */}
-          {suggestedQuestions.length > 0 && (
-            <details className="group" open>
-              <summary className="cursor-pointer list-none">
-                <Card className="hover:border-primary/40 transition-colors">
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-foreground">Browse All Questions</span>
-                      <span className="text-xs text-muted-foreground group-open:rotate-180 transition-transform">▼</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </summary>
-              <div className="mt-2">
-                <QuestionSwitcher
-                  question={currentPrompt}
-                  onQuestionChange={setCurrentPrompt}
-                  topic={selectedCategory}
-                  hideTopicSelector={true}
-                  questions={suggestedQuestions}
-                  isLoadingQuestions={isLoadingQuestions}
-                />
+                <Button onClick={retryConnection} size="sm" variant="outline">Retry</Button>
               </div>
-            </details>
+            </div>
           )}
 
-          {/* Image Uploader - Collapsible */}
-          {sessionId && (
-            <details className="group">
-              <summary className="cursor-pointer list-none">
-                <Card className="hover:border-primary/40 transition-colors">
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-foreground">Add Photos/Context</span>
-                      <span className="text-xs text-muted-foreground group-open:rotate-180 transition-transform">▼</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </summary>
-              <div className="mt-2">
-                <SessionImageUploader
-                  sessionId={sessionId}
-                  currentPrompt={currentPrompt}
-                  userId={user?.id}
-                />
+          {/* Additional Options - Minimalistic */}
+          <div className="flex items-center justify-center gap-4 mb-8 text-sm">
+            {suggestedQuestions.length > 0 && (
+              <details className="group">
+                <summary className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors list-none">
+                  <span className="flex items-center gap-2">
+                    Browse Questions
+                    <span className="text-xs group-open:rotate-180 transition-transform">▼</span>
+                  </span>
+                </summary>
+                <div className="mt-4 p-4 rounded-lg border border-border bg-muted/30">
+                  <QuestionSwitcher
+                    question={currentPrompt}
+                    onQuestionChange={setCurrentPrompt}
+                    topic={selectedCategory}
+                    hideTopicSelector={true}
+                    questions={suggestedQuestions}
+                    isLoadingQuestions={isLoadingQuestions}
+                  />
+                </div>
+              </details>
+            )}
+
+            {sessionId && (
+              <details className="group">
+                <summary className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors list-none">
+                  <span className="flex items-center gap-2">
+                    Add Photos
+                    <span className="text-xs group-open:rotate-180 transition-transform">▼</span>
+                  </span>
+                </summary>
+                <div className="mt-4 p-4 rounded-lg border border-border bg-muted/30">
+                  <SessionImageUploader
+                    sessionId={sessionId}
+                    currentPrompt={currentPrompt}
+                    userId={user?.id}
+                  />
+                </div>
+              </details>
+            )}
+          </div>
+
+          {/* Conversation Thread - Clean & Minimal */}
+          <div className="space-y-8">
+            {messages.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground">
+                <p>Start recording to begin your conversation</p>
               </div>
-            </details>
-          )}
-
-          {/* Conversation Thread - Main Focus */}
-          <Card>
-            <CardHeader className="border-b border-border pb-3">
-              <CardTitle className="text-base">Conversation</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="space-y-6">
-                {messages.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>No messages yet. Start recording to begin your conversation.</p>
-                  </div>
-                ) : (
-                  <>
-                    {messages.map((message) => (
-                  <div key={message.id} className="space-y-3">
-                    {/* Message Bubble */}
+            ) : (
+              <>
+                {messages.map((message) => (
+                  <div key={message.id} className="space-y-4">
+                    {/* Message */}
                     <div className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
-                      <div className={`flex items-start gap-2 max-w-[85%] ${message.type === "user" ? "flex-row-reverse" : ""}`}>
+                      <div className={`flex items-start gap-3 max-w-[80%] ${message.type === "user" ? "flex-row-reverse" : ""}`}>
                         <div
-                          className={`rounded-lg p-3 ${
+                          className={`rounded-2xl px-4 py-3 ${
                             message.type === "user"
                               ? "bg-primary text-primary-foreground"
-                              : "bg-muted text-foreground"
+                              : "bg-muted/50 text-foreground border border-border/50"
                           }`}
                         >
                           <p className="text-sm leading-relaxed">{message.content}</p>
-                          <div className="text-xs opacity-70 mt-1">
+                          <div className="text-xs opacity-60 mt-2">
                             {message.timestamp.toLocaleTimeString([], { 
                               hour: '2-digit', 
                               minute: '2-digit' 
@@ -975,12 +950,12 @@ export default function Session() {
                           </div>
                         </div>
                         
-                        {/* Audio Playback Buttons */}
+                        {/* Audio Playback */}
                         {message.type === "ai" && (
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-8 w-8 p-0 flex-shrink-0"
+                            className="h-7 w-7 p-0 flex-shrink-0 opacity-50 hover:opacity-100"
                             onClick={() => {
                               if (message.ttsUrl) {
                                 playAudio(message.id, message.ttsUrl);
@@ -993,18 +968,11 @@ export default function Session() {
                               }
                             }}
                             disabled={playingAudioId === message.id || message.isResolvingTts}
-                            title={
-                              message.isResolvingTts 
-                                ? "Audio is generating..." 
-                                : message.ttsUrl 
-                                ? "Play AI response audio" 
-                                : "Load and play audio"
-                            }
                           >
                             {playingAudioId === message.id || message.isResolvingTts ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <Loader2 className="h-3 w-3 animate-spin" />
                             ) : (
-                              <Volume2 className="h-4 w-4 text-primary" />
+                              <Volume2 className="h-3 w-3" />
                             )}
                           </Button>
                         )}
@@ -1013,67 +981,63 @@ export default function Session() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-8 w-8 p-0 flex-shrink-0"
+                            className="h-7 w-7 p-0 flex-shrink-0 opacity-50 hover:opacity-100"
                             onClick={() => playRecording(message.id, message.recordingPath!)}
                             disabled={playingAudioId === message.id}
                           >
                             {playingAudioId === message.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <Loader2 className="h-3 w-3 animate-spin" />
                             ) : (
-                              <Volume2 className="h-4 w-4" />
+                              <Volume2 className="h-3 w-3" />
                             )}
                           </Button>
                         )}
                       </div>
                     </div>
 
-                    {/* AI Suggestions - Inline after AI messages */}
+                    {/* Inline Suggestions - Subtle */}
                     {message.type === "ai" && message.suggestions && message.suggestions.length > 0 && (
-                      <div className="pl-10">
-                        <div className="bg-accent/30 border border-primary/20 rounded-lg p-3">
-                          <p className="text-xs font-medium text-muted-foreground mb-2">Follow-up suggestions:</p>
-                          <div className="flex flex-wrap gap-2">
-                            {message.suggestions.map((suggestion, idx) => (
-                              <Button
-                                key={idx}
-                                variant="outline"
-                                size="sm"
-                                className="text-xs h-auto py-2 px-3 bg-background hover:bg-primary hover:text-primary-foreground transition-colors"
-                                onClick={() => {
-                                  setCurrentPrompt(suggestion);
-                                  toast({
-                                    title: "Question selected",
-                                    description: "Ready to record your answer"
-                                  });
-                                }}
-                              >
-                                {suggestion}
-                              </Button>
-                            ))}
-                          </div>
+                      <div className="ml-10">
+                        <p className="text-xs text-muted-foreground mb-2">Suggested follow-ups:</p>
+                        <div className="flex flex-col gap-1.5">
+                          {message.suggestions.map((suggestion, index) => (
+                            <Button
+                              key={index}
+                              variant="ghost"
+                              size="sm"
+                              className="justify-start h-auto py-2 px-3 text-xs text-left font-normal hover:bg-muted/50"
+                              onClick={() => {
+                                setCurrentPrompt(suggestion);
+                                toast({
+                                  title: "Question selected",
+                                  description: "Ready to record your answer"
+                                });
+                              }}
+                            >
+                              {suggestion}
+                            </Button>
+                          ))}
                         </div>
                       </div>
                     )}
-                    </div>
-                  ))}
-                  
-                  {/* Thinking Indicator */}
-                  {status === "thinking" && (
+                  </div>
+                ))}
+                
+                {/* Thinking Indicator */}
+                {status === "thinking" && (
                   <div className="flex justify-start">
-                    <div className="bg-muted rounded-lg p-3">
+                    <div className="bg-muted/50 rounded-2xl p-3 border border-border/50">
                       <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
-                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
-                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
-                      </div>
+                        <div className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" />
+                        <div className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
+                        <div className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
                       </div>
                     </div>
-                  )}
-                </>
+                  </div>
                 )}
-              </div>
-            </CardContent>
-          </Card>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
