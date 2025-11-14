@@ -19,6 +19,7 @@ import { Header } from "@/components/layout/Header";
 import { QuestionSwitcher } from "@/components/ui/question-switcher";
 import { SessionImageUploader } from "@/components/ui/session-image-uploader";
 import { SessionModeSelector } from "@/components/session/SessionModeSelector";
+import { ConversationSkeleton } from "@/components/loaders/ConversationSkeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/hooks/useSession";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
@@ -60,7 +61,7 @@ export default function Session() {
     uploadAndProcess,
     cancelRecording 
   } = useAudioRecorder(sessionId);
-  const { turns, refetch: refetchTurns } = useTurns(sessionId || undefined);
+  const { turns, loading: turnsLoading, refetch: refetchTurns } = useTurns(sessionId || undefined);
   
   // Core session state
   const [status, setStatus] = useState<SessionStatus>("idle");
@@ -927,7 +928,15 @@ export default function Session() {
             </CardHeader>
             <CardContent className="p-4">
               <div className="space-y-6">
-                {messages.map((message) => (
+                {turnsLoading && existingSessionId ? (
+                  <ConversationSkeleton />
+                ) : messages.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No messages yet. Start recording to begin your conversation.</p>
+                  </div>
+                ) : (
+                  <>
+                    {messages.map((message) => (
                   <div key={message.id} className="space-y-3">
                     {/* Message Bubble */}
                     <div className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
@@ -1027,11 +1036,11 @@ export default function Session() {
                         </div>
                       </div>
                     )}
-                  </div>
-                ))}
-                
-                {/* Thinking Indicator */}
-                {status === "thinking" && (
+                    </div>
+                  ))}
+                  
+                  {/* Thinking Indicator */}
+                  {status === "thinking" && (
                   <div className="flex justify-start">
                     <div className="bg-muted rounded-lg p-3">
                       <div className="flex space-x-1">
@@ -1039,8 +1048,10 @@ export default function Session() {
                         <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
                         <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
                       </div>
+                      </div>
                     </div>
-                  </div>
+                  )}
+                </>
                 )}
               </div>
             </CardContent>

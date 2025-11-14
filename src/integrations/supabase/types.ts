@@ -493,6 +493,7 @@ export type Database = {
           created_at: string | null
           entities: Json | null
           follow_up_needed: boolean | null
+          follow_up_suggestions: Json | null
           id: string
           images: Json | null
           prompt_text: string | null
@@ -510,6 +511,7 @@ export type Database = {
           created_at?: string | null
           entities?: Json | null
           follow_up_needed?: boolean | null
+          follow_up_suggestions?: Json | null
           id?: string
           images?: Json | null
           prompt_text?: string | null
@@ -527,6 +529,7 @@ export type Database = {
           created_at?: string | null
           entities?: Json | null
           follow_up_needed?: boolean | null
+          follow_up_suggestions?: Json | null
           id?: string
           images?: Json | null
           prompt_text?: string | null
