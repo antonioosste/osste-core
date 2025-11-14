@@ -96,6 +96,9 @@ export default function Session() {
   // Waveform animation
   const [waveformData, setWaveformData] = useState<number[]>(new Array(20).fill(0));
   const intervalRef = useRef<NodeJS.Timeout>();
+  
+  // Conversation scroll reference
+  const conversationEndRef = useRef<HTMLDivElement>(null);
 
   // TTS audio playback
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
@@ -213,6 +216,11 @@ export default function Session() {
     }
     return () => clearInterval(intervalRef.current);
   }, [status]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    conversationEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   // Mock prompts rotation
   const prompts = [
@@ -758,9 +766,9 @@ export default function Session() {
         onClose={() => setShowModeSelector(false)}
       />
       
-      {/* Single Column Scrollable Layout */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-4 py-8 max-w-3xl">
+      {/* Main Session Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="max-w-4xl mx-auto w-full flex flex-col h-full px-4">
           {/* Minimalistic Header */}
           <div className="flex items-center justify-between mb-8 pb-4 border-b border-border/50">
             <div className="flex items-center gap-4">
