@@ -769,8 +769,30 @@ export default function Session() {
       {/* Main Session Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="max-w-4xl mx-auto w-full flex flex-col h-full px-4">
+          
+          {/* Minimized Conversation History - Top */}
+          <div className="flex-shrink-0 max-h-[30vh] overflow-y-auto py-4 mb-4 opacity-60 hover:opacity-100 transition-opacity">
+            <div className="space-y-3">
+              {messages.length > 1 && messages.slice(0, -1).map((message) => (
+                <div key={message.id} className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className={`flex items-start gap-2 max-w-[70%] ${message.type === "user" ? "flex-row-reverse" : ""}`}>
+                    <div
+                      className={`rounded-xl px-3 py-2 text-xs ${
+                        message.type === "user"
+                          ? "bg-primary/20 text-primary-foreground/80"
+                          : "bg-muted/30 text-muted-foreground border border-border/30"
+                      }`}
+                    >
+                      <p className="leading-relaxed line-clamp-2">{message.content}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Minimalistic Header */}
-          <div className="flex items-center justify-between mb-8 pb-4 border-b border-border/50">
+          <div className="flex items-center justify-between pb-4 border-b border-border/50 flex-shrink-0">
             <div className="flex items-center gap-4">
               <h1 className="text-lg font-medium text-foreground">Recording Session</h1>
               {getStatusBadge()}
@@ -803,7 +825,21 @@ export default function Session() {
           </div>
 
           {/* Central Recording Control - Main Focal Point */}
-          <div className="flex flex-col items-center mb-12">
+          <div className="flex flex-col items-center flex-1 justify-center">
+            {/* Error States */}
+            {hasNetworkError && (
+              <div className="mb-6 p-4 rounded-lg border border-destructive/50 bg-destructive/5 max-w-md w-full">
+                <div className="flex items-center space-x-3">
+                  <WifiOff className="w-5 h-5 text-destructive" />
+                  <div className="flex-1">
+                    <h3 className="font-medium text-sm text-foreground">Connection Lost</h3>
+                    <p className="text-xs text-muted-foreground">Unable to connect to the server.</p>
+                  </div>
+                  <Button onClick={retryConnection} size="sm" variant="outline">Retry</Button>
+                </div>
+              </div>
+            )}
+
             {/* Large Microphone Button */}
             <div className="relative mb-6">
               <Button
@@ -833,15 +869,15 @@ export default function Session() {
             </div>
 
             {/* Current Question Display */}
-            <div className="text-center max-w-xl mb-4">
-              <p className="text-base text-muted-foreground leading-relaxed">
+            <div className="text-center max-w-xl mb-6">
+              <p className="text-sm text-muted-foreground/80 leading-relaxed">
                 {currentPrompt}
               </p>
             </div>
 
             {/* Waveform - Only show when recording */}
             {isRecording && (
-              <div className="flex items-center justify-center space-x-1 h-16 mb-4">
+              <div className="flex items-center justify-center space-x-1 h-12 mb-6">
                 {waveformData.map((height, index) => (
                   <div
                     key={index}
@@ -865,186 +901,113 @@ export default function Session() {
                     description: "Your recording has been discarded."
                   });
                 }}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 mb-6"
               >
                 <X className="w-4 h-4 mr-2" />
                 Cancel Recording
               </Button>
             )}
-          </div>
 
-          {/* Error States */}
-          {hasNetworkError && (
-            <div className="mb-8 p-4 rounded-lg border border-destructive/50 bg-destructive/5">
-              <div className="flex items-center space-x-3">
-                <WifiOff className="w-5 h-5 text-destructive" />
-                <div className="flex-1">
-                  <h3 className="font-medium text-sm text-foreground">Connection Lost</h3>
-                  <p className="text-xs text-muted-foreground">Unable to connect to the server.</p>
-                </div>
-                <Button onClick={retryConnection} size="sm" variant="outline">Retry</Button>
-              </div>
-            </div>
-          )}
-
-          {/* Additional Options - Minimalistic */}
-          <div className="flex items-center justify-center gap-4 mb-8 text-sm">
-            {suggestedQuestions.length > 0 && (
-              <details className="group">
-                <summary className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors list-none">
-                  <span className="flex items-center gap-2">
-                    Browse Questions
-                    <span className="text-xs group-open:rotate-180 transition-transform">▼</span>
-                  </span>
-                </summary>
-                <div className="mt-4 p-4 rounded-lg border border-border bg-muted/30">
-                  <QuestionSwitcher
-                    question={currentPrompt}
-                    onQuestionChange={setCurrentPrompt}
-                    topic={selectedCategory}
-                    hideTopicSelector={true}
-                    questions={suggestedQuestions}
-                    isLoadingQuestions={isLoadingQuestions}
-                  />
-                </div>
-              </details>
-            )}
-
-            {sessionId && (
-              <details className="group">
-                <summary className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors list-none">
-                  <span className="flex items-center gap-2">
-                    Add Photos
-                    <span className="text-xs group-open:rotate-180 transition-transform">▼</span>
-                  </span>
-                </summary>
-                <div className="mt-4 p-4 rounded-lg border border-border bg-muted/30">
-                  <SessionImageUploader
-                    sessionId={sessionId}
-                    currentPrompt={currentPrompt}
-                    userId={user?.id}
-                  />
-                </div>
-              </details>
-            )}
-          </div>
-
-          {/* Conversation Thread - Clean & Minimal */}
-          <div className="space-y-8">
-            {messages.length === 0 ? (
-              <div className="text-center py-16 text-muted-foreground">
-                <p>Start recording to begin your conversation</p>
-              </div>
-            ) : (
-              <>
-                {messages.map((message) => (
-                  <div key={message.id} className="space-y-4">
-                    {/* Message */}
-                    <div className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
-                      <div className={`flex items-start gap-3 max-w-[80%] ${message.type === "user" ? "flex-row-reverse" : ""}`}>
-                        <div
-                          className={`rounded-2xl px-4 py-3 ${
-                            message.type === "user"
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted/50 text-foreground border border-border/50"
-                          }`}
+            {/* AI-Inspired Follow-up Suggestions - Directly below Record Button */}
+            {messages.length > 0 && messages[messages.length - 1]?.suggestions && !isRecording && (
+              <div className="w-full max-w-2xl animate-fade-in">
+                <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-card via-card to-muted/20 shadow-xl backdrop-blur-sm">
+                  {/* Subtle gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+                  
+                  <div className="relative p-6">
+                    {/* Header with AI indicator */}
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="relative">
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        <div className="absolute inset-0 w-2 h-2 rounded-full bg-primary animate-ping" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+                          Suggested Next Steps
+                        </h3>
+                        <p className="text-[10px] text-muted-foreground/50 mt-0.5">
+                          AI-generated follow-up questions
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Suggestions List */}
+                    <div className="space-y-2">
+                      {messages[messages.length - 1].suggestions!.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            setCurrentPrompt(suggestion);
+                            toast({
+                              title: "Question selected",
+                              description: "Ready to record your answer"
+                            });
+                          }}
+                          className="group w-full text-left p-4 rounded-xl border border-border/30 bg-background/50 hover:bg-accent/10 hover:border-accent/40 transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
                         >
-                          <p className="text-sm leading-relaxed">{message.content}</p>
-                          <div className="text-xs opacity-60 mt-2">
-                            {message.timestamp.toLocaleTimeString([], { 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                            })}
-                          </div>
-                        </div>
-                        
-                        {/* Audio Playback */}
-                        {message.type === "ai" && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 p-0 flex-shrink-0 opacity-50 hover:opacity-100"
-                            onClick={() => {
-                              if (message.ttsUrl) {
-                                playAudio(message.id, message.ttsUrl);
-                              } else if (message.recordingId && !message.isResolvingTts) {
-                                toast({
-                                  title: "Loading audio",
-                                  description: "We'll play it as soon as it's ready.",
-                                });
-                                resolveTtsForMessage(message.id, message.recordingId, { autoplay: true });
-                              }
-                            }}
-                            disabled={playingAudioId === message.id || message.isResolvingTts}
-                          >
-                            {playingAudioId === message.id || message.isResolvingTts ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <Volume2 className="h-3 w-3" />
-                            )}
-                          </Button>
-                        )}
-
-                        {message.type === "user" && message.recordingPath && !message.isPartial && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 p-0 flex-shrink-0 opacity-50 hover:opacity-100"
-                            onClick={() => playRecording(message.id, message.recordingPath!)}
-                            disabled={playingAudioId === message.id}
-                          >
-                            {playingAudioId === message.id ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <Volume2 className="h-3 w-3" />
-                            )}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Inline Suggestions - Subtle */}
-                    {message.type === "ai" && message.suggestions && message.suggestions.length > 0 && (
-                      <div className="ml-10">
-                        <p className="text-xs text-muted-foreground mb-2">Suggested follow-ups:</p>
-                        <div className="flex flex-col gap-1.5">
-                          {message.suggestions.map((suggestion, index) => (
-                            <Button
-                              key={index}
-                              variant="ghost"
-                              size="sm"
-                              className="justify-start h-auto py-2 px-3 text-xs text-left font-normal hover:bg-muted/50"
-                              onClick={() => {
-                                setCurrentPrompt(suggestion);
-                                toast({
-                                  title: "Question selected",
-                                  description: "Ready to record your answer"
-                                });
-                              }}
-                            >
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold mt-0.5 group-hover:bg-primary/20 transition-colors">
+                              {index + 1}
+                            </div>
+                            <p className="flex-1 text-sm text-foreground/90 leading-relaxed font-medium group-hover:text-foreground transition-colors">
                               {suggestion}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-                
-                {/* Thinking Indicator */}
-                {status === "thinking" && (
-                  <div className="flex justify-start">
-                    <div className="bg-muted/50 rounded-2xl p-3 border border-border/50">
-                      <div className="flex space-x-1">
-                        <div className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" />
-                        <div className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
-                        <div className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
-                      </div>
+                            </p>
+                            <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
+                                <span className="text-primary text-xs">→</span>
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
                     </div>
                   </div>
-                )}
-              </>
+                </div>
+              </div>
             )}
+
+            {/* Additional Options - Minimalistic */}
+            <div className="flex items-center justify-center gap-4 mt-6 text-xs">
+              {suggestedQuestions.length > 0 && (
+                <details className="group">
+                  <summary className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors list-none">
+                    <span className="flex items-center gap-2">
+                      Browse Questions
+                      <span className="text-xs group-open:rotate-180 transition-transform">▼</span>
+                    </span>
+                  </summary>
+                  <div className="absolute z-10 mt-2 p-4 rounded-lg border border-border bg-card shadow-lg min-w-[300px]">
+                    <QuestionSwitcher
+                      question={currentPrompt}
+                      onQuestionChange={setCurrentPrompt}
+                      topic={selectedCategory}
+                      hideTopicSelector={true}
+                      questions={suggestedQuestions}
+                      isLoadingQuestions={isLoadingQuestions}
+                    />
+                  </div>
+                </details>
+              )}
+
+              {sessionId && (
+                <details className="group">
+                  <summary className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors list-none">
+                    <span className="flex items-center gap-2">
+                      Add Photos
+                      <span className="text-xs group-open:rotate-180 transition-transform">▼</span>
+                    </span>
+                  </summary>
+                  <div className="absolute z-10 mt-2 p-4 rounded-lg border border-border bg-card shadow-lg">
+                    <SessionImageUploader
+                      sessionId={sessionId}
+                      currentPrompt={currentPrompt}
+                      userId={user?.id}
+                    />
+                  </div>
+                </details>
+              )}
+            </div>
           </div>
         </div>
       </div>
