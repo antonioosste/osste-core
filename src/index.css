@@ -214,5 +214,30 @@ All colors MUST be HSL.
     border: 1px solid rgba(0,0,0,.06);
     backdrop-filter: saturate(105%);
   }
+
+  /* Custom scrollbar for conversation history */
+  .conversation-history-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary) / 0.2) transparent;
+  }
+
+  .conversation-history-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .conversation-history-scroll::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+  }
+
+  .conversation-history-scroll::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.2);
+    border-radius: 10px;
+    transition: background 0.2s ease;
+  }
+
+  .conversation-history-scroll::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.35);
+  }
 }
 
