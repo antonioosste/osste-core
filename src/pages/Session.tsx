@@ -67,6 +67,7 @@ export default function Session() {
   const [status, setStatus] = useState<SessionStatus>("idle");
   const [sessionTime, setSessionTime] = useState(0);
   const [currentPrompt, setCurrentPrompt] = useState("Tell me about your earliest childhood memory. What stands out most vividly?");
+  const [isLoadingSession, setIsLoadingSession] = useState(!!existingSessionId);
   
   // Session mode state
   const [showModeSelector, setShowModeSelector] = useState(!existingSessionId);
@@ -105,6 +106,7 @@ export default function Session() {
   useEffect(() => {
     const loadExistingSession = async () => {
       if (existingSessionId && turns.length > 0) {
+        setIsLoadingSession(true);
         console.log('📥 Loading existing session:', existingSessionId);
         
         // Fetch session data to get mode
@@ -175,11 +177,16 @@ export default function Session() {
           title: "Session loaded",
           description: "Continuing from where you left off.",
         });
+        
+        setIsLoadingSession(false);
+      } else if (existingSessionId && !turnsLoading && turns.length === 0) {
+        // Session exists but has no turns yet
+        setIsLoadingSession(false);
       }
     };
 
     loadExistingSession();
-  }, [existingSessionId, turns]);
+  }, [existingSessionId, turns, turnsLoading]);
 
   // Timer effect
   useEffect(() => {
@@ -730,6 +737,19 @@ export default function Session() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header isAuthenticated={true} />
+
+      {/* Full Screen Loading Animation */}
+      {isLoadingSession && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4 animate-fade-in">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <div className="text-center space-y-2">
+              <p className="text-lg font-medium text-foreground">Loading your session...</p>
+              <p className="text-sm text-muted-foreground">Preparing your conversation</p>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Session Mode Selector Dialog */}
       <SessionModeSelector 
@@ -928,9 +948,7 @@ export default function Session() {
             </CardHeader>
             <CardContent className="p-4">
               <div className="space-y-6">
-                {turnsLoading && existingSessionId ? (
-                  <ConversationSkeleton />
-                ) : messages.length === 0 ? (
+                {messages.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <p>No messages yet. Start recording to begin your conversation.</p>
                   </div>
