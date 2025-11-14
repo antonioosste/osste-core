@@ -770,29 +770,8 @@ export default function Session() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="max-w-4xl mx-auto w-full flex flex-col h-full px-4">
           
-          {/* Minimized Conversation History - Top */}
-          <div className="flex-shrink-0 max-h-[30vh] overflow-y-auto py-4 mb-4 opacity-60 hover:opacity-100 transition-opacity">
-            <div className="space-y-3">
-              {messages.length > 1 && messages.slice(0, -1).map((message) => (
-                <div key={message.id} className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`flex items-start gap-2 max-w-[70%] ${message.type === "user" ? "flex-row-reverse" : ""}`}>
-                    <div
-                      className={`rounded-xl px-3 py-2 text-xs ${
-                        message.type === "user"
-                          ? "bg-primary/20 text-primary-foreground/80"
-                          : "bg-muted/30 text-muted-foreground border border-border/30"
-                      }`}
-                    >
-                      <p className="leading-relaxed line-clamp-2">{message.content}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Minimalistic Header */}
-          <div className="flex items-center justify-between pb-4 border-b border-border/50 flex-shrink-0">
+          <div className="flex items-center justify-between py-4 border-b border-border/50 flex-shrink-0">
             <div className="flex items-center gap-4">
               <h1 className="text-lg font-medium text-foreground">Recording Session</h1>
               {getStatusBadge()}
@@ -824,8 +803,8 @@ export default function Session() {
             </div>
           </div>
 
-          {/* Central Recording Control - Main Focal Point */}
-          <div className="flex flex-col items-center flex-1 justify-center">
+          {/* Central Recording Control - Top Section */}
+          <div className="flex flex-col items-center py-6 flex-shrink-0 border-b border-border/30">
             {/* Error States */}
             {hasNetworkError && (
               <div className="mb-6 p-4 rounded-lg border border-destructive/50 bg-destructive/5 max-w-md w-full">
@@ -841,7 +820,7 @@ export default function Session() {
             )}
 
             {/* Large Microphone Button */}
-            <div className="relative mb-6">
+            <div className="relative mb-4">
               <Button
                 size="lg"
                 variant={isRecording ? "destructive" : "default"}
@@ -869,7 +848,7 @@ export default function Session() {
             </div>
 
             {/* Current Question Display */}
-            <div className="text-center max-w-xl mb-6">
+            <div className="text-center max-w-xl mb-4">
               <p className="text-sm text-muted-foreground/80 leading-relaxed">
                 {currentPrompt}
               </p>
@@ -877,7 +856,7 @@ export default function Session() {
 
             {/* Waveform - Only show when recording */}
             {isRecording && (
-              <div className="flex items-center justify-center space-x-1 h-12 mb-6">
+              <div className="flex items-center justify-center space-x-1 h-12 mb-4">
                 {waveformData.map((height, index) => (
                   <div
                     key={index}
@@ -901,7 +880,7 @@ export default function Session() {
                     description: "Your recording has been discarded."
                   });
                 }}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10 mb-6"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 mb-4"
               >
                 <X className="w-4 h-4 mr-2" />
                 Cancel Recording
@@ -910,7 +889,7 @@ export default function Session() {
 
             {/* AI-Inspired Follow-up Suggestions - Directly below Record Button */}
             {messages.length > 0 && messages[messages.length - 1]?.suggestions && !isRecording && (
-              <div className="w-full max-w-2xl animate-fade-in">
+              <div className="w-full max-w-2xl animate-fade-in mb-4">
                 <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-card via-card to-muted/20 shadow-xl backdrop-blur-sm">
                   {/* Subtle gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-accent/5 pointer-events-none" />
@@ -968,7 +947,7 @@ export default function Session() {
             )}
 
             {/* Additional Options - Minimalistic */}
-            <div className="flex items-center justify-center gap-4 mt-6 text-xs">
+            <div className="flex items-center justify-center gap-4 text-xs">
               {suggestedQuestions.length > 0 && (
                 <details className="group">
                   <summary className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors list-none">
@@ -1007,6 +986,105 @@ export default function Session() {
                   </div>
                 </details>
               )}
+            </div>
+          </div>
+
+          {/* Conversation History - Scrollable Bottom Section */}
+          <div className="flex-1 overflow-y-auto py-6">
+            <div className="space-y-6">
+              {messages.length === 0 ? (
+                <div className="text-center py-16 text-muted-foreground">
+                  <p>Start recording to begin your conversation</p>
+                </div>
+              ) : (
+                <>
+                  {messages.map((message) => (
+                    <div key={message.id} className="space-y-2">
+                      {/* Message */}
+                      <div className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
+                        <div className={`flex items-start gap-3 max-w-[80%] ${message.type === "user" ? "flex-row-reverse" : ""}`}>
+                          <div
+                            className={`rounded-2xl px-4 py-3 ${
+                              message.type === "user"
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted/50 text-foreground border border-border/50"
+                            }`}
+                          >
+                            <p className="text-sm leading-relaxed">{message.content}</p>
+                            <div className="text-xs opacity-60 mt-2">
+                              {message.timestamp.toLocaleTimeString([], { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })}
+                            </div>
+                          </div>
+                          
+                          {/* Audio Playback */}
+                          {message.type === "ai" && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0 flex-shrink-0 opacity-50 hover:opacity-100"
+                              onClick={() => {
+                                if (message.ttsUrl) {
+                                  playAudio(message.id, message.ttsUrl);
+                                } else if (message.recordingId && !message.isResolvingTts) {
+                                  toast({
+                                    title: "Loading audio",
+                                    description: "We'll play it as soon as it's ready.",
+                                  });
+                                  resolveTtsForMessage(message.id, message.recordingId, { autoplay: true });
+                                }
+                              }}
+                              disabled={playingAudioId === message.id || message.isResolvingTts}
+                            >
+                              {playingAudioId === message.id || message.isResolvingTts ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Volume2 className="h-3 w-3" />
+                              )}
+                            </Button>
+                          )}
+
+                          {message.type === "user" && message.recordingPath && !message.isPartial && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0 flex-shrink-0 opacity-50 hover:opacity-100"
+                              onClick={() => {
+                                if (message.recordingPath) {
+                                  playAudio(message.id, message.recordingPath);
+                                }
+                              }}
+                              disabled={playingAudioId === message.id}
+                            >
+                              {playingAudioId === message.id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Volume2 className="h-3 w-3" />
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Thinking Indicator */}
+                  {status === "thinking" && (
+                    <div className="flex justify-start">
+                      <div className="bg-muted/50 rounded-2xl p-3 border border-border/50">
+                        <div className="flex space-x-1">
+                          <div className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" />
+                          <div className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
+                          <div className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+              <div ref={conversationEndRef} />
             </div>
           </div>
         </div>
