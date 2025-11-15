@@ -29,7 +29,7 @@ import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { useTurns } from "@/hooks/useTurns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { generateChapters, getFollowUpQuestions } from "@/lib/backend-api";
+import { generateChapters } from "@/lib/backend-api";
 
 type SessionStatus = "idle" | "listening" | "thinking" | "speaking" | "paused" | "error";
 type PermissionState = "granted" | "denied" | "pending" | "prompt";
@@ -69,7 +69,7 @@ export default function Session() {
   // Core session state
   const [status, setStatus] = useState<SessionStatus>("idle");
   const [sessionTime, setSessionTime] = useState(0);
-  const [currentPrompt, setCurrentPrompt] = useState("Tell me about your earliest childhood memory. What stands out most vividly?");
+  const [currentPrompt, setCurrentPrompt] = useState("");
   const [isLoadingSession, setIsLoadingSession] = useState(!!existingSessionId);
   
   // Session mode state
@@ -87,14 +87,7 @@ export default function Session() {
   const [isGeneratingChapters, setIsGeneratingChapters] = useState(false);
   
   // Conversation state
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      type: "ai",
-      content: "Hello! I'm here to help you capture your stories. Let's start with your earliest childhood memory - what stands out most vividly to you?",
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [conversationOpen, setConversationOpen] = useState(true);
   
   // Waveform animation
@@ -385,33 +378,11 @@ export default function Session() {
         setSuggestedQuestions(questions);
         
         // Set first question as current
-        if (questions.length > 0) {
-          setCurrentPrompt(questions[0]);
-        }
-      } else if (mode === 'non-guided' && sessionId) {
-        // Fetch AI-generated follow-up questions from backend
-        const { data: { session } } = await supabase.auth.getSession();
-        const token = session?.access_token;
-        
-        if (!token) {
-          throw new Error('No authentication token available');
-        }
-
-        const data = await getFollowUpQuestions(token, sessionId);
-        
-        // Backend returns: { questions: string[], active_question: string }
-        const questions = data?.questions || [];
-        const activeQuestion = data?.active_question;
-        
-        setSuggestedQuestions(questions);
-        
-        // Set active question as current prompt
-        if (activeQuestion) {
-          setCurrentPrompt(activeQuestion);
-        } else if (questions.length > 0) {
+        if (questions.length > 0 && !currentPrompt) {
           setCurrentPrompt(questions[0]);
         }
       }
+      // Non-guided mode: follow-up questions come from turn upload response only
     } catch (error) {
       console.error('Error loading questions:', error);
       toast({

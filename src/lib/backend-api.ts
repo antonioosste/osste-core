@@ -168,22 +168,10 @@ export async function assembleStory(token: string, sessionId: string) {
   return response.json();
 }
 
+// NOTE: Follow-up questions are now retrieved from the POST /api/turns/upload response
+// The response includes: { follow_up: { topic, suggestions, tts_url } }
+// This function is deprecated and should not be used
 export async function getFollowUpQuestions(token: string, sessionId: string) {
-  const response = await fetchWithRetry(
-    `${BACKEND_BASE}/api/ai/followups/${sessionId}`,
-    {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    }
-  );
-
-  if (!response.ok) {
-    const error = new Error(`Follow-up questions fetch failed: ${response.statusText}`) as BackendError;
-    error.status = response.status;
-    throw error;
-  }
-
-  return response.json();
+  console.warn('getFollowUpQuestions is deprecated. Follow-up questions come from turn upload response.');
+  throw new Error('This endpoint is no longer available. Follow-up questions are included in the turn upload response.');
 }
