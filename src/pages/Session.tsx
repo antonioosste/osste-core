@@ -46,6 +46,7 @@ interface Message {
   turnId?: string;
   isResolvingTts?: boolean;
   suggestions?: string[];
+  topic?: string | null;
 }
 
 export default function Session() {
@@ -453,15 +454,17 @@ export default function Session() {
       // Extract data from backend response
       const transcriptionText = result.transcript?.text || result.turn?.answer_text;
       
-      // Handle both response formats from AI service:
-      // - { questions: [...] } when prompt_text is provided
-      // - { topic: "...", follow_up_suggestions: [...] } when prompt_text is NOT provided
-      const suggestions = result.follow_up?.questions || result.follow_up?.follow_up_suggestions || result.follow_up?.suggestions || [];
+      // New structure: suggestions[0] = main question (with TTS), suggestions[1-4] = alternatives
+      const allSuggestions = result.follow_up?.suggestions || [];
       const ttsUrl = result.follow_up?.tts_url;
-      const firstSuggestion = suggestions[0];
+      const topic = result.follow_up?.topic || null;
+      const mainQuestion = allSuggestions[0]; // Main question with TTS
+      const alternativeQuestions = allSuggestions.slice(1); // 4 alternatives
       
       console.log('🎵 TTS URL from response:', ttsUrl);
-      console.log('📋 Follow-up suggestions:', suggestions);
+      console.log('📋 Main question:', mainQuestion);
+      console.log('📋 Alternative questions:', alternativeQuestions);
+      console.log('🏷️ Topic:', topic);
       
       if (transcriptionText) {
         // Update user message with transcription and attach actual storage path
@@ -479,8 +482,8 @@ export default function Session() {
         ));
       }
       
-      // Add AI message with TTS URL and inline suggestions
-      if (firstSuggestion) {
+      // Add AI message with main question
+      if (mainQuestion) {
         const aiMessageId = `ai-${Date.now()}`;
         
         setMessages((prev) => [
@@ -488,20 +491,21 @@ export default function Session() {
           {
             id: aiMessageId,
             type: "ai",
-            content: firstSuggestion,
+            content: mainQuestion,
             timestamp: new Date(),
             ttsUrl: ttsUrl || null,
             isResolvingTts: false,
             recordingId: result.recording_id,
-            suggestions: suggestions.length > 0 ? suggestions : undefined
+            suggestions: alternativeQuestions.length > 0 ? alternativeQuestions : undefined,
+            topic: topic
           },
         ]);
 
-        // Update prompt with first suggestion
-        setCurrentPrompt(firstSuggestion);
+        // Update prompt with main question
+        setCurrentPrompt(mainQuestion);
         
-        // Also store in QuestionSwitcher for manual selection
-        setSuggestedQuestions(suggestions);
+        // Store alternative questions in QuestionSwitcher for manual selection
+        setSuggestedQuestions(alternativeQuestions);
 
         // Auto-play TTS if available, otherwise resolve it with a small delay
         if (ttsUrl) {
@@ -1099,6 +1103,16 @@ export default function Session() {
                             }`}
                           >
                             <p className="text-sm leading-relaxed">{message.content}</p>
+                            
+                            {/* Topic badge for AI messages */}
+                            {message.type === "ai" && message.topic && (
+                              <div className="mt-2">
+                                <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
+                                  {message.topic}
+                                </Badge>
+                              </div>
+                            )}
+                            
                             <div className="text-xs opacity-60 mt-2">
                               {message.timestamp.toLocaleTimeString([], { 
                                 hour: '2-digit', 
