@@ -447,6 +447,9 @@ export default function Session() {
       const result = await uploadAndProcess(recording, currentPrompt);
       console.log('📋 Turn created:', result);
       
+      // Refetch turns to update conversation history
+      await refetchTurns();
+      
       // Extract data from backend response
       const transcriptionText = result.transcript?.text || result.turn?.answer_text;
       
@@ -456,6 +459,9 @@ export default function Session() {
       const suggestions = result.follow_up?.questions || result.follow_up?.follow_up_suggestions || result.follow_up?.suggestions || [];
       const ttsUrl = result.follow_up?.tts_url;
       const firstSuggestion = suggestions[0];
+      
+      console.log('🎵 TTS URL from response:', ttsUrl);
+      console.log('📋 Follow-up suggestions:', suggestions);
       
       if (transcriptionText) {
         // Update user message with transcription and attach actual storage path
@@ -485,7 +491,7 @@ export default function Session() {
             content: firstSuggestion,
             timestamp: new Date(),
             ttsUrl: ttsUrl || null,
-            isResolvingTts: !ttsUrl,
+            isResolvingTts: false,
             recordingId: result.recording_id,
             suggestions: suggestions.length > 0 ? suggestions : undefined
           },
@@ -497,13 +503,25 @@ export default function Session() {
         // Also store in QuestionSwitcher for manual selection
         setSuggestedQuestions(suggestions);
 
-        // Auto-play TTS if available, otherwise resolve it
+        // Auto-play TTS if available, otherwise resolve it with a small delay
         if (ttsUrl) {
-          console.log('🔊 Playing TTS audio from follow_up.tts_url');
-          playAudio(aiMessageId, ttsUrl);
+          console.log('🔊 Auto-playing TTS audio from follow_up.tts_url');
+          // Small delay to ensure message is rendered
+          setTimeout(() => {
+            playAudio(aiMessageId, ttsUrl).catch(error => {
+              console.error('❌ TTS auto-play failed:', error);
+              toast({
+                title: "Auto-play failed",
+                description: "Click the audio icon to play the response.",
+                variant: "default"
+              });
+            });
+          }, 100);
         } else if (result.recording_id) {
           console.log('🔄 TTS URL not ready, resolving from database...');
           resolveTtsForMessage(aiMessageId, result.recording_id, { autoplay: true });
+        } else {
+          console.warn('⚠️ No TTS URL or recording ID available');
         }
       }
       
@@ -530,6 +548,8 @@ export default function Session() {
 
   const playAudio = async (messageId: string, ttsUrl: string) => {
     try {
+      console.log('🎵 Playing audio for message:', messageId, 'URL:', ttsUrl);
+      
       // Stop any currently playing audio
       if (audioRef.current) {
         audioRef.current.pause();
@@ -542,12 +562,13 @@ export default function Session() {
       audioRef.current = audio;
 
       audio.onended = () => {
+        console.log('✅ Audio playback ended');
         setPlayingAudioId(null);
         audioRef.current = null;
       };
 
       audio.onerror = (err) => {
-        console.error("TTS playback error:", err);
+        console.error("❌ TTS playback error:", err);
         setPlayingAudioId(null);
         audioRef.current = null;
         toast({
@@ -557,11 +578,19 @@ export default function Session() {
         });
       };
 
-      await audio.play();
+      // Play with error handling
+      try {
+        await audio.play();
+        console.log('✅ Audio playback started successfully');
+      } catch (playError) {
+        console.error('❌ Audio play() failed:', playError);
+        throw playError;
+      }
     } catch (err) {
-      console.error("Error playing TTS audio:", err);
+      console.error("❌ Error playing TTS audio:", err);
       setPlayingAudioId(null);
       audioRef.current = null;
+      throw err;
     }
   };
 
