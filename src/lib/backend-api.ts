@@ -31,36 +31,8 @@ async function fetchWithRetry(
   }
 }
 
-export async function uploadRecording(
-  token: string,
-  data: {
-    sessionId: string;
-    storagePath: string;
-    durationSeconds: number;
-    mimeType: string;
-    language: string;
-  }
-) {
-  const response = await fetchWithRetry(
-    `${BACKEND_BASE}/api/recordings/upload`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    }
-  );
-
-  if (!response.ok) {
-    const error = new Error(`Upload failed: ${response.statusText}`) as BackendError;
-    error.status = response.status;
-    throw error;
-  }
-
-  return response.json();
-}
+// DEPRECATED: Use createTurn instead
+// The uploadRecording endpoint has been removed from the backend
 
 export async function createTurn(
   token: string,
@@ -107,25 +79,8 @@ export async function createTurn(
   return result;
 }
 
-export async function transcribeRecording(token: string, recordingId: string) {
-  const response = await fetchWithRetry(
-    `${BACKEND_BASE}/api/ai/transcribe/${recordingId}`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    }
-  );
-
-  if (!response.ok) {
-    const error = new Error(`Transcription failed: ${response.statusText}`) as BackendError;
-    error.status = response.status;
-    throw error;
-  }
-
-  return response.json();
-}
+// DEPRECATED: Transcription is now handled automatically by createTurn
+// The transcribeRecording endpoint has been removed from the backend
 
 export async function generateChapters(token: string, sessionId: string) {
   const response = await fetchWithRetry(
