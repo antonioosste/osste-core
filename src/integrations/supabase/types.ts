@@ -316,6 +316,7 @@ export type Database = {
           persona: string | null
           started_at: string | null
           status: string | null
+          story_anchor: string | null
           summary: string | null
           themes: string[] | null
           title: string | null
@@ -330,6 +331,7 @@ export type Database = {
           persona?: string | null
           started_at?: string | null
           status?: string | null
+          story_anchor?: string | null
           summary?: string | null
           themes?: string[] | null
           title?: string | null
@@ -344,6 +346,7 @@ export type Database = {
           persona?: string | null
           started_at?: string | null
           status?: string | null
+          story_anchor?: string | null
           summary?: string | null
           themes?: string[] | null
           title?: string | null
