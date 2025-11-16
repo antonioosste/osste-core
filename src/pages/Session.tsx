@@ -454,12 +454,11 @@ export default function Session() {
       // Extract data from backend response
       const transcriptionText = result.transcript?.text || result.turn?.answer_text;
       
-      // New structure: suggestions[0] = main question (with TTS), suggestions[1-4] = alternatives
-      const allSuggestions = result.follow_up?.suggestions || [];
+      // New unified API structure
+      const mainQuestion = result.follow_up?.question; // Main question (synthesized to TTS)
+      const alternativeQuestions = result.follow_up?.suggestions || []; // Alternative questions
       const ttsUrl = result.follow_up?.tts_url;
       const topic = result.follow_up?.topic || null;
-      const mainQuestion = allSuggestions[0]; // Main question with TTS
-      const alternativeQuestions = allSuggestions.slice(1); // 4 alternatives
       
       console.log('🎵 TTS URL from response:', ttsUrl);
       console.log('📋 Main question:', mainQuestion);
