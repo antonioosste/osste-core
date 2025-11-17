@@ -124,7 +124,8 @@ export async function assembleStory(token: string, sessionId: string) {
 }
 
 // NOTE: Follow-up questions are now retrieved from the POST /api/turns/upload response
-// The response includes: { follow_up: { topic, suggestions, tts_url } }
+// The response includes: { follow_up: { topic, question, tts_url, suggestions } }
+// The tts_url is a signed URL ready for immediate playback - no database queries needed
 // This function is deprecated and should not be used
 export async function getFollowUpQuestions(token: string, sessionId: string) {
   console.warn('getFollowUpQuestions is deprecated. Follow-up questions come from turn upload response.');
