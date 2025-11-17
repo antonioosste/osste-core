@@ -44,7 +44,6 @@ interface Message {
   recordingPath?: string;
   recordingId?: string;
   turnId?: string;
-  isResolvingTts?: boolean;
   suggestions?: string[];
   topic?: string | null;
 }
@@ -101,7 +100,6 @@ export default function Session() {
   // TTS audio playback
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [resolvingTtsIds, setResolvingTtsIds] = useState<Set<string>>(new Set());
 
   // Load existing session data on mount
   useEffect(() => {
@@ -258,89 +256,9 @@ export default function Session() {
     }
   };
 
-  // TTS resolver with polling
-  const resolveTtsForMessage = async (
-    messageId: string, 
-    recordingId: string, 
-    options: { autoplay?: boolean } = {}
-  ) => {
-    console.log('🔄 Starting TTS resolution for message:', messageId, 'recordingId:', recordingId);
-    
-    setResolvingTtsIds(prev => new Set(prev).add(messageId));
-    setMessages(prev => prev.map(m => 
-      m.id === messageId ? { ...m, isResolvingTts: true } : m
-    ));
-
-    for (let attempt = 0; attempt < 20; attempt++) {
-      try {
-        const { data, error } = await supabase
-          .from('turns')
-          .select('tts_audio_path')
-          .eq('recording_id', recordingId)
-          .maybeSingle();
-
-        console.log(`🔍 Attempt ${attempt + 1}/20 - TTS path:`, data?.tts_audio_path);
-
-        if (error) {
-          console.error('❌ Error fetching turns:', error);
-          break;
-        }
-
-        const path = data?.tts_audio_path;
-        if (path) {
-          console.log('✅ Found TTS path, creating signed URL:', path);
-          
-          const { data: signed, error: signErr } = await supabase.storage
-            .from('recordings')
-            .createSignedUrl(path, 3600);
-
-          if (!signErr && signed?.signedUrl) {
-            console.log('🎵 TTS signed URL created successfully:', signed.signedUrl);
-            
-            setMessages(prev => prev.map(m => 
-              m.id === messageId ? { ...m, ttsUrl: signed.signedUrl, isResolvingTts: false } : m
-            ));
-            setResolvingTtsIds(prev => {
-              const next = new Set(prev);
-              next.delete(messageId);
-              return next;
-            });
-
-            if (options.autoplay) {
-              console.log('🔊 Auto-playing TTS audio');
-              playAudio(messageId, signed.signedUrl);
-            }
-            return;
-          }
-          
-          console.error('❌ Error creating signed URL:', signErr);
-          break;
-        }
-
-        // Wait before next attempt with gentle backoff
-        await new Promise(r => setTimeout(r, 1500 + attempt * 250));
-      } catch (err) {
-        console.error('❌ Exception during TTS resolution:', err);
-        break;
-      }
-    }
-
-    console.log('⏱️ TTS resolution timed out or failed for message:', messageId);
-    setMessages(prev => prev.map(m => 
-      m.id === messageId ? { ...m, isResolvingTts: false } : m
-    ));
-    setResolvingTtsIds(prev => {
-      const next = new Set(prev);
-      next.delete(messageId);
-      return next;
-    });
-    
-    toast({
-      title: "Audio not ready yet",
-      description: "The AI audio is still being generated. Please try again in a moment.",
-      variant: "default",
-    });
-  };
+  // TTS playback is now handled directly from API response
+  // The backend returns follow_up.tts_url which is a signed URL ready for playback
+  // No database polling needed
 
   const handleModeSelect = async (mode: 'guided' | 'non-guided', category?: string) => {
     setSessionMode(mode);
@@ -493,7 +411,6 @@ export default function Session() {
             content: mainQuestion,
             timestamp: new Date(),
             ttsUrl: ttsUrl || null,
-            isResolvingTts: false,
             recordingId: result.recording_id,
             suggestions: alternativeQuestions.length > 0 ? alternativeQuestions : undefined,
             topic: topic
@@ -506,7 +423,7 @@ export default function Session() {
         // Store alternative questions in QuestionSwitcher for manual selection
         setSuggestedQuestions(alternativeQuestions);
 
-        // Auto-play TTS if available, otherwise resolve it with a small delay
+        // Auto-play TTS if available (backend always provides signed URL)
         if (ttsUrl) {
           console.log('🔊 Auto-playing TTS audio from follow_up.tts_url');
           // Small delay to ensure message is rendered
@@ -520,11 +437,8 @@ export default function Session() {
               });
             });
           }, 100);
-        } else if (result.recording_id) {
-          console.log('🔄 TTS URL not ready, resolving from database...');
-          resolveTtsForMessage(aiMessageId, result.recording_id, { autoplay: true });
         } else {
-          console.warn('⚠️ No TTS URL or recording ID available');
+          console.warn('⚠️ No TTS URL in API response');
         }
       }
       
@@ -1129,17 +1043,17 @@ export default function Session() {
                               onClick={() => {
                                 if (message.ttsUrl) {
                                   playAudio(message.id, message.ttsUrl);
-                                } else if (message.recordingId && !message.isResolvingTts) {
+                                } else {
                                   toast({
-                                    title: "Loading audio",
-                                    description: "We'll play it as soon as it's ready.",
+                                    title: "Audio unavailable",
+                                    description: "This message doesn't have audio available.",
+                                    variant: "default"
                                   });
-                                  resolveTtsForMessage(message.id, message.recordingId, { autoplay: true });
                                 }
                               }}
-                              disabled={playingAudioId === message.id || message.isResolvingTts}
+                              disabled={playingAudioId === message.id || !message.ttsUrl}
                             >
-                              {playingAudioId === message.id || message.isResolvingTts ? (
+                              {playingAudioId === message.id ? (
                                 <Loader2 className="h-3 w-3 animate-spin" />
                               ) : (
                                 <Volume2 className="h-3 w-3" />
