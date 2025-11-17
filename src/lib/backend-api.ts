@@ -79,6 +79,8 @@ export async function createTurn(
   return result;
 }
 
+// OPTIONAL: Use this endpoint only to refresh expired TTS signed URLs (24h expiry)
+// The initial POST /api/turns/upload response already includes the TTS URL
 export async function pollForTTS(
   token: string,
   turnId: string,
