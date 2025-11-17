@@ -79,6 +79,60 @@ export async function createTurn(
   return result;
 }
 
+export async function pollForTTS(
+  token: string,
+  turnId: string,
+  maxAttempts = 10,
+  intervalMs = 2000
+): Promise<{ tts_url: string | null; status: string; ready: boolean }> {
+  let attempts = 0;
+
+  while (attempts < maxAttempts) {
+    attempts++;
+    
+    try {
+      const response = await fetch(
+        `${BACKEND_BASE}/api/turns/${turnId}/tts`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.warn(`⚠️ TTS polling attempt ${attempts} failed:`, response.status);
+        if (attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, intervalMs));
+          continue;
+        }
+        throw new Error(`TTS polling failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.ready && data.tts_url) {
+        console.log(`✅ TTS ready on attempt ${attempts}:`, data.tts_url);
+        return data;
+      }
+
+      console.log(`⏳ TTS not ready yet (attempt ${attempts}/${maxAttempts}), status: ${data.status}`);
+      
+      if (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, intervalMs));
+      }
+    } catch (error) {
+      console.error(`❌ TTS polling error on attempt ${attempts}:`, error);
+      if (attempts >= maxAttempts) {
+        throw error;
+      }
+      await new Promise(resolve => setTimeout(resolve, intervalMs));
+    }
+  }
+
+  throw new Error('TTS polling timeout - max attempts reached');
+}
+
 // DEPRECATED: Transcription is now handled automatically by createTurn
 // The transcribeRecording endpoint has been removed from the backend
 
