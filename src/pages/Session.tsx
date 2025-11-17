@@ -29,7 +29,7 @@ import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { useTurns } from "@/hooks/useTurns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { generateChapters, pollForTTS } from "@/lib/backend-api";
+import { generateChapters } from "@/lib/backend-api";
 
 type SessionStatus = "idle" | "listening" | "thinking" | "speaking" | "paused" | "error";
 type PermissionState = "granted" | "denied" | "pending" | "prompt";
@@ -41,7 +41,6 @@ interface Message {
   timestamp: Date;
   isPartial?: boolean;
   ttsUrl?: string | null;
-  ttsLoading?: boolean;
   recordingPath?: string;
   recordingId?: string;
   turnId?: string;
@@ -376,13 +375,11 @@ export default function Session() {
       // New unified API structure
       const mainQuestion = result.follow_up?.question; // Main question (synthesized to TTS)
       const alternativeQuestions = result.follow_up?.suggestions || []; // Alternative questions
-      const ttsUrl = result.follow_up?.tts_url; // Will be null if TTS is pending
+      const ttsUrl = result.follow_up?.tts_url; // Available immediately in response
       const topic = result.follow_up?.topic || null;
       const turnId = result.turn?.id;
-      const turnStatus = result.turn?.status;
       
       console.log('🎵 TTS URL from response:', ttsUrl);
-      console.log('📋 Turn status:', turnStatus);
       console.log('📋 Main question:', mainQuestion);
       console.log('📋 Alternative questions:', alternativeQuestions);
       console.log('🏷️ Topic:', topic);
@@ -415,7 +412,6 @@ export default function Session() {
             content: mainQuestion,
             timestamp: new Date(),
             ttsUrl: ttsUrl || null,
-            ttsLoading: !ttsUrl && turnStatus === 'tts_pending', // Show loading if TTS is pending
             turnId: turnId,
             recordingId: result.recording_id,
             suggestions: alternativeQuestions.length > 0 ? alternativeQuestions : undefined,
@@ -428,13 +424,8 @@ export default function Session() {
         
         // Store alternative questions in QuestionSwitcher for manual selection
         setSuggestedQuestions(alternativeQuestions);
-
-        // If TTS is pending, start polling for it
-        if (!ttsUrl && turnStatus === 'tts_pending' && turnId) {
-          pollForTTSAudio(turnId);
-        }
         
-        // Auto-play TTS if immediately available
+        // Auto-play TTS audio (available immediately in response)
         if (ttsUrl) {
           console.log('🔊 Auto-playing TTS audio from follow_up.tts_url');
           setTimeout(() => {
@@ -579,44 +570,6 @@ export default function Session() {
     }
   };
 
-  const pollForTTSAudio = async (turnId: string) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        console.warn('No auth token for TTS polling');
-        return;
-      }
-
-      console.log('🎵 Starting TTS polling for turn:', turnId);
-      const result = await pollForTTS(session.access_token, turnId);
-      
-      if (result.ready && result.tts_url) {
-        console.log('✅ TTS URL received:', result.tts_url);
-        setMessages(prev => prev.map(msg => 
-          msg.turnId === turnId 
-            ? { ...msg, ttsUrl: result.tts_url, ttsLoading: false }
-            : msg
-        ));
-        
-        toast({
-          title: "Audio ready",
-          description: "You can now play the audio response.",
-        });
-      }
-    } catch (error) {
-      console.error('❌ TTS polling failed:', error);
-      setMessages(prev => prev.map(msg => 
-        msg.turnId === turnId 
-          ? { ...msg, ttsLoading: false }
-          : msg
-      ));
-      toast({
-        title: "Audio generation failed",
-        description: "Could not generate audio for this response.",
-        variant: "destructive"
-      });
-    }
-  };
 
   const cancelAndExit = () => {
     if (isRecording) {
@@ -1083,15 +1036,7 @@ export default function Session() {
                           
                           {/* Audio Playback */}
                           {message.type === "ai" && (
-                            <>
-                              {message.ttsLoading && (
-                                <div className="flex items-center text-xs text-muted-foreground gap-1">
-                                  <Loader2 className="h-3 w-3 animate-spin" />
-                                  <span>Generating audio...</span>
-                                </div>
-                              )}
-                              {!message.ttsLoading && (
-                                <Button
+                            <Button
                                   size="sm"
                                   variant="ghost"
                                   className="h-7 w-7 p-0 flex-shrink-0 opacity-50 hover:opacity-100"
@@ -1114,8 +1059,6 @@ export default function Session() {
                                     <Volume2 className="h-3 w-3" />
                                   )}
                                 </Button>
-                              )}
-                            </>
                           )}
 
                           {message.type === "user" && message.recordingPath && (
