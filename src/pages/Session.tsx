@@ -1114,28 +1114,8 @@ export default function Session() {
                                     <Loader2 className="h-3 w-3 animate-spin" />
                                   ) : (
                                     <Volume2 className="h-3 w-3" />
-                                  )}
-                                </Button>
                           )}
-
-                          {message.type === "user" && message.recordingPath && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 w-7 p-0 flex-shrink-0 opacity-50 hover:opacity-100"
-                              onClick={() => {
-                                if (message.recordingPath) {
-                                  playAudio(message.id, message.recordingPath);
-                                }
-                              }}
-                              disabled={playingAudioId === message.id}
-                            >
-                              {playingAudioId === message.id ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <Volume2 className="h-3 w-3" />
-                              )}
-                            </Button>
+                                </Button>
                           )}
                         </div>
                       </div>
