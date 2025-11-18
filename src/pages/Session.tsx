@@ -83,6 +83,7 @@ export default function Session() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [currentQuestionData, setCurrentQuestionData] = useState<QuestionRow | null>(null);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
+  const [currentQuestionTtsUrl, setCurrentQuestionTtsUrl] = useState<string | null>(null);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   
   // Permission and error states
@@ -474,6 +475,7 @@ export default function Session() {
 
         // Update prompt with main question
         setCurrentPrompt(mainQuestion);
+        setCurrentQuestionTtsUrl(ttsUrl || null);
         
         // Store alternative questions in QuestionSwitcher for manual selection
         setSuggestedQuestions(alternativeQuestions);
@@ -837,9 +839,30 @@ export default function Session() {
 
             {/* Current Question Display */}
             <div className="text-center max-w-xl mb-4">
-              <p className="text-sm text-muted-foreground/80 leading-relaxed">
-                {currentPrompt}
-              </p>
+              <div className="flex items-center justify-center gap-3">
+                <p className="text-sm text-muted-foreground/80 leading-relaxed flex-1">
+                  {currentPrompt}
+                </p>
+                {currentQuestionTtsUrl && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0 flex-shrink-0"
+                    onClick={() => {
+                      if (currentQuestionTtsUrl) {
+                        playAudio('current-question', currentQuestionTtsUrl);
+                      }
+                    }}
+                    disabled={playingAudioId === 'current-question'}
+                  >
+                    {playingAudioId === 'current-question' ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Volume2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
 
             {/* Waveform - Only show when recording */}
