@@ -113,7 +113,7 @@ export default function Session() {
     const loadExistingSession = async () => {
       if (existingSessionId && turns.length > 0) {
         setIsLoadingSession(true);
-        console.log('📥 Loading existing session:', existingSessionId);
+        console.log('📥 Loading existing session:', existingSessionId, 'with', turns.length, 'turns');
         
         // Fetch session data to get mode
         const { data: sessionData } = await supabase
@@ -138,16 +138,26 @@ export default function Session() {
           await loadQuestions(loadedMode, category);
         }
         
-        // Load turns into messages
-        const loadedMessages: Message[] = [{
-          id: "welcome",
-          type: "ai",
-          content: "Welcome back! Let's continue your story.",
-          timestamp: new Date()
-        }];
+        // Sort turns by turn_index to ensure proper ordering
+        const sortedTurns = [...turns].sort((a, b) => {
+          const indexA = a.turn_index || 0;
+          const indexB = b.turn_index || 0;
+          return indexA - indexB;
+        });
+        
+        console.log('📋 Loading', sortedTurns.length, 'turns in order');
+        
+        // Load turns into messages - NO welcome message for existing sessions
+        const loadedMessages: Message[] = [];
 
-        for (const turn of turns) {
-          // Add AI prompt
+        for (const turn of sortedTurns) {
+          console.log('📝 Loading turn', turn.turn_index, ':', {
+            prompt: turn.prompt_text?.substring(0, 50),
+            answer: turn.answer_text?.substring(0, 50),
+            stt: turn.stt_text?.substring(0, 50)
+          });
+          
+          // Add AI prompt first if it exists
           if (turn.prompt_text) {
             const suggestions = turn.follow_up_suggestions 
               ? (Array.isArray(turn.follow_up_suggestions) 
@@ -155,35 +165,52 @@ export default function Session() {
                   : [])
               : undefined;
             
+            // Get TTS URL if available
+            let ttsUrl: string | null = null;
+            if (turn.tts_audio_path) {
+              const { data } = await supabase.storage
+                .from('recordings')
+                .createSignedUrl(turn.tts_audio_path, 86400); // 24 hours
+              ttsUrl = data?.signedUrl || null;
+            }
+            
             loadedMessages.push({
               id: `ai-${turn.id}`,
               type: "ai",
               content: turn.prompt_text,
               timestamp: new Date(turn.created_at || Date.now()),
-              ttsUrl: null,
+              ttsUrl: ttsUrl,
               recordingId: turn.recording_id || undefined,
               suggestions: suggestions,
+              turnId: turn.id
             });
           }
 
-          // Add user answer
-          if (turn.answer_text) {
+          // Add user answer (use stt_text if answer_text is not available)
+          const userText = turn.answer_text || turn.stt_text;
+          if (userText) {
             loadedMessages.push({
               id: `user-${turn.id}`,
               type: "user",
-              content: turn.answer_text,
+              content: userText,
               timestamp: new Date(turn.created_at || Date.now()),
               recordingPath: turn.recording_id || undefined,
             });
           }
         }
 
+        console.log('✅ Loaded', loadedMessages.length, 'messages total');
         setMessages(loadedMessages);
         
         // Set the last AI prompt as current and load its suggestions
-        const lastAiMessage = loadedMessages.reverse().find(m => m.type === 'ai');
+        const lastAiMessage = [...loadedMessages].reverse().find(m => m.type === 'ai');
         if (lastAiMessage) {
           setCurrentPrompt(lastAiMessage.content);
+          
+          // Set TTS URL for current question
+          if (lastAiMessage.ttsUrl) {
+            setCurrentQuestionTtsUrl(lastAiMessage.ttsUrl);
+          }
           
           // If the last AI message has suggestions, load them
           if (lastAiMessage.suggestions) {
@@ -193,13 +220,14 @@ export default function Session() {
 
         toast({
           title: "Session loaded",
-          description: "Continuing from where you left off.",
+          description: `Loaded ${sortedTurns.length} conversation turns`,
         });
         
         setIsLoadingSession(false);
       } else if (existingSessionId && !turnsLoading && turns.length === 0) {
-        // Session exists but has no turns yet
+        // Session exists but has no turns yet - show category selector
         setIsLoadingSession(false);
+        setShowCategorySelector(true);
       }
     };
 
