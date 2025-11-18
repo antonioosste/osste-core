@@ -32,20 +32,45 @@ export function useChapters(recordingId?: string) {
 
     try {
       setLoading(true);
-      let query = (supabase as any)
-        .from('chapters')
-        .select('*')
-        .order('order_index', { ascending: true });
-
+      
       if (recordingId) {
-        query = query.eq('recording_id', recordingId);
+        // Fetch chapters for a specific recording
+        const { data, error: fetchError } = await (supabase as any)
+          .from('chapters')
+          .select('*')
+          .eq('recording_id', recordingId)
+          .order('order_index', { ascending: true });
+
+        if (fetchError) throw fetchError;
+        setChapters((data as any) || []);
+      } else {
+        // Fetch all chapters for the current user's recordings
+        const { data: recordings, error: recordingsError } = await (supabase as any)
+          .from('recordings')
+          .select('id')
+          .in('session_id', 
+            (supabase as any)
+              .from('sessions')
+              .select('id')
+              .eq('user_id', user.id)
+          );
+
+        if (recordingsError) throw recordingsError;
+
+        if (recordings && recordings.length > 0) {
+          const recordingIds = recordings.map((r: any) => r.id);
+          const { data, error: fetchError } = await (supabase as any)
+            .from('chapters')
+            .select('*')
+            .in('recording_id', recordingIds)
+            .order('order_index', { ascending: true });
+
+          if (fetchError) throw fetchError;
+          setChapters((data as any) || []);
+        } else {
+          setChapters([]);
+        }
       }
-
-      const { data, error: fetchError } = await query;
-
-      if (fetchError) throw fetchError;
-
-      setChapters((data as any) || []);
     } catch (err) {
       setError(err as Error);
       console.error('Error fetching chapters:', err);
