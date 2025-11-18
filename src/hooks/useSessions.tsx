@@ -91,6 +91,73 @@ export function useSessions() {
 
   const deleteSession = async (id: string) => {
     try {
+      // First, get all recordings for this session to delete storage files
+      const { data: recordings } = await supabase
+        .from('recordings')
+        .select('storage_path')
+        .eq('session_id', id);
+
+      // Delete storage files for recordings
+      if (recordings && recordings.length > 0) {
+        const filePaths = recordings.map(r => r.storage_path);
+        const { error: storageError } = await supabase.storage
+          .from('recordings')
+          .remove(filePaths);
+        
+        if (storageError) {
+          console.error('Error deleting recording files:', storageError);
+        }
+      }
+
+      // Delete session media files from storage
+      const { data: mediaFiles } = await supabase
+        .from('session_media')
+        .select('url, file_name')
+        .eq('session_id', id);
+
+      if (mediaFiles && mediaFiles.length > 0) {
+        // Extract file paths from URLs (remove the base URL)
+        const mediaPaths = mediaFiles.map(m => {
+          // Extract path after the bucket name
+          const match = m.url.match(/session-media\/(.+)$/);
+          return match ? match[1] : m.file_name;
+        });
+        
+        const { error: mediaStorageError } = await supabase.storage
+          .from('session-media')
+          .remove(mediaPaths);
+        
+        if (mediaStorageError) {
+          console.error('Error deleting media files:', mediaStorageError);
+        }
+      }
+
+      // Delete in order due to foreign key constraints:
+      // 1. Delete turns (references recordings)
+      await supabase.from('turns').delete().eq('session_id', id);
+      
+      // 2. Delete transcripts (references recordings)
+      const { data: sessionRecordings } = await supabase
+        .from('recordings')
+        .select('id')
+        .eq('session_id', id);
+      
+      if (sessionRecordings && sessionRecordings.length > 0) {
+        const recordingIds = sessionRecordings.map(r => r.id);
+        await supabase.from('transcripts').delete().in('recording_id', recordingIds);
+        await supabase.from('chapters').delete().in('recording_id', recordingIds);
+      }
+
+      // 3. Delete session_media
+      await supabase.from('session_media').delete().eq('session_id', id);
+      
+      // 4. Delete stories
+      await supabase.from('stories').delete().eq('session_id', id);
+      
+      // 5. Delete recordings
+      await supabase.from('recordings').delete().eq('session_id', id);
+
+      // 6. Finally delete the session
       const { error: deleteError } = await supabase
         .from('sessions')
         .delete()
@@ -102,7 +169,7 @@ export function useSessions() {
 
       toast({
         title: "Session deleted",
-        description: "The session has been permanently deleted.",
+        description: "The session and all related data have been permanently deleted.",
       });
     } catch (err) {
       toast({
