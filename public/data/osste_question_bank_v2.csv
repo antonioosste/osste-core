@@ -1,0 +1,442 @@
+osste_question_bank_v2
+id,category,question,emotion_tags,followup_type,depth_level,locale_variant
+1,Childhood & Early Memories,"What is your earliest memory, and how old were you?",nostalgia|warmth|innocence,sensory|timeline|why_how,1,en-US
+2,Childhood & Early Memories,What did your childhood bedroom look like?,nostalgia|warmth|innocence,sensory|timeline|why_how,1,en-US
+3,Childhood & Early Memories,Which smells or sounds instantly take you back to childhood?,nostalgia|warmth|innocence,sensory|timeline|why_how,1,en-US
+4,Childhood & Early Memories,Who was your best childhood friend and how did you meet?,nostalgia|warmth|innocence,sensory|timeline|why_how,1,en-US
+5,Childhood & Early Memories,What games or activities did you love most as a kid?,nostalgia|warmth|innocence,sensory|timeline|why_how,1,en-US
+6,Childhood & Early Memories,What was a typical weekend like in your family when you were little?,nostalgia|warmth|innocence,sensory|timeline|why_how,1,en-US
+7,Childhood & Early Memories,What made you feel safe or comforted as a child?,nostalgia|warmth|innocence,sensory|timeline|why_how,1,en-US
+8,Childhood & Early Memories,Which family routines do you remember most vividly?,nostalgia|warmth|innocence,sensory|timeline|why_how,1,en-US
+9,Childhood & Early Memories,What did you want to be when you grew up—and why?,nostalgia|warmth|innocence,sensory|timeline|why_how,2,en-US
+10,Childhood & Early Memories,What rule at home felt unfair back then?,nostalgia|warmth|innocence,sensory|timeline|why_how,2,en-US
+11,Childhood & Early Memories,What was your favorite place to hide or play?,nostalgia|warmth|innocence,sensory|timeline|why_how,1,en-US
+12,Childhood & Early Memories,"Which book, movie, or show defined your childhood?",nostalgia|warmth|innocence,sensory|timeline|why_how,1,en-US
+13,Childhood & Early Memories,What is a time you got in trouble—and what did you learn?,nostalgia|warmth|innocence,sensory|timeline|why_how,2,en-US
+14,Childhood & Early Memories,Which holiday from childhood stands out the most to you?,nostalgia|warmth|innocence,sensory|timeline|why_how,1,en-US
+15,Childhood & Early Memories,What did the outside of your home/neighborhood feel like?,nostalgia|warmth|innocence,sensory|timeline|why_how,1,en-US
+16,Childhood & Early Memories,What was your favorite meal or snack as a kid?,nostalgia|warmth|innocence,sensory|timeline|why_how,1,en-US
+17,Childhood & Early Memories,Who were your heroes growing up?,nostalgia|warmth|innocence,sensory|timeline|why_how,1,en-US
+18,Childhood & Early Memories,What made you laugh the hardest as a child?,nostalgia|warmth|innocence,sensory|timeline|why_how,1,en-US
+19,Childhood & Early Memories,What is a small detail from your childhood home you still remember?,nostalgia|warmth|innocence,sensory|timeline|why_how,2,en-US
+20,Childhood & Early Memories,"If you could relive one childhood day, which would it be and why?",nostalgia|warmth|innocence,sensory|timeline|why_how,2,en-US
+21,Family & Home Life,How would you describe your parents’ relationship?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+22,Family & Home Life,What are the most important lessons you learned from your parents or caregivers?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+23,Family & Home Life,What roles did siblings (or cousins) play in your life?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+24,Family & Home Life,Which family traditions meant the most to you?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+25,Family & Home Life,How did your family handle conflict or disagreements?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+26,Family & Home Life,Who in your family made you feel most understood?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+27,Family & Home Life,What did dinner time look like in your home?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+28,Family & Home Life,What chores or responsibilities did you have growing up?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+29,Family & Home Life,Did your family move homes—how did that affect you?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+30,Family & Home Life,What is something you wish you had said to a family member?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+31,Family & Home Life,Which family story gets told over and over again?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+32,Family & Home Life,How did your family celebrate birthdays or milestones?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+33,Family & Home Life,What was your relationship like with grandparents?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+34,Family & Home Life,What was the toughest challenge your family faced together?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+35,Family & Home Life,How did your family express love and care?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+36,Family & Home Life,What values were emphasized in your home?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+37,Family & Home Life,How did your family influence your beliefs about money?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+38,Family & Home Life,How has your relationship with your family changed over time?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+39,Family & Home Life,What do you hope to carry forward from your family culture?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+40,Family & Home Life,What family tradition would you like to start or revive?,belonging|love|roots,why_how|narrative|reflection,2,en-US
+41,School & Teenage Years,What kind of student were you in elementary school?,growth|identity|awkward,timeline|narrative|contrast,2,en-US
+42,School & Teenage Years,Who was your favorite teacher and why did they matter to you?,growth|identity|awkward,timeline|narrative|contrast,2,en-US
+43,School & Teenage Years,"What subjects came naturally, and which were hard?",growth|identity|awkward,timeline|narrative|contrast,2,en-US
+44,School & Teenage Years,What is a school accomplishment you’re proud of?,growth|identity|awkward,timeline|narrative|contrast,2,en-US
+45,School & Teenage Years,What did your friend group look like in high school?,growth|identity|awkward,timeline|narrative|contrast,2,en-US
+46,School & Teenage Years,What music defined your teenage years?,growth|identity|awkward,timeline|narrative|contrast,2,en-US
+47,School & Teenage Years,How did you spend your weekends or summers as a teen?,growth|identity|awkward,timeline|narrative|contrast,2,en-US
+48,School & Teenage Years,Did you have a part-time job—what was it like?,growth|identity|awkward,timeline|narrative|contrast,2,en-US
+49,School & Teenage Years,What was a moment you felt misunderstood as a teenager?,growth|identity|awkward,timeline|narrative|contrast,2,en-US
+50,School & Teenage Years,What was your first major responsibility outside home?,growth|identity|awkward,timeline|narrative|contrast,2,en-US
+51,School & Teenage Years,What was prom or your biggest school event like for you?,growth|identity|awkward,timeline|narrative|contrast,2,en-US
+52,School & Teenage Years,What was your biggest fear or insecurity as a teen?,growth|identity|awkward,timeline|narrative|contrast,2,en-US
+53,School & Teenage Years,What rule did you break in school—and what happened?,growth|identity|awkward,timeline|narrative|contrast,2,en-US
+54,School & Teenage Years,Who believed in you when you didn’t believe in yourself?,growth|identity|awkward,timeline|narrative|contrast,2,en-US
+55,School & Teenage Years,"What was your high school persona, if any?",growth|identity|awkward,timeline|narrative|contrast,2,en-US
+56,School & Teenage Years,How did you imagine adulthood back then?,growth|identity|awkward,timeline|narrative|contrast,2,en-US
+57,School & Teenage Years,What advice would you give your teenage self?,growth|identity|awkward,timeline|narrative|contrast,2,en-US
+58,School & Teenage Years,What was a turning point during your teen years?,growth|identity|awkward,timeline|narrative|contrast,2,en-US
+59,School & Teenage Years,What skill or habit from school still helps you today?,growth|identity|awkward,timeline|narrative|contrast,2,en-US
+60,School & Teenage Years,Which classmate do you still think about and why?,growth|identity|awkward,timeline|narrative|contrast,2,en-US
+61,First Love & Relationships,When did you first feel love—what do you remember about it?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+62,First Love & Relationships,How did you meet your first significant partner?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+63,First Love & Relationships,What do you wish you had known about love back then?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+64,First Love & Relationships,What is the most romantic gesture you’ve given or received?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+65,First Love & Relationships,What is your love language—how do you show affection?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+66,First Love & Relationships,What did your earliest relationships teach you about yourself?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+67,First Love & Relationships,What does a healthy relationship look like to you now?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+68,First Love & Relationships,How have your standards in love changed over time?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+69,First Love & Relationships,What is your most cherished memory with a partner?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+70,First Love & Relationships,What was your first heartbreak like—how did you heal?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+71,First Love & Relationships,Have you ever written or received a love letter?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+72,First Love & Relationships,What small everyday moments felt like love to you?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+73,First Love & Relationships,What values do you look for in a partner now?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+74,First Love & Relationships,How do you handle conflict in relationships?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+75,First Love & Relationships,What role does trust play for you—and how is it earned?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+76,First Love & Relationships,How do you balance independence and intimacy?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+77,First Love & Relationships,What kind of partner are you at your best?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+78,First Love & Relationships,What’s a lesson you learned from a breakup?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+79,First Love & Relationships,How do you know you’re truly in love now?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+80,First Love & Relationships,What advice about love would you give your younger self?,love|vulnerability|heartbreak,narrative|why_how|repair,2,en-US
+81,Friendships & Community,"Who has been your most loyal friend, and how did you meet?",trust|joy|loyalty,narrative|why_how|repair,2,en-US
+82,Friendships & Community,What do you value most in friendship?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+83,Friendships & Community,What’s your funniest memory with friends?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+84,Friendships & Community,Who is someone who showed up for you when it mattered most?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+85,Friendships & Community,Have you ever drifted from a friend—what happened?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+86,Friendships & Community,What’s the kindest thing a friend has done for you?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+87,Friendships & Community,How do you nurture long-distance friendships?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+88,Friendships & Community,What makes you feel truly seen by a friend?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+89,Friendships & Community,Which community or group made you feel you belonged?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+90,Friendships & Community,Have you ever had to end a friendship—how did you handle it?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+91,Friendships & Community,What shared tradition do you have with friends?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+92,Friendships & Community,What did you learn from a difficult friendship?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+93,Friendships & Community,Who do you still want to thank from your past?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+94,Friendships & Community,What role do you play in your friend group?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+95,Friendships & Community,How have your friendships changed over time?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+96,Friendships & Community,What does being a good friend mean to you?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+97,Friendships & Community,Who do you call first with good news—why them?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+98,Friendships & Community,What adventure did you share with friends that you’ll never forget?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+99,Friendships & Community,How do you handle conflict with friends?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+100,Friendships & Community,Which friend pushed you to grow—and how?,trust|joy|loyalty,narrative|why_how|repair,2,en-US
+101,"Work, Career & Purpose",What was your first paid job and what did it teach you?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+102,"Work, Career & Purpose",Who mentored you early in your career?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+103,"Work, Career & Purpose",What risk did you take professionally that changed your path?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+104,"Work, Career & Purpose",What’s a project you’re proud of even if few people know about it?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+105,"Work, Career & Purpose",When did work first feel meaningful to you?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+106,"Work, Career & Purpose",What failure taught you the most at work?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+107,"Work, Career & Purpose",Have you ever reinvented your career—what led to it?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+108,"Work, Career & Purpose",How do you define success now compared to earlier?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+109,"Work, Career & Purpose",What’s a time you advocated for yourself at work?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+110,"Work, Career & Purpose",How do you balance work and life during busy seasons?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+111,"Work, Career & Purpose",What’s a skill you developed that surprised you?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+112,"Work, Career & Purpose",What workplace culture brought out your best self?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+113,"Work, Career & Purpose",Have you ever started a business or side project—what happened?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+114,"Work, Career & Purpose",What advice would you give your younger self about career?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+115,"Work, Career & Purpose",What’s a professional boundary you learned to set?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+116,"Work, Career & Purpose",Which compliment about your work meant the most?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+117,"Work, Career & Purpose",When did you feel most confident in your role?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+118,"Work, Career & Purpose",What’s a big goal you’re still working toward?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+119,"Work, Career & Purpose",How do you want your work to impact others?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+120,"Work, Career & Purpose",What would you do if money were no object?,ambition|pride|doubt,timeline|narrative|why_how,2,en-US
+121,"Hardship, Loss & Healing",What’s the hardest season you’ve lived through?,grief|resilience|compassion,narrative|grounding|repair,3,en-US
+122,"Hardship, Loss & Healing",How did you find strength when you felt overwhelmed?,grief|resilience|compassion,narrative|grounding|repair,3,en-US
+123,"Hardship, Loss & Healing",What loss changed you—how did you grieve?,grief|resilience|compassion,narrative|grounding|repair,3,en-US
+124,"Hardship, Loss & Healing",Who helped you through a painful time—and how?,grief|resilience|compassion,narrative|grounding|repair,3,en-US
+125,"Hardship, Loss & Healing",What does resilience look like in your life?,grief|resilience|compassion,narrative|grounding|repair,3,en-US
+126,"Hardship, Loss & Healing",What did pain teach you that comfort could not?,grief|resilience|compassion,narrative|grounding|repair,3,en-US
+127,"Hardship, Loss & Healing",What’s a promise you made to yourself after a hard moment?,grief|resilience|compassion,narrative|grounding|repair,3,en-US
+128,"Hardship, Loss & Healing",How have you healed from something that once hurt deeply?,grief|resilience|compassion,narrative|grounding|repair,3,en-US
+129,"Hardship, Loss & Healing",What coping strategies actually helped you?,grief|resilience|compassion,narrative|grounding|repair,2,en-US
+130,"Hardship, Loss & Healing",What do you wish others knew about grief?,grief|resilience|compassion,narrative|grounding|repair,2,en-US
+131,"Hardship, Loss & Healing",What relationship required forgiveness—what did that take?,grief|resilience|compassion,narrative|grounding|repair,3,en-US
+132,"Hardship, Loss & Healing",How did your worldview change after hardship?,grief|resilience|compassion,narrative|grounding|repair,3,en-US
+133,"Hardship, Loss & Healing",What small steps moved you forward when nothing else could?,grief|resilience|compassion,narrative|grounding|repair,2,en-US
+134,"Hardship, Loss & Healing",What memory still aches—and why does it matter?,grief|resilience|compassion,narrative|grounding|repair,3,en-US
+135,"Hardship, Loss & Healing",What role do faith or beliefs play in healing for you?,grief|resilience|compassion,narrative|grounding|repair,3,en-US
+136,"Hardship, Loss & Healing",When did you realize you were stronger than you thought?,grief|resilience|compassion,narrative|grounding|repair,3,en-US
+137,"Hardship, Loss & Healing",How do you handle anniversaries of difficult events?,grief|resilience|compassion,narrative|grounding|repair,2,en-US
+138,"Hardship, Loss & Healing",What would you tell someone going through what you did?,grief|resilience|compassion,narrative|grounding|repair,2,en-US
+139,"Hardship, Loss & Healing",What boundaries protect your peace now?,grief|resilience|compassion,narrative|grounding|repair,2,en-US
+140,"Hardship, Loss & Healing",What does compassion for yourself look like today?,grief|resilience|compassion,narrative|grounding|repair,3,en-US
+141,Triumphs & Turning Points,What’s a moment that changed the course of your life?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+142,Triumphs & Turning Points,What personal milestone means the most to you—and why?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+143,Triumphs & Turning Points,What did it take to achieve a goal others doubted?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+144,Triumphs & Turning Points,When did you surprise yourself with courage?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+145,Triumphs & Turning Points,Who was the first person you told about a big win?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+146,Triumphs & Turning Points,How do you celebrate your achievements?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+147,Triumphs & Turning Points,What turning point helped you grow up?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+148,Triumphs & Turning Points,What habit or decision had an outsized impact?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+149,Triumphs & Turning Points,What’s the best risk you ever took?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+150,Triumphs & Turning Points,What failure turned out to be a gift?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+151,Triumphs & Turning Points,What’s a small win that felt huge to you?,pride|relief|transformation,timeline|narrative|zoom_in,1,en-US
+152,Triumphs & Turning Points,What compliment shifted your self-image?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+153,Triumphs & Turning Points,When did you feel truly proud of yourself?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+154,Triumphs & Turning Points,What did you let go of that set you free?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+155,Triumphs & Turning Points,What opportunity changed your direction?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+156,Triumphs & Turning Points,What’s a moment you realized your own strength?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+157,Triumphs & Turning Points,Who believed in you before you did—and how did that help?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+158,Triumphs & Turning Points,What did you learn from proving yourself wrong?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+159,Triumphs & Turning Points,Which promise to yourself did you finally keep?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+160,Triumphs & Turning Points,What turning point would you include in your memoir?,pride|relief|transformation,timeline|narrative|zoom_in,2,en-US
+161,"Travel, Adventure & Discovery",What was your first trip away from home like?,wonder|curiosity|freedom,sensory|narrative|why_how,1,en-US
+162,"Travel, Adventure & Discovery",Which place took your breath away—and why?,wonder|curiosity|freedom,sensory|narrative|why_how,1,en-US
+163,"Travel, Adventure & Discovery",What trip changed your perspective on life?,wonder|curiosity|freedom,sensory|narrative|why_how,2,en-US
+164,"Travel, Adventure & Discovery",Who is your favorite travel companion and why?,wonder|curiosity|freedom,sensory|narrative|why_how,1,en-US
+165,"Travel, Adventure & Discovery",What’s your funniest travel mishap story?,wonder|curiosity|freedom,sensory|narrative|why_how,1,en-US
+166,"Travel, Adventure & Discovery",Which city felt like home the moment you arrived?,wonder|curiosity|freedom,sensory|narrative|why_how,1,en-US
+167,"Travel, Adventure & Discovery",What food or flavor instantly transports you back to a place?,wonder|curiosity|freedom,sensory|narrative|why_how,1,en-US
+168,"Travel, Adventure & Discovery","What is your favorite slow, simple travel memory?",wonder|curiosity|freedom,sensory|narrative|why_how,1,en-US
+169,"Travel, Adventure & Discovery",Which culture fascinated you the most—and what did you learn?,wonder|curiosity|freedom,sensory|narrative|why_how,2,en-US
+170,"Travel, Adventure & Discovery",Where would you live for a year if you could?,wonder|curiosity|freedom,sensory|narrative|why_how,1,en-US
+171,"Travel, Adventure & Discovery",What did travel teach you about yourself?,wonder|curiosity|freedom,sensory|narrative|why_how,2,en-US
+172,"Travel, Adventure & Discovery",What’s the most meaningful souvenir you’ve kept?,wonder|curiosity|freedom,sensory|narrative|why_how,1,en-US
+173,"Travel, Adventure & Discovery",How do you like to plan: rigid or spontaneous?,wonder|curiosity|freedom,sensory|narrative|why_how,1,en-US
+174,"Travel, Adventure & Discovery",What’s still on your travel bucket list?,wonder|curiosity|freedom,sensory|narrative|why_how,2,en-US
+175,"Travel, Adventure & Discovery",Which landscape or view is etched in your memory?,wonder|curiosity|freedom,sensory|narrative|why_how,1,en-US
+176,"Travel, Adventure & Discovery",How do you handle getting lost or plans changing?,wonder|curiosity|freedom,sensory|narrative|why_how,2,en-US
+177,"Travel, Adventure & Discovery",What’s a local tradition you took part in while traveling?,wonder|curiosity|freedom,sensory|narrative|why_how,2,en-US
+178,"Travel, Adventure & Discovery",Who did you meet on the road that you’ll never forget?,wonder|curiosity|freedom,sensory|narrative|why_how,2,en-US
+179,"Travel, Adventure & Discovery",What song or sound reminds you of a place you love?,wonder|curiosity|freedom,sensory|narrative|why_how,1,en-US
+180,"Travel, Adventure & Discovery","If you could time-travel, where and when would you go?",wonder|curiosity|freedom,sensory|narrative|why_how,1,en-US
+181,"Passions, Hobbies & Joy",What activity makes you lose track of time?,joy|play|flow,narrative|sensory|why_how,1,en-US
+182,"Passions, Hobbies & Joy",What hobby brings you pure joy—and why?,joy|play|flow,narrative|sensory|why_how,1,en-US
+183,"Passions, Hobbies & Joy",When do you feel most creative?,joy|play|flow,narrative|sensory|why_how,1,en-US
+184,"Passions, Hobbies & Joy",What did you create that you’re proud of?,joy|play|flow,narrative|sensory|why_how,1,en-US
+185,"Passions, Hobbies & Joy",Which song can instantly lift your mood?,joy|play|flow,narrative|sensory|why_how,1,en-US
+186,"Passions, Hobbies & Joy",What’s a new hobby you picked up recently?,joy|play|flow,narrative|sensory|why_how,1,en-US
+187,"Passions, Hobbies & Joy",What makes you laugh until you cry?,joy|play|flow,narrative|sensory|why_how,1,en-US
+188,"Passions, Hobbies & Joy",What role does art or music play in your life?,joy|play|flow,narrative|sensory|why_how,1,en-US
+189,"Passions, Hobbies & Joy",What’s a simple ritual that grounds you?,joy|play|flow,narrative|sensory|why_how,1,en-US
+190,"Passions, Hobbies & Joy",When do you feel most playful?,joy|play|flow,narrative|sensory|why_how,1,en-US
+191,"Passions, Hobbies & Joy",Who do you share your passions with?,joy|play|flow,narrative|sensory|why_how,1,en-US
+192,"Passions, Hobbies & Joy",What do you love learning about for its own sake?,joy|play|flow,narrative|sensory|why_how,1,en-US
+193,"Passions, Hobbies & Joy",What tradition or celebration fills you with joy?,joy|play|flow,narrative|sensory|why_how,1,en-US
+194,"Passions, Hobbies & Joy",What weekend routine do you look forward to?,joy|play|flow,narrative|sensory|why_how,1,en-US
+195,"Passions, Hobbies & Joy",What small luxury makes your day better?,joy|play|flow,narrative|sensory|why_how,1,en-US
+196,"Passions, Hobbies & Joy",What’s a skill you want to master purely for fun?,joy|play|flow,narrative|sensory|why_how,1,en-US
+197,"Passions, Hobbies & Joy",What childhood joy have you kept as an adult?,joy|play|flow,narrative|sensory|why_how,1,en-US
+198,"Passions, Hobbies & Joy",What’s your favorite way to unwind?,joy|play|flow,narrative|sensory|why_how,1,en-US
+199,"Passions, Hobbies & Joy",What makes you feel alive in your body?,joy|play|flow,narrative|sensory|why_how,1,en-US
+200,"Passions, Hobbies & Joy",What’s a joy you want more of this year?,joy|play|flow,narrative|sensory|why_how,1,en-US
+201,"Values, Beliefs & Reflections",What does living a good life mean to you?,meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+202,"Values, Beliefs & Reflections",Which values are non-negotiable for you—and why?,meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+203,"Values, Beliefs & Reflections",Who shaped your moral compass most?,meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+204,"Values, Beliefs & Reflections",How have your beliefs changed over time?,meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+205,"Values, Beliefs & Reflections",What role does faith or spirituality play in your life?,meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+206,"Values, Beliefs & Reflections",When have you stood up for what you believe in?,meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+207,"Values, Beliefs & Reflections",How do you make hard decisions when values conflict?,meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+208,"Values, Beliefs & Reflections",What does kindness look like in action for you?,meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+209,"Values, Beliefs & Reflections","Do you believe in destiny, free will, or both?",meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+210,"Values, Beliefs & Reflections",What brings you peace in chaotic times?,meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+211,"Values, Beliefs & Reflections",What are you most grateful for today—and why?,meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+212,"Values, Beliefs & Reflections",What do you wish everyone in the world understood?,meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+213,"Values, Beliefs & Reflections",How do you define happiness now?,meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+214,"Values, Beliefs & Reflections",What wisdom do you wish you had earlier in life?,meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+215,"Values, Beliefs & Reflections",What does forgiveness mean to you?,meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+216,"Values, Beliefs & Reflections",How do you practice empathy with people you disagree with?,meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+217,"Values, Beliefs & Reflections","What is love, in your own words?",meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+218,"Values, Beliefs & Reflections",How do you measure personal growth?,meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+219,"Values, Beliefs & Reflections",What truth do you return to when life is hard?,meaning|peace|conviction,reflection|why_how|contrast,2,en-US
+220,"Values, Beliefs & Reflections",What legacy do you want to leave behind?,meaning|peace|conviction,reflection|why_how|contrast,3,en-US
+221,Parenthood & Family of Choice,When did you first imagine becoming a parent (or not)?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+222,Parenthood & Family of Choice,How did your life change when you first cared for a child?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+223,Parenthood & Family of Choice,What values do you want to pass to future generations?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+224,Parenthood & Family of Choice,What surprised you most about parenting or caregiving?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+225,Parenthood & Family of Choice,What is the hardest part of being a parent or mentor?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+226,Parenthood & Family of Choice,What moment with a child felt sacred or unforgettable?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+227,Parenthood & Family of Choice,What traditions do you want your family to continue?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+228,Parenthood & Family of Choice,How do you talk about mistakes with children?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+229,Parenthood & Family of Choice,How do you handle fear or worry as a caregiver?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+230,Parenthood & Family of Choice,What kind of world do you hope they grow up in?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+231,Parenthood & Family of Choice,"If you could record one message for them, what would it say?",tenderness|duty|hope,narrative|why_how|repair,2,en-US
+232,Parenthood & Family of Choice,What do you hope they remember you for?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+233,Parenthood & Family of Choice,How do you balance guidance and independence?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+234,Parenthood & Family of Choice,What did a child teach you recently?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+235,Parenthood & Family of Choice,How do you show love to the young people in your life?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+236,Parenthood & Family of Choice,What stories from your family history do you want them to know?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+237,Parenthood & Family of Choice,How do you co-parent or collaborate with others?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+238,Parenthood & Family of Choice,How did becoming a caregiver change your priorities?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+239,Parenthood & Family of Choice,What kind of grandparent or elder do you hope to be?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+240,Parenthood & Family of Choice,What boundaries protect your family’s peace?,tenderness|duty|hope,narrative|why_how|repair,2,en-US
+241,"Dreams, Future & Aspirations",What dreams still keep you awake at night—and why?,hope|vision|motivation,future|why_how|plan,2,en-US
+242,"Dreams, Future & Aspirations",What would your perfect day look like ten years from now?,hope|vision|motivation,future|why_how|plan,2,en-US
+243,"Dreams, Future & Aspirations",Where do you hope to live in the future?,hope|vision|motivation,future|why_how|plan,2,en-US
+244,"Dreams, Future & Aspirations",What kind of person do you want to become?,hope|vision|motivation,future|why_how|plan,2,en-US
+245,"Dreams, Future & Aspirations",What does fulfillment look like to you?,hope|vision|motivation,future|why_how|plan,2,en-US
+246,"Dreams, Future & Aspirations",Who do you hope to grow old with?,hope|vision|motivation,future|why_how|plan,2,en-US
+247,"Dreams, Future & Aspirations",What experiences do you still want to have?,hope|vision|motivation,future|why_how|plan,2,en-US
+248,"Dreams, Future & Aspirations",What big risk would you take if fear weren’t a factor?,hope|vision|motivation,future|why_how|plan,2,en-US
+249,"Dreams, Future & Aspirations",What change do you want to see in your community or world?,hope|vision|motivation,future|why_how|plan,2,en-US
+250,"Dreams, Future & Aspirations",What skill are you committed to developing next?,hope|vision|motivation,future|why_how|plan,2,en-US
+251,"Dreams, Future & Aspirations",What legacy project do you want to start?,hope|vision|motivation,future|why_how|plan,2,en-US
+252,"Dreams, Future & Aspirations",What would make future-you proud of present-you?,hope|vision|motivation,future|why_how|plan,2,en-US
+253,"Dreams, Future & Aspirations",What do you want your relationships to feel like in the future?,hope|vision|motivation,future|why_how|plan,2,en-US
+254,"Dreams, Future & Aspirations",What habits are you building for your future self?,hope|vision|motivation,future|why_how|plan,2,en-US
+255,"Dreams, Future & Aspirations",What’s on your life bucket list—and why those items?,hope|vision|motivation,future|why_how|plan,2,en-US
+256,"Dreams, Future & Aspirations",How do you want to be remembered by the people you love?,hope|vision|motivation,future|why_how|plan,2,en-US
+257,"Dreams, Future & Aspirations",What financial or career goals matter most now?,hope|vision|motivation,future|why_how|plan,2,en-US
+258,"Dreams, Future & Aspirations",What would you do if you knew you could not fail?,hope|vision|motivation,future|why_how|plan,2,en-US
+259,"Dreams, Future & Aspirations",What chapter do you want to write next in your story?,hope|vision|motivation,future|why_how|plan,2,en-US
+260,"Dreams, Future & Aspirations",How do you hope your story inspires others?,hope|vision|motivation,future|why_how|plan,2,en-US
+261,Life Lessons & Wisdom,What is the most important lesson life has taught you?,gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+262,Life Lessons & Wisdom,"If you could start over, what would you do differently?",gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+263,Life Lessons & Wisdom,What advice would you give your younger self?,gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+264,Life Lessons & Wisdom,What’s something most people learn the hard way?,gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+265,Life Lessons & Wisdom,What belief did you let go of that set you free?,gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+266,Life Lessons & Wisdom,What would you tell someone going through what you did?,gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+267,Life Lessons & Wisdom,What truth do you wish you learned sooner?,gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+268,Life Lessons & Wisdom,What mistake turned into your greatest teacher?,gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+269,Life Lessons & Wisdom,How do you define courage now?,gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+270,Life Lessons & Wisdom,How do you practice self-compassion?,gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+271,Life Lessons & Wisdom,What boundary changed your life for the better?,gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+272,Life Lessons & Wisdom,What does success mean now vs. ten years ago?,gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+273,Life Lessons & Wisdom,What are you most grateful for and why?,gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+274,Life Lessons & Wisdom,What surprised you about adulthood?,gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+275,Life Lessons & Wisdom,What’s the best piece of advice you ever received?,gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+276,Life Lessons & Wisdom,How do you recover when things go wrong?,gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+277,Life Lessons & Wisdom,What do you hope people say about you at your 90th birthday?,gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+278,Life Lessons & Wisdom,What challenge would you thank your past self for facing?,gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+279,Life Lessons & Wisdom,What are you still learning to accept?,gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+280,Life Lessons & Wisdom,"What does a ""good life"" look like to you?",gratitude|clarity|humility,reflection|why_how|zoom_out,2,en-US
+281,"Health, Body & Wellbeing",When have you felt strongest in your body?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+282,"Health, Body & Wellbeing",What does taking care of yourself look like today?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+283,"Health, Body & Wellbeing",What role does movement or sport play in your life?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+284,"Health, Body & Wellbeing",How has your relationship with your body changed over time?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+285,"Health, Body & Wellbeing",What’s a health scare that changed your habits?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+286,"Health, Body & Wellbeing",What daily ritual helps your mental health most?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+287,"Health, Body & Wellbeing",What’s your sleep like—and what helps it?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+288,"Health, Body & Wellbeing",Who do you rely on when your wellbeing dips?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+289,"Health, Body & Wellbeing",What does rest mean to you beyond sleep?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+290,"Health, Body & Wellbeing",What foods make you feel nourished?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+291,"Health, Body & Wellbeing",How do you handle stress physically and emotionally?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+292,"Health, Body & Wellbeing",When did you learn to say no for your health?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+293,"Health, Body & Wellbeing",What does balance mean for your lifestyle?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+294,"Health, Body & Wellbeing",How do you rebuild after burnout?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+295,"Health, Body & Wellbeing",What’s a joyfully healthy moment you remember?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+296,"Health, Body & Wellbeing",What does aging mean to you?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+297,"Health, Body & Wellbeing",What message would you send your body with gratitude?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+298,"Health, Body & Wellbeing",How do you care for your future self’s health?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+299,"Health, Body & Wellbeing",What habit had the biggest payoff for wellbeing?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+300,"Health, Body & Wellbeing",Who modeled healthy living for you?,care|energy|recovery,narrative|why_how|grounding,2,en-US
+301,"Identity, Culture & Belonging",What parts of your identity feel most central to who you are?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+302,"Identity, Culture & Belonging",How has your cultural background shaped your life?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+303,"Identity, Culture & Belonging",What traditions or rituals define where you come from?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+304,"Identity, Culture & Belonging",When did you feel most at home in a community?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+305,"Identity, Culture & Belonging",Have you ever felt like an outsider—what helped you belong?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+306,"Identity, Culture & Belonging",What languages or dialects feel like home to you?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+307,"Identity, Culture & Belonging",What stories were passed down in your family or culture?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+308,"Identity, Culture & Belonging",What stereotype did you have to challenge in your life?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+309,"Identity, Culture & Belonging",What do you wish people understood about your background?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+310,"Identity, Culture & Belonging",What holidays or festivals carry deep meaning for you?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+311,"Identity, Culture & Belonging",How do you honor your roots in your daily life?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+312,"Identity, Culture & Belonging",What did you learn from living between cultures or places?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+313,"Identity, Culture & Belonging",Who helped you embrace your identity more fully?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+314,"Identity, Culture & Belonging",What foods taste like home—why?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+315,"Identity, Culture & Belonging",What place holds your family history?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+316,"Identity, Culture & Belonging",How do you celebrate your identity with others?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+317,"Identity, Culture & Belonging",What aspects of your identity evolved over time?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+318,"Identity, Culture & Belonging",What values from your culture guide you today?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+319,"Identity, Culture & Belonging",What does belonging feel like in your body?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+320,"Identity, Culture & Belonging",What do you hope future generations carry forward?,pride|belonging|curiosity,narrative|why_how|contrast,2,en-US
+321,"Money, Home & Lifestyle",What did your family teach you about money growing up?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+322,"Money, Home & Lifestyle",How has your relationship with money changed over time?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+323,"Money, Home & Lifestyle",What financial decision are you proud of?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+324,"Money, Home & Lifestyle",What’s a money mistake you learned from?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+325,"Money, Home & Lifestyle","What does ""home"" mean to you now?",security|freedom|comfort,narrative|why_how|plan,2,en-US
+326,"Money, Home & Lifestyle",What rituals make your living space feel like yours?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+327,"Money, Home & Lifestyle",What was the first big purchase you saved for?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+328,"Money, Home & Lifestyle",How do you budget or plan for your goals?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+329,"Money, Home & Lifestyle",What’s your philosophy on spending vs. saving?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+330,"Money, Home & Lifestyle",How do you define a rich life that isn’t about money?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+331,"Money, Home & Lifestyle",What neighborhood or city felt like the right fit—why?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+332,"Money, Home & Lifestyle",What is your dream home environment like?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+333,"Money, Home & Lifestyle",What do you collect or care for in your home?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+334,"Money, Home & Lifestyle",How do you host or welcome people into your space?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+335,"Money, Home & Lifestyle",What financial goal are you working toward now?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+336,"Money, Home & Lifestyle",What does generosity look like in your life?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+337,"Money, Home & Lifestyle",What money beliefs did you unlearn?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+338,"Money, Home & Lifestyle",How do you want to feel when you open your bank app?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+339,"Money, Home & Lifestyle",What role does work play in funding your dreams?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+340,"Money, Home & Lifestyle",What would you teach a teenager about money?,security|freedom|comfort,narrative|why_how|plan,2,en-US
+341,Migration & New Beginnings,When did you first move away from your original home?,longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+342,Migration & New Beginnings,What pushed you to leave—and what pulled you to the new place?,longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+343,Migration & New Beginnings,What did you miss most about the place you left?,longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+344,Migration & New Beginnings,What was your first impression when you arrived?,longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+345,Migration & New Beginnings,Who helped you feel at home in the new place?,longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+346,Migration & New Beginnings,What surprised you most about the new culture or city?,longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+347,Migration & New Beginnings,What was the hardest part about starting over?,longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+348,Migration & New Beginnings,What small ritual made the new place feel like home?,longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+349,Migration & New Beginnings,What did you carry with you that held meaning?,longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+350,Migration & New Beginnings,What language or dialect shifts did you experience?,longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+351,Migration & New Beginnings,How did you stay connected to your roots?,longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+352,Migration & New Beginnings,"What moment made you feel, “I belong here now”?",longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+353,Migration & New Beginnings,What was your first holiday season like in the new place?,longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+354,Migration & New Beginnings,How did your identity change after moving?,longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+355,Migration & New Beginnings,What advice would you give someone moving today?,longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+356,Migration & New Beginnings,What document or process was most stressful to handle?,longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+357,Migration & New Beginnings,What memory of the journey itself stands out?,longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+358,Migration & New Beginnings,What foods or smells helped with homesickness?,longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+359,Migration & New Beginnings,What do you still hope to build in this new chapter?,longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+360,Migration & New Beginnings,"If you returned today, what would you do first?",longing|hope|adaptation,narrative|timeline|contrast,2,en-US
+361,Entrepreneurship & Ambition,What inspired your very first business idea?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+362,Entrepreneurship & Ambition,What problem in the world do you feel called to solve?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+363,Entrepreneurship & Ambition,What was the moment you decided to bet on yourself?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+364,Entrepreneurship & Ambition,Who backed you when your idea was just a seed?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+365,Entrepreneurship & Ambition,What early customer story kept you going?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+366,Entrepreneurship & Ambition,What was a painful lesson that made you better?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+367,Entrepreneurship & Ambition,How did you choose your co-founders or first hires?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+368,Entrepreneurship & Ambition,What is your philosophy on risk and reward?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+369,Entrepreneurship & Ambition,When did you pivot—and why?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+370,Entrepreneurship & Ambition,What metric or signal told you that you had product–market fit?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+371,Entrepreneurship & Ambition,What’s your favorite scrappy growth story?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+372,Entrepreneurship & Ambition,How do you protect your energy as a founder?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+373,Entrepreneurship & Ambition,What did failure teach you that success could not?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+374,Entrepreneurship & Ambition,What is your north star for the company long-term?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+375,Entrepreneurship & Ambition,What partnerships changed your trajectory?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+376,Entrepreneurship & Ambition,How do you handle doubt—from others or yourself?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+377,Entrepreneurship & Ambition,What’s the most meaningful win you’ve had so far?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+378,Entrepreneurship & Ambition,How do you define ‘enough’ as an ambitious person?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+379,Entrepreneurship & Ambition,What would you build if resources were unlimited?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+380,Entrepreneurship & Ambition,What legacy do you want your venture to leave?,drive|risk|resilience,narrative|why_how|plan,2,en-US
+381,"Faith, Philosophy & Meaning",How has your faith or philosophy evolved over time?,awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+382,"Faith, Philosophy & Meaning",What experiences deepened your sense of meaning?,awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+383,"Faith, Philosophy & Meaning","When do you feel closest to God, spirit, or purpose?",awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+384,"Faith, Philosophy & Meaning",What questions about life do you return to often?,awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+385,"Faith, Philosophy & Meaning",Who or what shaped your beliefs the most?,awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+386,"Faith, Philosophy & Meaning",How do you navigate doubt or spiritual dry seasons?,awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+387,"Faith, Philosophy & Meaning",What practice brings you peace or clarity?,awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+388,"Faith, Philosophy & Meaning",What role does gratitude play in your worldview?,awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+389,"Faith, Philosophy & Meaning",How do you reconcile suffering with your beliefs?,awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+390,"Faith, Philosophy & Meaning","What book, verse, quote, or idea anchors you?",awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+391,"Faith, Philosophy & Meaning",How do you show kindness in everyday life?,awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+392,"Faith, Philosophy & Meaning",What does forgiveness look like in action for you?,awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+393,"Faith, Philosophy & Meaning",When did you change your mind about something big?,awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+394,"Faith, Philosophy & Meaning",How do you handle disagreement about beliefs with loved ones?,awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+395,"Faith, Philosophy & Meaning",What ritual or tradition grounds you?,awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+396,"Faith, Philosophy & Meaning",What gives you hope about the future?,awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+397,"Faith, Philosophy & Meaning",What do you pray or meditate for most often?,awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+398,"Faith, Philosophy & Meaning",How do you define a life well-lived?,awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+399,"Faith, Philosophy & Meaning",What wisdom do you want to pass down?,awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+400,"Faith, Philosophy & Meaning",Where do you find beauty when life feels heavy?,awe|peace|doubt,reflection|why_how|zoom_out,2,en-US
+401,"Military, Service & Duty","What drew you to serve, and how did you decide?",honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+402,"Military, Service & Duty",What was training like—physically and mentally?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+403,"Military, Service & Duty",Who mentored you during your service?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+404,"Military, Service & Duty",What moment demanded the most courage?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+405,"Military, Service & Duty",How did you handle fear in high-pressure situations?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+406,"Military, Service & Duty",What was daily life like while deployed or on duty?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+407,"Military, Service & Duty",What friendship from service became like family?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+408,"Military, Service & Duty",How did service change your views on leadership?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+409,"Military, Service & Duty",What did you learn about discipline and teamwork?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+410,"Military, Service & Duty",What memory from service do you carry with honor?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+411,"Military, Service & Duty",What was hardest to adjust to after returning home?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+412,"Military, Service & Duty",How did service affect your relationships back home?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+413,"Military, Service & Duty",What skills from service help you in civilian life?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+414,"Military, Service & Duty",How do you cope with memories that are difficult?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+415,"Military, Service & Duty",What traditions or rituals from service stayed with you?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+416,"Military, Service & Duty",Who do you remember on days of remembrance—and why?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+417,"Military, Service & Duty",What support made a difference during or after service?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+418,"Military, Service & Duty",What would you tell someone considering enlistment today?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+419,"Military, Service & Duty",How do you continue serving your community now?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+420,"Military, Service & Duty",How did service change your definition of courage?,honor|sacrifice|courage,timeline|narrative|grounding,2,en-US
+421,"Technology, Modern Life & Social Media",How has technology changed how you remember and share your life?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+422,"Technology, Modern Life & Social Media",What’s your first memory of being online?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+423,"Technology, Modern Life & Social Media",Which piece of tech had the biggest impact on your daily life?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+424,"Technology, Modern Life & Social Media",How has social media shaped your friendships and identity?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+425,"Technology, Modern Life & Social Media",What do you miss about the offline world?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+426,"Technology, Modern Life & Social Media",What are your boundaries with screens or notifications?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+427,"Technology, Modern Life & Social Media",What’s your most meaningful digital community?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+428,"Technology, Modern Life & Social Media",What’s a time technology brought you closer to someone?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+429,"Technology, Modern Life & Social Media",What privacy or safety habits do you practice online?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+430,"Technology, Modern Life & Social Media",What’s a joyful memory captured on your phone that you revisit?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+431,"Technology, Modern Life & Social Media",How do you curate what you share vs. keep private?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+432,"Technology, Modern Life & Social Media",What’s a tech habit you’re trying to change?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+433,"Technology, Modern Life & Social Media",What app or tool genuinely improved your wellbeing?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+434,"Technology, Modern Life & Social Media",When did a viral trend actually teach you something?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+435,"Technology, Modern Life & Social Media",How do you handle comparison online?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+436,"Technology, Modern Life & Social Media",What role does AI play in your creativity or work?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+437,"Technology, Modern Life & Social Media",What’s a memory you’re glad wasn’t recorded?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+438,"Technology, Modern Life & Social Media","If you could unplug for a month, what would you hope to feel?",connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+439,"Technology, Modern Life & Social Media",What do you hope future tech will make possible?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US
+440,"Technology, Modern Life & Social Media",How do you balance living the moment with documenting it?,connection|curation|overwhelm,contrast|why_how|narrative,2,en-US

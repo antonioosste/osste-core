@@ -20,8 +20,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Header } from "@/components/layout/Header";
 import { QuestionSwitcher } from "@/components/ui/question-switcher";
 import { SessionImageUploader } from "@/components/ui/session-image-uploader";
-import { SessionModeSelector } from "@/components/session/SessionModeSelector";
+import { CategorySelector } from "@/components/session/CategorySelector";
 import { ConversationSkeleton } from "@/components/loaders/ConversationSkeleton";
+import { getQuestionsByCategory, getRandomQuestion } from "@/lib/questions";
+import type { QuestionRow, QuestionCategory } from "@/types/questions";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/hooks/useSession";
@@ -72,10 +74,14 @@ export default function Session() {
   const [currentPrompt, setCurrentPrompt] = useState("");
   const [isLoadingSession, setIsLoadingSession] = useState(!!existingSessionId);
   
-  // Session mode state
-  const [showModeSelector, setShowModeSelector] = useState(!existingSessionId);
+  // Session mode and question bank state
+  const [showCategorySelector, setShowCategorySelector] = useState(!existingSessionId);
   const [sessionMode, setSessionMode] = useState<'guided' | 'non-guided'>('guided');
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
+  const [selectedCategory, setSelectedCategory] = useState<QuestionCategory | undefined>();
+  const [selectedDepth, setSelectedDepth] = useState<number>(2);
+  const [questionBank, setQuestionBank] = useState<QuestionRow[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [currentQuestionData, setCurrentQuestionData] = useState<QuestionRow | null>(null);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   
@@ -120,12 +126,12 @@ export default function Session() {
           const loadedMode = mode === 'non-guided' ? 'non-guided' : 'guided';
           setSessionMode(loadedMode);
           
-          let category: string | undefined;
+          let category: QuestionCategory | undefined;
           if (sessionData.themes && sessionData.themes.length > 0) {
-            category = sessionData.themes[0];
+            category = sessionData.themes[0] as QuestionCategory;
             setSelectedCategory(category);
           }
-          setShowModeSelector(false);
+          setShowCategorySelector(false);
           
           // Load questions for the session mode
           await loadQuestions(loadedMode, category);
@@ -260,48 +266,61 @@ export default function Session() {
   // The backend returns follow_up.tts_url which is a signed URL ready for playback
   // No database polling needed
 
-  const handleModeSelect = async (mode: 'guided' | 'non-guided', category?: string) => {
-    setSessionMode(mode);
-    setSelectedCategory(category);
-    setShowModeSelector(false);
+  const handleCategorySelect = async (category: QuestionCategory | "surprise", depthLevel: number) => {
+    setSessionMode('guided');
+    setSelectedDepth(depthLevel);
+    setShowCategorySelector(false);
 
-    // Start session in database with selected mode
+    // If "surprise me", pick random category
+    const finalCategory = category === "surprise" ? undefined : category;
+    setSelectedCategory(finalCategory);
+
+    // Start session in database
     try {
       await startSessionDb({
         persona: 'friendly',
-        themes: category ? [category] : [],
+        themes: finalCategory ? [finalCategory] : [],
         language: 'en',
-        mode: mode,
-        category: category
+        mode: 'guided',
+        category: finalCategory
       });
       
-      // Load questions based on mode
-      await loadQuestions(mode, category);
+      // Load questions
+      await loadQuestions('guided', finalCategory, depthLevel);
     } catch (error) {
       console.error('Error starting session:', error);
     }
   };
 
-  const loadQuestions = async (mode: 'guided' | 'non-guided', category?: string) => {
+  const loadQuestions = async (mode: 'guided' | 'non-guided', category?: QuestionCategory, depthLevel?: number) => {
     setIsLoadingQuestions(true);
     try {
-      if (mode === 'guided' && category) {
-        // Fetch questions from database based on category
-        const { data, error } = await supabase.functions.invoke('get-questions', {
-          body: { category, limit: 10 }
-        });
-
-        if (error) throw error;
+      if (mode === 'guided') {
+        let questions: QuestionRow[];
         
-        const questions = data?.map((q: any) => q.question) || [];
-        setSuggestedQuestions(questions);
+        if (category) {
+          // Fetch questions for specific category
+          questions = await getQuestionsByCategory({
+            category,
+            depthLevelMax: depthLevel || selectedDepth
+          });
+        } else {
+          // Random question for "surprise me"
+          const randomQ = await getRandomQuestion({
+            depthLevelMax: depthLevel || selectedDepth
+          });
+          questions = randomQ ? [randomQ] : [];
+        }
+        
+        setQuestionBank(questions);
+        setCurrentQuestionIndex(0);
         
         // Set first question as current
-        if (questions.length > 0 && !currentPrompt) {
-          setCurrentPrompt(questions[0]);
+        if (questions.length > 0) {
+          setCurrentQuestionData(questions[0]);
+          setCurrentPrompt(questions[0].question);
         }
       }
-      // Non-guided mode: follow-up questions come from turn upload response only
     } catch (error) {
       console.error('Error loading questions:', error);
       toast({
@@ -312,6 +331,40 @@ export default function Session() {
     } finally {
       setIsLoadingQuestions(false);
     }
+  };
+
+  const nextQuestion = () => {
+    if (currentQuestionIndex < questionBank.length - 1) {
+      const nextIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(nextIndex);
+      setCurrentQuestionData(questionBank[nextIndex]);
+      setCurrentPrompt(questionBank[nextIndex].question);
+    } else {
+      // Load more questions or wrap around
+      loadRandomQuestionForCategory();
+    }
+  };
+
+  const loadRandomQuestionForCategory = async () => {
+    try {
+      const randomQ = await getRandomQuestion({
+        category: selectedCategory,
+        depthLevelMax: selectedDepth
+      });
+      if (randomQ) {
+        setCurrentQuestionData(randomQ);
+        setCurrentPrompt(randomQ.question);
+      }
+    } catch (error) {
+      console.error('Error loading random question:', error);
+    }
+  };
+
+  const changeTopic = () => {
+    setShowCategorySelector(true);
+    setCurrentQuestionData(null);
+    setCurrentPrompt("");
+    setQuestionBank([]);
   };
 
   const startRecording = async () => {
@@ -692,12 +745,14 @@ export default function Session() {
         </div>
       )}
       
-      {/* Session Mode Selector Dialog */}
-      <SessionModeSelector 
-        open={showModeSelector} 
-        onSelect={handleModeSelect}
-        onClose={() => setShowModeSelector(false)}
-      />
+      {/* Category Selector */}
+      {showCategorySelector && (
+        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="max-w-4xl w-full">
+            <CategorySelector onCategorySelected={handleCategorySelect} />
+          </div>
+        </div>
+      )}
       
       {/* Main Session Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -896,27 +951,29 @@ export default function Session() {
               </div>
             )}
 
-            {/* Additional Options - Minimalistic */}
+            {/* Additional Options - Question Navigation */}
             <div className="flex items-center justify-center gap-4 text-xs">
-              {sessionMode === 'guided' && suggestedQuestions.length > 0 && (
-                <details className="group">
-                  <summary className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors list-none">
-                    <span className="flex items-center gap-2">
-                      Browse Questions
-                      <span className="text-xs group-open:rotate-180 transition-transform">▼</span>
-                    </span>
-                  </summary>
-                  <div className="absolute z-10 mt-2 p-4 rounded-lg border border-border bg-card shadow-lg min-w-[300px]">
-                    <QuestionSwitcher
-                      question={currentPrompt}
-                      onQuestionChange={setCurrentPrompt}
-                      topic={selectedCategory}
-                      hideTopicSelector={true}
-                      questions={suggestedQuestions}
-                      isLoadingQuestions={isLoadingQuestions}
-                    />
-                  </div>
-                </details>
+              {sessionMode === 'guided' && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={nextQuestion}
+                    disabled={isLoadingQuestions}
+                    className="text-xs"
+                  >
+                    Next Question
+                  </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={changeTopic}
+                    className="text-xs"
+                  >
+                    Change Topic
+                  </Button>
+                </>
               )}
 
               {sessionId && (
