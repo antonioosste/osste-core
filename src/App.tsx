@@ -27,6 +27,7 @@ import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
 import AdminQuestions from "./pages/AdminQuestions";
 import QuestionBankImport from "./pages/QuestionBankImport";
+import QuestionImport from "./pages/QuestionImport";
 import Interview from "./pages/Interview";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
@@ -67,6 +68,7 @@ const App = () => (
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/admin/questions" element={<ProtectedRoute><AdminQuestions /></ProtectedRoute>} />
             <Route path="/admin/import-questions" element={<ProtectedRoute><QuestionBankImport /></ProtectedRoute>} />
+            <Route path="/admin/question-import" element={<ProtectedRoute><QuestionImport /></ProtectedRoute>} />
             <Route path="/interview" element={<ProtectedRoute><Interview /></ProtectedRoute>} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
