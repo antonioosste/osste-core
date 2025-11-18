@@ -227,8 +227,17 @@ export default function Sessions() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Session?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this session and all associated recordings. This action cannot be undone.
+            <AlertDialogDescription className="space-y-2">
+              <p className="font-semibold text-destructive">Warning: This action cannot be undone!</p>
+              <p>This will permanently delete:</p>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>The session and all its settings</li>
+                <li>All recordings and audio files</li>
+                <li>All transcripts</li>
+                <li>All turns and conversation history</li>
+                <li>All chapters and stories</li>
+                <li>All uploaded media files</li>
+              </ul>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
