@@ -21,6 +21,7 @@ import { Header } from "@/components/layout/Header";
 import { QuestionSwitcher } from "@/components/ui/question-switcher";
 import { SessionImageUploader } from "@/components/ui/session-image-uploader";
 import { CategorySelector } from "@/components/session/CategorySelector";
+import { GuidedSetup } from "@/components/session/GuidedSetup";
 import { ConversationSkeleton } from "@/components/loaders/ConversationSkeleton";
 import { getQuestionsByCategory, getRandomQuestion } from "@/lib/questions";
 import type { QuestionRow, QuestionCategory } from "@/types/questions";
@@ -50,10 +51,17 @@ interface Message {
   topic?: string | null;
 }
 
+interface GuidedPrompt {
+  id: string;
+  text: string;
+  topic_id: string;
+}
+
 export default function Session() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const existingSessionId = searchParams.get('id');
+  const modeParam = searchParams.get('mode') as 'guided' | 'non-guided' | null;
   
   const { toast } = useToast();
   const { user } = useAuth();
@@ -74,9 +82,12 @@ export default function Session() {
   const [currentPrompt, setCurrentPrompt] = useState("");
   const [isLoadingSession, setIsLoadingSession] = useState(!!existingSessionId);
   
-  // Session mode and question bank state
-  const [showCategorySelector, setShowCategorySelector] = useState(!existingSessionId);
-  const [sessionMode, setSessionMode] = useState<'guided' | 'non-guided'>('guided');
+  // Session mode and question bank state  
+  const [showGuidedSetup, setShowGuidedSetup] = useState(modeParam === 'guided' && !existingSessionId);
+  const [sessionMode, setSessionMode] = useState<'guided' | 'non-guided'>(modeParam || 'non-guided');
+  const [guidedPrompts, setGuidedPrompts] = useState<GuidedPrompt[]>([]);
+  const [currentGuidedPromptIndex, setCurrentGuidedPromptIndex] = useState(0);
+  const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<QuestionCategory | undefined>();
   const [selectedDepth, setSelectedDepth] = useState<number>(2);
   const [questionBank, setQuestionBank] = useState<QuestionRow[]>([]);
@@ -108,6 +119,29 @@ export default function Session() {
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Start non-guided session automatically
+  useEffect(() => {
+    const startNonGuidedSession = async () => {
+      if (modeParam === 'non-guided' && !existingSessionId && !sessionId) {
+        try {
+          await startSessionDb({
+            persona: 'friendly',
+            themes: [],
+            language: 'en',
+            mode: 'non-guided'
+          });
+          
+          // Set initial prompt for non-guided
+          setCurrentPrompt("Tell me a story from your life that's meaningful to you.");
+        } catch (error) {
+          console.error('Error starting non-guided session:', error);
+        }
+      }
+    };
+
+    startNonGuidedSession();
+  }, [modeParam, existingSessionId, sessionId]);
+
   // Load existing session data on mount
   useEffect(() => {
     const loadExistingSession = async () => {
@@ -126,6 +160,7 @@ export default function Session() {
           const mode = sessionData.mode as 'guided' | 'non-guided' | null;
           const loadedMode = mode === 'non-guided' ? 'non-guided' : 'guided';
           setSessionMode(loadedMode);
+          setShowGuidedSetup(false);
           
           let category: QuestionCategory | undefined;
           if (sessionData.themes && sessionData.themes.length > 0) {
@@ -134,8 +169,10 @@ export default function Session() {
           }
           setShowCategorySelector(false);
           
-          // Load questions for the session mode
-          await loadQuestions(loadedMode, category);
+          // Load questions for guided mode only
+          if (loadedMode === 'guided') {
+            await loadQuestions(loadedMode, category);
+          }
         }
         
         // Sort turns by turn_index to ensure proper ordering
@@ -294,6 +331,44 @@ export default function Session() {
   // TTS playback is now handled directly from API response
   // The backend returns follow_up.tts_url which is a signed URL ready for playback
   // No database polling needed
+
+  const handleGuidedSetupComplete = async (topicId: string, selectedPrompts: GuidedPrompt[]) => {
+    setShowGuidedSetup(false);
+    setGuidedPrompts(selectedPrompts);
+    setCurrentGuidedPromptIndex(0);
+    setSessionMode('guided');
+
+    // Start session in database
+    try {
+      await startSessionDb({
+        persona: 'friendly',
+        themes: [topicId],
+        language: 'en',
+        mode: 'guided'
+      });
+      
+      // Set first prompt as current question
+      if (selectedPrompts.length > 0) {
+        setCurrentPrompt(selectedPrompts[0].text);
+      }
+      
+      toast({
+        title: "Session started",
+        description: "You can now start recording your responses",
+      });
+    } catch (error) {
+      console.error('Error starting guided session:', error);
+      toast({
+        title: "Failed to start session",
+        description: "Please try again",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleGuidedSetupCancel = () => {
+    navigate('/sessions');
+  };
 
   const handleCategorySelect = async (category: QuestionCategory | "surprise", depthLevel: number) => {
     setSessionMode('guided');
@@ -775,7 +850,19 @@ export default function Session() {
         </div>
       )}
       
-      {/* Category Selector */}
+      {/* Guided Setup */}
+      {showGuidedSetup && (
+        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="w-full py-8">
+            <GuidedSetup
+              onComplete={handleGuidedSetupComplete}
+              onCancel={handleGuidedSetupCancel}
+            />
+          </div>
+        </div>
+      )}
+      
+      {/* Category Selector (Legacy - kept for existing sessions) */}
       {showCategorySelector && (
         <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="max-w-4xl w-full">
@@ -948,8 +1035,8 @@ export default function Session() {
               </div>
             )}
 
-            {/* AI-Inspired Follow-up Suggestions - Directly below Record Button */}
-            {messages.length > 0 && messages[messages.length - 1]?.suggestions && !isRecording && status !== "thinking" && (
+            {/* AI-Inspired Follow-up Suggestions - Only show in non-guided mode */}
+            {sessionMode === 'non-guided' && messages.length > 0 && messages[messages.length - 1]?.suggestions && !isRecording && status !== "thinking" && (
               <div className="w-full max-w-2xl animate-fade-in mb-4">
                 <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-card via-card to-muted/20 shadow-xl backdrop-blur-sm">
                   {/* Subtle gradient overlay */}
@@ -1007,9 +1094,50 @@ export default function Session() {
               </div>
             )}
 
-            {/* Additional Options - Question Navigation */}
+            {/* Additional Options - Mode-specific Navigation */}
             <div className="flex items-center justify-center gap-4 text-xs">
-              {sessionMode === 'guided' && (
+              {sessionMode === 'guided' && guidedPrompts.length > 0 && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const nextIndex = currentGuidedPromptIndex + 1;
+                      if (nextIndex < guidedPrompts.length) {
+                        setCurrentGuidedPromptIndex(nextIndex);
+                        setCurrentPrompt(guidedPrompts[nextIndex].text);
+                        toast({
+                          title: "Next question",
+                          description: `Question ${nextIndex + 1} of ${guidedPrompts.length}`,
+                        });
+                      } else {
+                        toast({
+                          title: "All questions completed",
+                          description: "You've gone through all selected questions",
+                        });
+                      }
+                    }}
+                    disabled={currentGuidedPromptIndex >= guidedPrompts.length - 1}
+                    className="text-xs"
+                  >
+                    Next Question ({currentGuidedPromptIndex + 1}/{guidedPrompts.length})
+                  </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowGuidedSetup(true);
+                      setGuidedPrompts([]);
+                    }}
+                    className="text-xs"
+                  >
+                    Change Topic
+                  </Button>
+                </>
+              )}
+              
+              {sessionMode === 'guided' && questionBank.length > 0 && guidedPrompts.length === 0 && (
                 <>
                   <Button
                     variant="ghost"
