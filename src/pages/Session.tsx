@@ -1114,32 +1114,6 @@ export default function Session() {
                             </div>
                           </div>
                           
-                          {/* Audio Playback */}
-                          {message.type === "ai" && (
-                            <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 w-7 p-0 flex-shrink-0 opacity-50 hover:opacity-100"
-                                  onClick={() => {
-                                    if (message.ttsUrl) {
-                                      playAudio(message.id, message.ttsUrl);
-                                    } else {
-                                      toast({
-                                        title: "Audio unavailable",
-                                        description: "This message doesn't have audio available.",
-                                        variant: "default"
-                                      });
-                                    }
-                                  }}
-                                  disabled={playingAudioId === message.id || !message.ttsUrl}
-                                >
-                                  {playingAudioId === message.id ? (
-                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                  ) : (
-                                    <Volume2 className="h-3 w-3" />
-                          )}
-                                </Button>
-                          )}
                         </div>
                       </div>
                     </div>
