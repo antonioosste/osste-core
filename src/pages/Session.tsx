@@ -867,29 +867,34 @@ export default function Session() {
 
             {/* Current Question Display */}
             <div className="text-center max-w-xl mb-4">
-              <div className="flex items-center justify-center gap-3">
-                <p className="text-sm text-muted-foreground/80 leading-relaxed flex-1">
-                  {currentPrompt}
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground/60 font-medium">
+                  Current Question
                 </p>
-                {currentQuestionTtsUrl && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 w-8 p-0 flex-shrink-0"
-                    onClick={() => {
-                      if (currentQuestionTtsUrl) {
-                        playAudio('current-question', currentQuestionTtsUrl);
-                      }
-                    }}
-                    disabled={playingAudioId === 'current-question'}
-                  >
-                    {playingAudioId === 'current-question' ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Volume2 className="h-4 w-4" />
-                    )}
-                  </Button>
-                )}
+                <div className="flex items-center justify-center gap-3 w-full">
+                  <p className="text-base text-foreground leading-relaxed flex-1 font-medium">
+                    {currentPrompt}
+                  </p>
+                  {currentQuestionTtsUrl && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 flex-shrink-0"
+                      onClick={() => {
+                        if (currentQuestionTtsUrl) {
+                          playAudio('current-question', currentQuestionTtsUrl);
+                        }
+                      }}
+                      disabled={playingAudioId === 'current-question'}
+                    >
+                      {playingAudioId === 'current-question' ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Volume2 className="h-4 w-4" />
+                      )}
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
 
