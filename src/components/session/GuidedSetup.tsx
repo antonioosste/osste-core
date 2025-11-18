@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,11 +31,6 @@ export function GuidedSetup({ onComplete, onCancel }: GuidedSetupProps) {
   const [selectedPrompts, setSelectedPrompts] = useState<Prompt[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Load topics on mount
-  useState(() => {
-    loadTopics();
-  });
-
   const loadTopics = async () => {
     setLoading(true);
     try {
@@ -57,6 +52,11 @@ export function GuidedSetup({ onComplete, onCancel }: GuidedSetupProps) {
       setLoading(false);
     }
   };
+
+  // Load topics on mount
+  useEffect(() => {
+    loadTopics();
+  }, []);
 
   const handleTopicSelect = async (topic: Topic) => {
     setSelectedTopic(topic);
