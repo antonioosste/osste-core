@@ -44,32 +44,48 @@ export function useChapters(recordingId?: string) {
         if (fetchError) throw fetchError;
         setChapters((data as any) || []);
       } else {
-        // Fetch all chapters for the current user's recordings
+        // First get all session IDs for the current user
+        const { data: sessions, error: sessionsError } = await (supabase as any)
+          .from('sessions')
+          .select('id')
+          .eq('user_id', user.id);
+
+        if (sessionsError) throw sessionsError;
+
+        if (!sessions || sessions.length === 0) {
+          setChapters([]);
+          return;
+        }
+
+        const sessionIds = sessions.map((s: any) => s.id);
+
+        // Then get all recording IDs for those sessions
         const { data: recordings, error: recordingsError } = await (supabase as any)
           .from('recordings')
           .select('id')
-          .in('session_id', 
-            (supabase as any)
-              .from('sessions')
-              .select('id')
-              .eq('user_id', user.id)
-          );
+          .in('session_id', sessionIds);
 
         if (recordingsError) throw recordingsError;
 
-        if (recordings && recordings.length > 0) {
-          const recordingIds = recordings.map((r: any) => r.id);
-          const { data, error: fetchError } = await (supabase as any)
-            .from('chapters')
-            .select('*')
-            .in('recording_id', recordingIds)
-            .order('order_index', { ascending: true });
+        const recordingIds = recordings?.map((r: any) => r.id) || [];
 
-          if (fetchError) throw fetchError;
-          setChapters((data as any) || []);
+        // Fetch chapters that are either:
+        // 1. Directly linked to user's sessions
+        // 2. Linked to recordings from user's sessions
+        let query = (supabase as any)
+          .from('chapters')
+          .select('*');
+
+        if (recordingIds.length > 0) {
+          query = query.or(`session_id.in.(${sessionIds.join(',')}),recording_id.in.(${recordingIds.join(',')})`);
         } else {
-          setChapters([]);
+          query = query.in('session_id', sessionIds);
         }
+
+        const { data, error: fetchError } = await query.order('order_index', { ascending: true });
+
+        if (fetchError) throw fetchError;
+        setChapters((data as any) || []);
       }
     } catch (err) {
       setError(err as Error);
