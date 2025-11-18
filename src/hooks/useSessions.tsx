@@ -133,10 +133,10 @@ export function useSessions() {
       }
 
       // Delete in order due to foreign key constraints:
-      // 1. Delete turns (references recordings)
+      // 1. Delete turns (references session)
       await supabase.from('turns').delete().eq('session_id', id);
       
-      // 2. Delete transcripts (references recordings)
+      // 2. Delete transcripts and chapters that reference this session via recordings
       const { data: sessionRecordings } = await supabase
         .from('recordings')
         .select('id')
@@ -148,16 +148,19 @@ export function useSessions() {
         await supabase.from('chapters').delete().in('recording_id', recordingIds);
       }
 
-      // 3. Delete session_media
+      // 3. Also delete any chapters that reference this session directly
+      await supabase.from('chapters').delete().eq('session_id', id);
+
+      // 4. Delete session_media
       await supabase.from('session_media').delete().eq('session_id', id);
       
-      // 4. Delete stories
+      // 5. Delete stories
       await supabase.from('stories').delete().eq('session_id', id);
       
-      // 5. Delete recordings
+      // 6. Delete recordings
       await supabase.from('recordings').delete().eq('session_id', id);
 
-      // 6. Finally delete the session
+      // 7. Finally delete the session
       const { error: deleteError } = await supabase
         .from('sessions')
         .delete()
@@ -180,7 +183,6 @@ export function useSessions() {
       throw err;
     }
   };
-
   useEffect(() => {
     fetchSessions();
   }, [user]);
