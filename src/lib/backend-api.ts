@@ -159,14 +159,22 @@ export async function generateChapters(token: string, sessionId: string) {
   return response.json();
 }
 
-export async function assembleStory(token: string, sessionId: string) {
+export async function assembleStory(
+  token: string, 
+  sessionId: string, 
+  styleInstruction?: string | null
+) {
+  const body = styleInstruction ? { style_instruction: styleInstruction } : undefined;
+  
   const response = await fetchWithRetry(
     `${BACKEND_BASE}/api/ai/story/assemble/${sessionId}`,
     {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
+      ...(body && { body: JSON.stringify(body) }),
     }
   );
 
