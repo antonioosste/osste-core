@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { 
   ArrowLeft, 
@@ -28,6 +28,10 @@ import { useToast } from "@/hooks/use-toast";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { useStories } from "@/hooks/useStories";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { assembleStory } from "@/lib/backend-api";
 
 const sampleStory = {
   id: "1",
@@ -105,6 +109,9 @@ export default function StoryDetail() {
   const [regenerateDialog, setRegenerateDialog] = useState(false);
   const [factsDrawerOpen, setFactsDrawerOpen] = useState(false);
   const [chapterImages, setChapterImages] = useState<File[]>([]);
+  const [styleInstruction, setStyleInstruction] = useState("");
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadStory = async () => {
@@ -159,12 +166,70 @@ export default function StoryDetail() {
     }
   };
 
-  const handleRegenerate = () => {
+  const handleRegenerate = async () => {
+    if (!story?.session_id) {
+      toast({
+        title: "Error",
+        description: "Unable to regenerate story - session not found.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsRegenerating(true);
     setRegenerateDialog(false);
-    toast({
-      title: "Regenerating story",
-      description: "AI is creating a new version based on the transcript."
-    });
+
+    try {
+      // Get current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error("Authentication required");
+      }
+
+      toast({
+        title: "Regenerating story...",
+        description: styleInstruction 
+          ? "AI is creating a new version with your style preferences." 
+          : "AI is creating a new version based on the transcript."
+      });
+
+      // Call backend API with optional style instruction
+      const result = await assembleStory(
+        session.access_token,
+        story.session_id,
+        styleInstruction.trim() || null
+      );
+
+      // Fetch updated story from database
+      const updatedStory = await getStory(id!);
+      
+      if (updatedStory) {
+        setStory(updatedStory);
+        setEditedContent(updatedStory.edited_text || updatedStory.raw_text || "");
+        
+        // Scroll to top of content
+        if (contentRef.current) {
+          contentRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        toast({
+          title: "Story regenerated successfully",
+          description: "Your story has been updated with the new version."
+        });
+      }
+
+      setStyleInstruction("");
+    } catch (error) {
+      console.error('Error regenerating story:', error);
+      toast({
+        title: "Regeneration failed",
+        description: error instanceof Error ? error.message : "Failed to regenerate story. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRegenerating(false);
+    }
   };
 
   const handleImageUpload = (files: File[]) => {
@@ -221,7 +286,7 @@ export default function StoryDetail() {
         </div>
 
         {/* Story Header */}
-        <div className="mb-8">
+        <div className="mb-8" ref={contentRef}>
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-foreground mb-2">
@@ -248,9 +313,10 @@ export default function StoryDetail() {
                 variant="outline" 
                 onClick={() => setRegenerateDialog(true)}
                 className="gap-2"
+                disabled={isRegenerating}
               >
-                <RotateCcw className="w-4 h-4" />
-                Regenerate
+                <RotateCcw className={`w-4 h-4 ${isRegenerating ? 'animate-spin' : ''}`} />
+                {isRegenerating ? "Regenerating..." : "Regenerate"}
               </Button>
               <Sheet open={factsDrawerOpen} onOpenChange={setFactsDrawerOpen}>
                 <SheetTrigger asChild>
@@ -415,20 +481,58 @@ export default function StoryDetail() {
 
       {/* Regenerate Confirmation Dialog */}
       <Dialog open={regenerateDialog} onOpenChange={setRegenerateDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Regenerate Story?</DialogTitle>
+            <DialogTitle>Regenerate Story</DialogTitle>
             <DialogDescription>
-              This will create a new polished version of the story based on the original transcript. 
-              Your current edits will be replaced. This action cannot be undone.
+              Add a tone or style preference to customize how your story is rewritten, or leave it blank to use the default style.
             </DialogDescription>
           </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="style-instruction">Style Instruction (Optional)</Label>
+              <Textarea
+                id="style-instruction"
+                placeholder="Example: 'Make it more emotional', 'Write it like a children's bedtime story', 'Make it more poetic'"
+                value={styleInstruction}
+                onChange={(e) => setStyleInstruction(e.target.value)}
+                className="min-h-[100px]"
+              />
+              <p className="text-xs text-muted-foreground">
+                Leave empty to regenerate with the default style. The AI will recreate the story based on your recordings and chapter summaries.
+              </p>
+            </div>
+            
+            <div className="bg-muted/50 p-3 rounded-md border border-border">
+              <p className="text-sm text-muted-foreground">
+                <strong className="text-foreground">Note:</strong> This will create a new version based on your original recordings. Any manual edits will be replaced.
+              </p>
+            </div>
+          </div>
+          
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRegenerateDialog(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setRegenerateDialog(false);
+                setStyleInstruction("");
+              }}
+            >
               Cancel
             </Button>
-            <Button onClick={handleRegenerate}>
-              Regenerate Story
+            <Button onClick={handleRegenerate} disabled={isRegenerating}>
+              {isRegenerating ? (
+                <>
+                  <RotateCcw className="w-4 h-4 mr-2 animate-spin" />
+                  Regenerating...
+                </>
+              ) : (
+                <>
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Regenerate Story
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
