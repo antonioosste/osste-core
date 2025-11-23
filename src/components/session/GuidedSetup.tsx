@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Loader2 } from "lucide-react";
+import { BookOpen, Loader2, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { BACKEND_URL } from "@/config/backend";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Topic {
   id: string;
@@ -18,18 +20,20 @@ interface Prompt {
 }
 
 interface GuidedSetupProps {
-  onComplete: (topicId: string, selectedPrompts: Prompt[]) => void;
+  onComplete: (starterQuestion: string) => void;
   onSkip: () => void;
 }
 
 export function GuidedSetup({ onComplete, onSkip }: GuidedSetupProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [step, setStep] = useState<'topic' | 'prompts'>('topic');
   const [topics, setTopics] = useState<Topic[]>([]);
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const [selectedPrompts, setSelectedPrompts] = useState<Prompt[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
 
   const loadTopics = async () => {
     setLoading(true);
@@ -110,9 +114,51 @@ export function GuidedSetup({ onComplete, onSkip }: GuidedSetupProps) {
     });
   };
 
-  const handleComplete = () => {
-    if (selectedTopic && selectedPrompts.length > 0) {
-      onComplete(selectedTopic.id, selectedPrompts);
+  const handleComplete = async () => {
+    if (!selectedTopic || selectedPrompts.length === 0) return;
+    
+    setIsStarting(true);
+    try {
+      // Get auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Not authenticated");
+      }
+
+      // Call backend API
+      const response = await fetch(`${BACKEND_URL}/api/guided/hints`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          topicId: selectedTopic.id,
+          selectedQuestionIds: selectedPrompts.map(p => p.id)
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to get starter question: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!data.starterQuestion) {
+        throw new Error("No starter question returned");
+      }
+
+      // Pass the starter question to parent
+      onComplete(data.starterQuestion);
+      
+    } catch (error) {
+      console.error('Error getting starter question:', error);
+      toast({
+        title: "Failed to start",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive"
+      });
+    } finally {
+      setIsStarting(false);
     }
   };
 
@@ -156,17 +202,15 @@ export function GuidedSetup({ onComplete, onSkip }: GuidedSetupProps) {
         <CardContent className="space-y-4">
           {step === 'topic' ? (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="flex flex-wrap gap-2 p-4">
                 {topics.map((topic) => (
-                  <Card
+                  <button
                     key={topic.id}
-                    className="cursor-pointer hover:border-primary transition-colors"
                     onClick={() => handleTopicSelect(topic)}
+                    className="px-4 py-2 rounded-full bg-secondary/50 hover:bg-primary hover:text-primary-foreground transition-all duration-200 text-sm font-medium border border-border hover:border-primary hover:scale-105"
                   >
-                    <CardContent className="p-4">
-                      <p className="font-medium text-foreground">{topic.name}</p>
-                    </CardContent>
-                  </Card>
+                    {topic.name}
+                  </button>
                 ))}
               </div>
               
@@ -178,34 +222,28 @@ export function GuidedSetup({ onComplete, onSkip }: GuidedSetupProps) {
             </>
           ) : (
             <>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
                   Select up to 3 questions you'd like to explore during your recording.
                 </p>
-                <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                <div className="flex flex-wrap gap-2 max-h-[400px] overflow-y-auto p-2">
                   {prompts.map((prompt) => {
                     const isSelected = selectedPrompts.find(p => p.id === prompt.id);
                     return (
-                      <Card
+                      <button
                         key={prompt.id}
-                        className={`cursor-pointer transition-all ${
-                          isSelected ? 'border-primary bg-primary/5' : 'hover:border-primary/50'
-                        }`}
                         onClick={() => togglePrompt(prompt)}
+                        className={`px-4 py-2 rounded-full text-sm transition-all duration-200 border group hover:scale-105 ${
+                          isSelected 
+                            ? 'bg-primary text-primary-foreground border-primary shadow-md' 
+                            : 'bg-secondary/50 hover:bg-secondary border-border hover:border-primary/50'
+                        }`}
                       >
-                        <CardContent className="p-4 flex items-start gap-3">
-                          <div className={`h-5 w-5 rounded border-2 flex-shrink-0 mt-0.5 ${
-                            isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'
-                          }`}>
-                            {isSelected && (
-                              <svg className="w-full h-full text-primary-foreground" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            )}
-                          </div>
-                          <p className="text-sm text-foreground">{prompt.text}</p>
-                        </CardContent>
-                      </Card>
+                        <span className="flex items-center gap-2">
+                          {isSelected && <Check className="h-3 w-3" />}
+                          <span>{prompt.text}</span>
+                        </span>
+                      </button>
                     );
                   })}
                 </div>
@@ -217,13 +255,20 @@ export function GuidedSetup({ onComplete, onSkip }: GuidedSetupProps) {
                 </Button>
                 <div className="flex items-center gap-3">
                   <Badge variant="secondary">
-                    {selectedPrompts.length} question{selectedPrompts.length !== 1 ? 's' : ''} selected
+                    {selectedPrompts.length} / 3 selected
                   </Badge>
                   <Button 
                     onClick={handleComplete}
-                    disabled={selectedPrompts.length === 0}
+                    disabled={selectedPrompts.length === 0 || isStarting}
                   >
-                    Start Recording Session
+                    {isStarting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Starting...
+                      </>
+                    ) : (
+                      'Start Recording'
+                    )}
                   </Button>
                 </div>
               </div>

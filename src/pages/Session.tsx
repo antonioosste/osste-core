@@ -332,32 +332,28 @@ export default function Session() {
   // The backend returns follow_up.tts_url which is a signed URL ready for playback
   // No database polling needed
 
-  const handleGuidedSetupComplete = async (topicId: string, selectedPrompts: GuidedPrompt[]) => {
+  const handleGuidedSetupComplete = async (starterQuestion: string) => {
     setShowGuidedSetup(false);
-    setGuidedPrompts(selectedPrompts);
-    setCurrentGuidedPromptIndex(0);
-    setSessionMode('guided');
+    setSessionMode('non-guided'); // Use non-guided flow after guidance
 
     // Start session in database
     try {
       await startSessionDb({
         persona: 'friendly',
-        themes: [topicId],
+        themes: [],
         language: 'en',
-        mode: 'guided'
+        mode: 'non-guided'
       });
       
-      // Set first prompt as current question
-      if (selectedPrompts.length > 0) {
-        setCurrentPrompt(selectedPrompts[0].text);
-      }
+      // Set the starter question from backend
+      setCurrentPrompt(starterQuestion);
       
       toast({
         title: "Session started",
-        description: "You can now start recording your responses",
+        description: "You can now start recording your response",
       });
     } catch (error) {
-      console.error('Error starting guided session:', error);
+      console.error('Error starting session:', error);
       toast({
         title: "Failed to start session",
         description: "Please try again",
