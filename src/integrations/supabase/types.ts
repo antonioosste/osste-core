@@ -71,27 +71,6 @@ export type Database = {
           },
         ]
       }
-      followup_templates: {
-        Row: {
-          created_at: string | null
-          id: number
-          prompt: string
-          type: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: number
-          prompt: string
-          type: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: number
-          prompt?: string
-          type?: string
-        }
-        Relationships: []
-      }
       pages: {
         Row: {
           body_markdown: string | null
@@ -220,33 +199,6 @@ export type Database = {
           },
         ]
       }
-      raw_questions_staging: {
-        Row: {
-          category: string | null
-          depth_level: number | null
-          emotion_tags: string | null
-          followup_type: string | null
-          locale_variant: string | null
-          question: string | null
-        }
-        Insert: {
-          category?: string | null
-          depth_level?: number | null
-          emotion_tags?: string | null
-          followup_type?: string | null
-          locale_variant?: string | null
-          question?: string | null
-        }
-        Update: {
-          category?: string | null
-          depth_level?: number | null
-          emotion_tags?: string | null
-          followup_type?: string | null
-          locale_variant?: string | null
-          question?: string | null
-        }
-        Relationships: []
-      }
       recordings: {
         Row: {
           created_at: string | null
@@ -296,45 +248,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      session_media: {
-        Row: {
-          chapter_id: string | null
-          created_at: string
-          file_name: string
-          id: string
-          mime_type: string
-          prompt: string | null
-          session_id: string
-          size_bytes: number
-          url: string
-          user_id: string | null
-        }
-        Insert: {
-          chapter_id?: string | null
-          created_at?: string
-          file_name: string
-          id?: string
-          mime_type: string
-          prompt?: string | null
-          session_id: string
-          size_bytes: number
-          url: string
-          user_id?: string | null
-        }
-        Update: {
-          chapter_id?: string | null
-          created_at?: string
-          file_name?: string
-          id?: string
-          mime_type?: string
-          prompt?: string | null
-          session_id?: string
-          size_bytes?: number
-          url?: string
-          user_id?: string | null
-        }
-        Relationships: []
       }
       sessions: {
         Row: {
@@ -463,6 +376,95 @@ export type Database = {
             columns: ["story_id"]
             isOneToOne: false
             referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      story_images: {
+        Row: {
+          alt_text: string | null
+          caption: string | null
+          chapter_id: string | null
+          created_at: string | null
+          file_name: string
+          height: number | null
+          id: string
+          mime_type: string
+          session_id: string | null
+          size_bytes: number | null
+          storage_path: string
+          story_id: string | null
+          thumbnail_path: string | null
+          turn_id: string | null
+          usage: string | null
+          user_id: string
+          width: number | null
+        }
+        Insert: {
+          alt_text?: string | null
+          caption?: string | null
+          chapter_id?: string | null
+          created_at?: string | null
+          file_name: string
+          height?: number | null
+          id?: string
+          mime_type: string
+          session_id?: string | null
+          size_bytes?: number | null
+          storage_path: string
+          story_id?: string | null
+          thumbnail_path?: string | null
+          turn_id?: string | null
+          usage?: string | null
+          user_id: string
+          width?: number | null
+        }
+        Update: {
+          alt_text?: string | null
+          caption?: string | null
+          chapter_id?: string | null
+          created_at?: string | null
+          file_name?: string
+          height?: number | null
+          id?: string
+          mime_type?: string
+          session_id?: string | null
+          size_bytes?: number | null
+          storage_path?: string
+          story_id?: string | null
+          thumbnail_path?: string | null
+          turn_id?: string | null
+          usage?: string | null
+          user_id?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_images_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_images_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_images_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_images_turn_id_fkey"
+            columns: ["turn_id"]
+            isOneToOne: false
+            referencedRelation: "turns"
             referencedColumns: ["id"]
           },
         ]

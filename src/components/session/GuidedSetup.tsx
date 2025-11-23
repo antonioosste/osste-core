@@ -19,10 +19,10 @@ interface Prompt {
 
 interface GuidedSetupProps {
   onComplete: (topicId: string, selectedPrompts: Prompt[]) => void;
-  onCancel: () => void;
+  onSkip: () => void;
 }
 
-export function GuidedSetup({ onComplete, onCancel }: GuidedSetupProps) {
+export function GuidedSetup({ onComplete, onSkip }: GuidedSetupProps) {
   const { toast } = useToast();
   const [step, setStep] = useState<'topic' | 'prompts'>('topic');
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -96,6 +96,15 @@ export function GuidedSetup({ onComplete, onCancel }: GuidedSetupProps) {
       if (exists) {
         return prev.filter(p => p.id !== prompt.id);
       } else {
+        // Limit to 3 questions
+        if (prev.length >= 3) {
+          toast({
+            title: "Maximum reached",
+            description: "You can select up to 3 questions",
+            variant: "default"
+          });
+          return prev;
+        }
         return [...prev, prompt];
       }
     });
@@ -119,21 +128,28 @@ export function GuidedSetup({ onComplete, onCancel }: GuidedSetupProps) {
     <div className="max-w-4xl mx-auto p-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <BookOpen className="h-5 w-5 text-primary" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <BookOpen className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl">
+                  {step === 'topic' ? 'Want some guidance?' : 'Select Your Questions'}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {step === 'topic' 
+                    ? 'Choose a topic and questions, or skip to record freely'
+                    : `Choose up to 3 questions from ${selectedTopic?.name}`
+                  }
+                </p>
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-2xl">
-                {step === 'topic' ? 'Choose Your Topic' : 'Select Your Questions'}
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                {step === 'topic' 
-                  ? 'Pick a topic to guide your storytelling session'
-                  : `Choose questions from ${selectedTopic?.name}`
-                }
-              </p>
-            </div>
+            {step === 'topic' && (
+              <Button variant="ghost" onClick={onSkip}>
+                Skip
+              </Button>
+            )}
           </div>
         </CardHeader>
         
@@ -155,8 +171,8 @@ export function GuidedSetup({ onComplete, onCancel }: GuidedSetupProps) {
               </div>
               
               <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button variant="outline" onClick={onCancel}>
-                  Cancel
+                <Button variant="ghost" onClick={onSkip}>
+                  Skip & Record Freely
                 </Button>
               </div>
             </>
@@ -164,7 +180,7 @@ export function GuidedSetup({ onComplete, onCancel }: GuidedSetupProps) {
             <>
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  Select the questions you'd like to explore. You can choose multiple.
+                  Select up to 3 questions you'd like to explore during your recording.
                 </p>
                 <div className="space-y-2 max-h-[400px] overflow-y-auto">
                   {prompts.map((prompt) => {
