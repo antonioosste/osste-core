@@ -59,36 +59,48 @@ export const useInterview = () => {
   }, []);
 
   const getFollowups = useCallback(async (types: string[]): Promise<string[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('followup_templates')
-        .select('*')
-        .in('type', types);
+    // Return mock followup prompts based on type
+    const followupTemplates: Record<string, string[]> = {
+      'repair': [
+        'How did that experience shape who you are today?',
+        'What helped you get through that difficult time?'
+      ],
+      'grounding': [
+        'Can you describe what you were feeling in that moment?',
+        'What stands out most vividly in your memory?'
+      ],
+      'reflection': [
+        'Looking back, what did you learn from that experience?',
+        'What would you tell someone going through something similar?'
+      ],
+      'sensory': [
+        'What do you remember seeing, hearing, or smelling?',
+        'Can you describe the setting in more detail?'
+      ],
+      'timeline': [
+        'What happened next?',
+        'How did things unfold from there?'
+      ],
+      'narrative': [
+        'Tell me more about that.',
+        'What else do you remember?'
+      ],
+      'why_how': [
+        'Why do you think that happened?',
+        'How did that make you feel?'
+      ]
+    };
 
-      if (error) throw error;
+    const prompts: string[] = [];
+    types.forEach(type => {
+      const typePrompts = followupTemplates[type] || followupTemplates['narrative'];
+      const count = Math.min(2, typePrompts.length);
+      for (let i = 0; i < count; i++) {
+        if (typePrompts[i]) prompts.push(typePrompts[i]);
+      }
+    });
 
-      if (!data || data.length === 0) return [];
-
-      // Return 1-2 random prompts per type
-      const prompts: string[] = [];
-      types.forEach(type => {
-        const typePrompts = data.filter(d => d.type === type);
-        if (typePrompts.length > 0) {
-          // Pick 1-2 random
-          const count = Math.min(2, typePrompts.length);
-          for (let i = 0; i < count; i++) {
-            const randomIndex = Math.floor(Math.random() * typePrompts.length);
-            prompts.push(typePrompts[randomIndex].prompt);
-            typePrompts.splice(randomIndex, 1);
-          }
-        }
-      });
-
-      return prompts;
-    } catch (error) {
-      console.error('Error fetching followups:', error);
-      return [];
-    }
+    return prompts;
   }, []);
 
   const getBiasedFollowupTypes = useCallback((
