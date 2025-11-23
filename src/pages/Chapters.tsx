@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { BookOpen, Calendar, FileText, ArrowLeft, Loader2 } from "lucide-react";
+import { BookOpen, Calendar, FileText, ArrowLeft, Loader2, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,20 +9,69 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { useChapters } from "@/hooks/useChapters";
 import { EmptyState } from "@/components/empty-states/EmptyState";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { assembleStory } from "@/lib/backend-api";
+import { useStories } from "@/hooks/useStories";
+import { useState } from "react";
 
 export default function Chapters() {
   const navigate = useNavigate();
   const { chapters, loading } = useChapters();
+  const { session } = useAuth();
+  const { toast } = useToast();
+  const { refetch: refetchStories } = useStories();
+  const [assemblingSessionId, setAssemblingSessionId] = useState<string | null>(null);
 
-  // Group chapters by recording_id
+  // Group chapters by session_id (needed for story generation)
   const groupedChapters = chapters.reduce((acc, chapter) => {
-    const key = chapter.recording_id;
+    // Use session_id for grouping since that's what the backend API needs
+    const key = chapter.session_id || chapter.recording_id || 'unknown';
     if (!acc[key]) {
       acc[key] = [];
     }
     acc[key].push(chapter);
     return acc;
   }, {} as Record<string, typeof chapters>);
+
+  const handleAssembleStory = async (sessionId: string) => {
+    if (!session?.access_token) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to generate a story.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setAssemblingSessionId(sessionId);
+    try {
+      toast({
+        title: "Generating story...",
+        description: "Please wait while we assemble your story from these chapters.",
+      });
+
+      await assembleStory(session.access_token, sessionId);
+      
+      toast({
+        title: "Story generated successfully!",
+        description: "Your story is now ready to view.",
+      });
+
+      // Refresh stories list and navigate to stories
+      refetchStories();
+      navigate('/stories');
+    } catch (error) {
+      console.error('Error assembling story:', error);
+      toast({
+        title: "Story generation failed",
+        description: error instanceof Error ? error.message : "Failed to generate story",
+        variant: "destructive",
+      });
+    } finally {
+      setAssemblingSessionId(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -81,19 +130,38 @@ export default function Chapters() {
         {/* Chapters List */}
         {!loading && chapters.length > 0 && (
           <div className="space-y-8">
-            {Object.entries(groupedChapters).map(([recordingId, recordingChapters]) => (
-              <div key={recordingId}>
+            {Object.entries(groupedChapters).map(([sessionId, sessionChapters]) => (
+              <div key={sessionId}>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-foreground">
-                    Recording Session
-                  </h2>
-                  <Badge variant="secondary">
-                    {recordingChapters.length} {recordingChapters.length === 1 ? 'Chapter' : 'Chapters'}
-                  </Badge>
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-xl font-semibold text-foreground">
+                      Recording Session
+                    </h2>
+                    <Badge variant="secondary">
+                      {sessionChapters.length} {sessionChapters.length === 1 ? 'Chapter' : 'Chapters'}
+                    </Badge>
+                  </div>
+                  <Button
+                    onClick={() => handleAssembleStory(sessionId)}
+                    disabled={assemblingSessionId === sessionId}
+                    className="gap-2"
+                  >
+                    {assemblingSessionId === sessionId ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        Generate Story
+                      </>
+                    )}
+                  </Button>
                 </div>
 
                 <div className="space-y-6">
-                  {recordingChapters
+                  {sessionChapters
                     .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
                     .map((chapter, index) => (
                       <Card key={chapter.id} className="hover:shadow-md transition-shadow">

@@ -5,7 +5,8 @@ import { useToast } from './use-toast';
 
 export interface Chapter {
   id: string;
-  recording_id: string;
+  recording_id: string | null;
+  session_id: string | null;
   title: string | null;
   summary: string | null;
   overall_summary: string | null;
