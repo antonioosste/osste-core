@@ -21,7 +21,18 @@ export const importQuestions = async () => {
 
   for (let i = 0; i < questionBankData.length; i += chunkSize) {
     const chunk = questionBankData.slice(i, i + chunkSize);
-    const { error } = await supabase.from('questions').insert(chunk);
+    
+    // Map old format to new database schema
+    const mappedChunk = chunk.map(q => ({
+      question_text: q.question,
+      category_id: null, // Will need to be mapped separately
+      persona_tags: q.emotion_tags ? q.emotion_tags.split('|') : null,
+      difficulty: q.depth_level || 1,
+      order_index: q.id,
+      active: true
+    }));
+    
+    const { error } = await supabase.from('questions').insert(mappedChunk);
     
     if (error) {
       console.error(`Error importing chunk ${i}-${i + chunk.length}:`, error);

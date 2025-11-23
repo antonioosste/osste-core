@@ -6,19 +6,14 @@ export async function getQuestionsByCategory(options: {
   locale?: string;
   depthLevelMax?: number;
 }): Promise<QuestionRow[]> {
-  const { category, locale = "en-US", depthLevelMax } = options;
+  const { category } = options;
 
-  let query = supabase
+  const query = supabase
     .from("questions")
     .select("*")
-    .eq("category", category)
-    .eq("locale_variant", locale)
-    .order("depth_level", { ascending: true })
+    .eq("active", true)
+    .order("order_index", { ascending: true })
     .order("id", { ascending: true });
-
-  if (depthLevelMax) {
-    query = query.lte("depth_level", depthLevelMax);
-  }
 
   const { data, error } = await query;
   if (error) {
@@ -33,19 +28,10 @@ export async function getRandomQuestion(options?: {
   locale?: string;
   depthLevelMax?: number;
 }): Promise<QuestionRow | null> {
-  const { category, locale = "en-US", depthLevelMax } = options || {};
-
-  let query = supabase
+  const query = supabase
     .from("questions")
     .select("*")
-    .eq("locale_variant", locale);
-
-  if (category) {
-    query = query.eq("category", category);
-  }
-  if (depthLevelMax) {
-    query = query.lte("depth_level", depthLevelMax);
-  }
+    .eq("active", true);
 
   const { data, error } = await query;
   if (error || !data || data.length === 0) {

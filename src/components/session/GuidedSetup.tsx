@@ -35,7 +35,7 @@ export function GuidedSetup({ onComplete, onCancel }: GuidedSetupProps) {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('topics')
+        .from('question_categories')
         .select('*')
         .order('name');
       
@@ -64,12 +64,19 @@ export function GuidedSetup({ onComplete, onCancel }: GuidedSetupProps) {
     
     try {
       const { data, error } = await supabase
-        .from('prompts')
-        .select('*')
-        .eq('topic_id', topic.id);
+        .from('questions')
+        .select('id, question_text, category_id')
+        .eq('category_id', topic.id)
+        .eq('active', true);
       
       if (error) throw error;
-      setPrompts(data || []);
+      // Map questions to prompts format
+      const mappedPrompts = (data || []).map(q => ({
+        id: q.id,
+        text: q.question_text,
+        topic_id: q.category_id || topic.id
+      }));
+      setPrompts(mappedPrompts);
       setStep('prompts');
     } catch (error) {
       console.error('Error loading prompts:', error);

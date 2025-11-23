@@ -18,7 +18,7 @@ const AdminQuestions = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedDepth, setSelectedDepth] = useState<string>("All");
   const [searchText, setSearchText] = useState("");
-  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 
   const categories = [
     "All",
@@ -116,15 +116,11 @@ const AdminQuestions = () => {
       let query = supabase.from('questions').select('*');
 
       if (selectedCategory !== "All") {
-        query = query.eq('category', selectedCategory);
-      }
-
-      if (selectedDepth !== "All") {
-        query = query.eq('depth_level', parseInt(selectedDepth));
+        query = query.eq('category_id', selectedCategory);
       }
 
       if (searchText) {
-        query = query.ilike('question', `%${searchText}%`);
+        query = query.ilike('question_text', `%${searchText}%`);
       }
 
       const { data, error } = await query.order('id');
@@ -159,7 +155,7 @@ const AdminQuestions = () => {
     }
   };
 
-  const toggleRow = (id: number) => {
+  const toggleRow = (id: string) => {
     const newSelected = new Set(selectedRows);
     if (newSelected.has(id)) {
       newSelected.delete(id);

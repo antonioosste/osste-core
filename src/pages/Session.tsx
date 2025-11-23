@@ -422,7 +422,7 @@ export default function Session() {
         // Set first question as current
         if (questions.length > 0) {
           setCurrentQuestionData(questions[0]);
-          setCurrentPrompt(questions[0].question);
+          setCurrentPrompt(questions[0].question_text);
         }
       }
     } catch (error) {
@@ -442,7 +442,7 @@ export default function Session() {
       const nextIndex = currentQuestionIndex + 1;
       setCurrentQuestionIndex(nextIndex);
       setCurrentQuestionData(questionBank[nextIndex]);
-      setCurrentPrompt(questionBank[nextIndex].question);
+      setCurrentPrompt(questionBank[nextIndex].question_text);
     } else {
       // Load more questions or wrap around
       loadRandomQuestionForCategory();
@@ -457,7 +457,7 @@ export default function Session() {
       });
       if (randomQ) {
         setCurrentQuestionData(randomQ);
-        setCurrentPrompt(randomQ.question);
+        setCurrentPrompt(randomQ.question_text);
       }
     } catch (error) {
       console.error('Error loading random question:', error);
