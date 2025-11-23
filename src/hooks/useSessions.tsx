@@ -109,26 +109,20 @@ export function useSessions() {
         }
       }
 
-      // Delete session media files from storage
-      const { data: mediaFiles } = await supabase
-        .from('session_media')
-        .select('url, file_name')
+      // Delete story images from storage
+      const { data: storyImages } = await supabase
+        .from('story_images')
+        .select('storage_path')
         .eq('session_id', id);
 
-      if (mediaFiles && mediaFiles.length > 0) {
-        // Extract file paths from URLs (remove the base URL)
-        const mediaPaths = mediaFiles.map(m => {
-          // Extract path after the bucket name
-          const match = m.url.match(/session-media\/(.+)$/);
-          return match ? match[1] : m.file_name;
-        });
+      if (storyImages && storyImages.length > 0) {
+        const imagePaths = storyImages.map(img => img.storage_path);
+        const { error: imageStorageError } = await supabase.storage
+          .from('story_media')
+          .remove(imagePaths);
         
-        const { error: mediaStorageError } = await supabase.storage
-          .from('session-media')
-          .remove(mediaPaths);
-        
-        if (mediaStorageError) {
-          console.error('Error deleting media files:', mediaStorageError);
+        if (imageStorageError) {
+          console.error('Error deleting story images:', imageStorageError);
         }
       }
 
@@ -151,8 +145,8 @@ export function useSessions() {
       // 3. Also delete any chapters that reference this session directly
       await supabase.from('chapters').delete().eq('session_id', id);
 
-      // 4. Delete session_media
-      await supabase.from('session_media').delete().eq('session_id', id);
+      // 4. Delete story images
+      await supabase.from('story_images').delete().eq('session_id', id);
       
       // 5. Delete stories
       await supabase.from('stories').delete().eq('session_id', id);

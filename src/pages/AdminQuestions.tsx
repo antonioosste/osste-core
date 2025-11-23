@@ -88,20 +88,8 @@ const AdminQuestions = () => {
 
     setLoading(true);
     try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-      
-      const rows: any[] = [];
-      Object.entries(data).forEach(([type, prompts]) => {
-        (prompts as string[]).forEach(prompt => {
-          rows.push({ type, prompt });
-        });
-      });
-
-      const { error } = await supabase.from('followup_templates').insert(rows);
-      if (error) throw error;
-
-      toast.success(`Imported ${rows.length} followup templates successfully`);
+      toast.error('Followup templates feature not available - table does not exist');
+      console.log('followup_templates table does not exist in database');
     } catch (error) {
       console.error('Error importing JSON:', error);
       toast.error('Failed to import JSON');
