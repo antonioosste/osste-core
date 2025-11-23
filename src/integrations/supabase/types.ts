@@ -155,65 +155,95 @@ export type Database = {
         }
         Relationships: []
       }
-      prompts: {
+      question_categories: {
         Row: {
           created_at: string | null
+          description: string | null
           id: string
-          text: string
-          topic_id: string | null
+          name: string
+          order_index: number | null
         }
         Insert: {
           created_at?: string | null
+          description?: string | null
           id?: string
-          text: string
-          topic_id?: string | null
+          name: string
+          order_index?: number | null
         }
         Update: {
           created_at?: string | null
+          description?: string | null
           id?: string
-          text?: string
-          topic_id?: string | null
+          name?: string
+          order_index?: number | null
+        }
+        Relationships: []
+      }
+      questions: {
+        Row: {
+          active: boolean | null
+          category_id: string | null
+          created_at: string | null
+          difficulty: number | null
+          id: string
+          order_index: number | null
+          persona_tags: string[] | null
+          question_text: string
+        }
+        Insert: {
+          active?: boolean | null
+          category_id?: string | null
+          created_at?: string | null
+          difficulty?: number | null
+          id?: string
+          order_index?: number | null
+          persona_tags?: string[] | null
+          question_text: string
+        }
+        Update: {
+          active?: boolean | null
+          category_id?: string | null
+          created_at?: string | null
+          difficulty?: number | null
+          id?: string
+          order_index?: number | null
+          persona_tags?: string[] | null
+          question_text?: string
         }
         Relationships: [
           {
-            foreignKeyName: "prompts_topic_id_fkey"
-            columns: ["topic_id"]
+            foreignKeyName: "questions_category_id_fkey"
+            columns: ["category_id"]
             isOneToOne: false
-            referencedRelation: "topics"
+            referencedRelation: "question_categories"
             referencedColumns: ["id"]
           },
         ]
       }
-      questions: {
+      raw_questions_staging: {
         Row: {
-          category: string
-          created_at: string | null
+          category: string | null
           depth_level: number | null
           emotion_tags: string | null
           followup_type: string | null
-          id: number
           locale_variant: string | null
-          question: string
+          question: string | null
         }
         Insert: {
-          category: string
-          created_at?: string | null
+          category?: string | null
           depth_level?: number | null
           emotion_tags?: string | null
           followup_type?: string | null
-          id?: number
           locale_variant?: string | null
-          question: string
+          question?: string | null
         }
         Update: {
-          category?: string
-          created_at?: string | null
+          category?: string | null
           depth_level?: number | null
           emotion_tags?: string | null
           followup_type?: string | null
-          id?: number
           locale_variant?: string | null
-          question?: string
+          question?: string | null
         }
         Relationships: []
       }
@@ -364,6 +394,7 @@ export type Database = {
           raw_text: string | null
           recording_id: string | null
           session_id: string | null
+          style_instruction: string | null
           title: string | null
         }
         Insert: {
@@ -375,6 +406,7 @@ export type Database = {
           raw_text?: string | null
           recording_id?: string | null
           session_id?: string | null
+          style_instruction?: string | null
           title?: string | null
         }
         Update: {
@@ -386,6 +418,7 @@ export type Database = {
           raw_text?: string | null
           recording_id?: string | null
           session_id?: string | null
+          style_instruction?: string | null
           title?: string | null
         }
         Relationships: [
@@ -433,24 +466,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      topics: {
-        Row: {
-          created_at: string | null
-          id: string
-          name: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          name: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string
-        }
-        Relationships: []
       }
       transcripts: {
         Row: {
