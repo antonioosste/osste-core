@@ -61,7 +61,7 @@ const Interview = () => {
   useEffect(() => {
     const loadFollowups = async () => {
       if (currentQuestion) {
-        const types = getBiasedFollowupTypes(undefined, currentQuestion.category);
+        const types = getBiasedFollowupTypes(undefined, currentQuestion.category_id || '');
         const prompts = await getFollowups(types);
         setFollowups(prompts.slice(0, 2)); // Show 2 follow-ups
       }
@@ -71,7 +71,7 @@ const Interview = () => {
 
   const handleNextQuestion = async () => {
     if (goDeeper && currentDepth < 3) {
-      await escalateDepth(selectedCategory === "All" ? currentQuestion?.category || "" : selectedCategory);
+      await escalateDepth(selectedCategory === "All" ? currentQuestion?.category_id || "" : selectedCategory);
     } else {
       await fetchInitialQuestion({
         category: selectedCategory,
@@ -154,7 +154,7 @@ const Interview = () => {
             <Card className="p-8 shadow-xl">
               <div className="flex items-center justify-between mb-6">
                 <Badge variant="secondary" className="text-sm">
-                  {currentQuestion?.category}
+                  {currentQuestion?.category_id || 'General'}
                 </Badge>
                 <Badge variant="outline">
                   Depth Level {currentDepth}
@@ -162,7 +162,7 @@ const Interview = () => {
               </div>
 
               <h2 className="font-serif text-3xl font-semibold mb-8 leading-relaxed">
-                {currentQuestion?.question}
+                {currentQuestion?.question_text}
               </h2>
 
               {followups.length > 0 && (

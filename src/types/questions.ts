@@ -23,21 +23,23 @@ export type QuestionCategory =
   | "Technology, Modern Life & Social Media";
 
 export interface QuestionRow {
-  id: number;
-  category: QuestionCategory;
-  question: string;
-  emotion_tags: string;      // pipe-separated
-  followup_type: string;     // pipe-separated
-  depth_level: number;       // 1, 2, or 3
-  locale_variant: string;    // e.g. "en-US"
+  id: string;
+  category_id: string | null;
+  question_text: string;
+  persona_tags: string[] | null;
+  difficulty: number | null;
+  order_index: number | null;
+  active: boolean | null;
+  created_at: string | null;
 }
 
 export function parseEmotionTags(row: QuestionRow): string[] {
-  return row.emotion_tags.split("|").map(tag => tag.trim()).filter(Boolean);
+  return row.persona_tags || [];
 }
 
 export function parseFollowupTypes(row: QuestionRow): string[] {
-  return row.followup_type.split("|").map(tag => tag.trim()).filter(Boolean);
+  // Followup types are not in the current schema
+  return [];
 }
 
 export const QUESTION_CATEGORIES: QuestionCategory[] = [

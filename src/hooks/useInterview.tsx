@@ -2,13 +2,14 @@ import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Question {
-  id: number;
-  category: string;
-  question: string;
-  emotion_tags: string;
-  followup_type: string;
-  depth_level: number;
-  locale_variant: string;
+  id: string;
+  category_id: string | null;
+  question_text: string;
+  persona_tags: string[] | null;
+  difficulty: number | null;
+  order_index: number | null;
+  active: boolean | null;
+  created_at: string | null;
 }
 
 interface FollowupTemplate {
@@ -34,10 +35,10 @@ export const useInterview = () => {
       let query = supabase
         .from('questions')
         .select('*')
-        .eq('depth_level', depth_level);
+        .eq('active', true);
 
       if (category && category !== 'All') {
-        query = query.eq('category', category);
+        query = query.eq('category_id', category);
       }
 
       const { data, error } = await query;
@@ -103,13 +104,9 @@ export const useInterview = () => {
       return ['sensory', 'timeline'];
     }
 
-    // Default follow-up types from current question
-    if (currentQuestion?.followup_type) {
-      return currentQuestion.followup_type.split('|');
-    }
-
+    // Default follow-up types
     return ['narrative', 'why_how'];
-  }, [currentQuestion]);
+  }, []);
 
   const escalateDepth = useCallback(async (category: string) => {
     if (currentDepth < 3) {
