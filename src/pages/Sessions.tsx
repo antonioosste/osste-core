@@ -12,14 +12,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-states/EmptyState";
 import { useAuth } from "@/hooks/useAuth";
-import { SessionModeSelector } from "@/components/session/SessionModeSelector";
 
 export default function Sessions() {
   const navigate = useNavigate();
   const { sessions, loading, deleteSession } = useSessions();
   const { session } = useAuth();
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [showModeSelector, setShowModeSelector] = useState(false);
 
   const handleDelete = async () => {
     if (deleteId) {
@@ -41,27 +39,9 @@ export default function Sessions() {
     return `${minutes} min`;
   };
 
-  const handleModeSelect = (mode: 'guided' | 'non-guided', category?: string) => {
-    setShowModeSelector(false);
-    if (mode === 'non-guided') {
-      // Non-guided: go directly to session with no category
-      navigate('/session?mode=non-guided');
-    } else {
-      // Guided: go to session with guided mode flag
-      navigate(`/session?mode=guided${category ? `&category=${category}` : ''}`);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Header isAuthenticated={true} />
-      
-      {/* Mode Selector Dialog */}
-      <SessionModeSelector
-        open={showModeSelector}
-        onSelect={handleModeSelect}
-        onClose={() => setShowModeSelector(false)}
-      />
       
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
@@ -71,7 +51,7 @@ export default function Sessions() {
               Manage your storytelling sessions
             </p>
           </div>
-          <Button onClick={() => setShowModeSelector(true)}>
+          <Button onClick={() => navigate('/session')}>
             <Plus className="w-4 h-4 mr-2" />
             New Session
           </Button>

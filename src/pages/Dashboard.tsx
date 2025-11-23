@@ -24,7 +24,6 @@ import { useSessions } from "@/hooks/useSessions";
 import { useStories } from "@/hooks/useStories";
 import { useProfile } from "@/hooks/useProfile";
 import { useRecordings } from "@/hooks/useRecordings";
-import { SessionModeSelector } from "@/components/session/SessionModeSelector";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -32,7 +31,6 @@ export default function Dashboard() {
   const { stories, loading: storiesLoading } = useStories();
   const { profile } = useProfile();
   const { recordings, loading: recordingsLoading } = useRecordings();
-  const [showModeSelector, setShowModeSelector] = useState(false);
   
   const isLoading = sessionsLoading || storiesLoading || recordingsLoading;
   const userPaid = profile?.plan !== 'free';
@@ -66,25 +64,9 @@ export default function Dashboard() {
     }
   };
 
-  const handleModeSelect = (mode: 'guided' | 'non-guided', category?: string) => {
-    setShowModeSelector(false);
-    if (mode === 'non-guided') {
-      navigate('/session?mode=non-guided');
-    } else {
-      navigate(`/session?mode=guided${category ? `&category=${category}` : ''}`);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Header isAuthenticated={true} />
-      
-      {/* Mode Selector Dialog */}
-      <SessionModeSelector
-        open={showModeSelector}
-        onSelect={handleModeSelect}
-        onClose={() => setShowModeSelector(false)}
-      />
       
       <main className="container mx-auto px-4 py-8">
         {/* Header */}
@@ -186,7 +168,7 @@ export default function Dashboard() {
                 <Button 
                   size="lg" 
                   className="w-full sm:w-auto"
-                  onClick={() => setShowModeSelector(true)}
+                  onClick={() => navigate('/session')}
                 >
                   <Play className="w-4 h-4 mr-2" />
                   Start Recording

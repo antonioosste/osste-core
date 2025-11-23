@@ -83,7 +83,7 @@ export default function Session() {
   const [isLoadingSession, setIsLoadingSession] = useState(!!existingSessionId);
   
   // Session mode and question bank state  
-  const [showGuidedSetup, setShowGuidedSetup] = useState(modeParam === 'guided' && !existingSessionId);
+  const [showGuidedSetup, setShowGuidedSetup] = useState(!existingSessionId && !modeParam);
   const [sessionMode, setSessionMode] = useState<'guided' | 'non-guided'>(modeParam || 'non-guided');
   const [guidedPrompts, setGuidedPrompts] = useState<GuidedPrompt[]>([]);
   const [currentGuidedPromptIndex, setCurrentGuidedPromptIndex] = useState(0);
@@ -366,8 +366,33 @@ export default function Session() {
     }
   };
 
-  const handleGuidedSetupCancel = () => {
-    navigate('/sessions');
+  const handleGuidedSetupSkip = async () => {
+    setShowGuidedSetup(false);
+    setSessionMode('non-guided');
+    
+    // Start non-guided session
+    try {
+      await startSessionDb({
+        persona: 'friendly',
+        themes: [],
+        language: 'en',
+        mode: 'non-guided'
+      });
+      
+      setCurrentPrompt("Tell me a story from your life that's meaningful to you.");
+      
+      toast({
+        title: "Free recording mode",
+        description: "Record your story without guidance",
+      });
+    } catch (error) {
+      console.error('Error starting non-guided session:', error);
+      toast({
+        title: "Failed to start session",
+        description: "Please try again",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleCategorySelect = async (category: QuestionCategory | "surprise", depthLevel: number) => {
@@ -856,7 +881,7 @@ export default function Session() {
           <div className="w-full py-8">
             <GuidedSetup
               onComplete={handleGuidedSetupComplete}
-              onCancel={handleGuidedSetupCancel}
+              onSkip={handleGuidedSetupSkip}
             />
           </div>
         </div>
