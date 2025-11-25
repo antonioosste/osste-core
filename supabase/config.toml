@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.seed-questions]
 verify_jwt = false
+
+[functions.transcribe-session]
+verify_jwt = true
+
+[functions.generate-book-pdf]
+verify_jwt = true
