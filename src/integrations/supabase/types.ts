@@ -21,9 +21,7 @@ export type Database = {
           image_hints: Json | null
           order_index: number | null
           overall_summary: string | null
-          polished_text: string | null
           quotes: Json | null
-          raw_transcript: string | null
           recording_id: string | null
           session_id: string | null
           suggested_cover_title: string | null
@@ -36,9 +34,7 @@ export type Database = {
           image_hints?: Json | null
           order_index?: number | null
           overall_summary?: string | null
-          polished_text?: string | null
           quotes?: Json | null
-          raw_transcript?: string | null
           recording_id?: string | null
           session_id?: string | null
           suggested_cover_title?: string | null
@@ -51,9 +47,7 @@ export type Database = {
           image_hints?: Json | null
           order_index?: number | null
           overall_summary?: string | null
-          polished_text?: string | null
           quotes?: Json | null
-          raw_transcript?: string | null
           recording_id?: string | null
           session_id?: string | null
           suggested_cover_title?: string | null

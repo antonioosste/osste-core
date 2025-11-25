@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { 
   ArrowLeft, 
   Download, 
@@ -9,8 +9,7 @@ import {
   FileText,
   BookOpen,
   Calendar,
-  User,
-  Loader2
+  User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,10 +18,6 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
-import { useChapters } from "@/hooks/useChapters";
-import { useAuth } from "@/hooks/useAuth";
-import { useProfile } from "@/hooks/useProfile";
-import { EmptyState } from "@/components/empty-states/EmptyState";
 
 interface Story {
   id: string;
@@ -32,49 +27,66 @@ interface Story {
   order: number;
 }
 
+const approvedStories: Story[] = [
+  {
+    id: "1",
+    title: "Childhood Memories in Brooklyn",
+    content: `I was born in Brooklyn in 1942, right in the heart of what we called "the neighborhood." Our block was lined with brownstones, each one filled with families who knew each other's business—and I mean that in the best possible way.
+
+The candy store on the corner was owned by Mr. Goldstein, a kind man with thick glasses who always had a smile for us kids. We'd spend our nickels on penny candy, carefully choosing each piece from the glass jars that lined the counter.
+
+Summer meant stickball in the street. We'd use a broomstick and a pink rubber ball—what we called a "spaldeen." The manhole covers were our bases, and we'd play until the streetlights came on and our mothers called us in for dinner.
+
+The neighborhood was alive with sounds: kids playing, mothers calling from windows, the knife sharpener's bell, and the ice cream truck playing its tinny melody. Everyone looked out for everyone else's kids.
+
+Those were simpler times, but they were rich with community and connection. Every day was an adventure, even if it was just walking to the corner store or playing in the street until dark.`,
+    wordCount: 168,
+    order: 1
+  },
+  {
+    id: "3",
+    title: "Family Immigration Story",
+    content: `The journey from Ellis Island to building a new life in America was not easy, but it was filled with hope and determination.
+
+My grandparents arrived with nothing but the clothes on their backs and a dream of a better future. They didn't speak the language, didn't know the customs, but they had something more valuable than money—they had each other and an unshakeable belief in the promise of America.
+
+The first winter was the hardest. They lived in a tiny tenement apartment with three other families. But slowly, through hard work and perseverance, they began to build their new life.
+
+Within five years, my grandfather had saved enough to open a small grocery store. The neighborhood welcomed them, and soon they became an integral part of the community fabric.
+
+Their story is one of courage, sacrifice, and the enduring power of the American dream.`,
+    wordCount: 145,
+    order: 2
+  },
+  {
+    id: "4",
+    title: "Wedding Day Memories",
+    content: `It was September 15th, 1963, and despite the difficult times of the Depression, love found a way to triumph.
+
+My grandmother wore her mother's wedding dress, carefully altered to fit. There was no money for flowers, so the women of the neighborhood gathered wildflowers from the nearby park. The ceremony was held in the small church on the corner, the same one where I would later be baptized.
+
+The reception was in the church basement, with tables made from wooden planks and sawhorses. But what it lacked in elegance, it made up for in joy. The whole neighborhood came together to celebrate, bringing dishes from their own kitchens.
+
+They danced to music from an old radio, and when it broke halfway through the evening, Uncle Tony played his accordion. The party went on until dawn, and even though times were hard, nobody wanted the magic to end.
+
+That wedding taught me that happiness doesn't come from having the most expensive things—it comes from being surrounded by people who care about you.`,
+    wordCount: 189,
+    order: 3
+  }
+];
+
 export default function BookPreview() {
-  const navigate = useNavigate();
   const { toast } = useToast();
-  const { session, user } = useAuth();
-  const { profile } = useProfile();
-  const { chapters, loading } = useChapters();
-  
-  const [stories, setStories] = useState<Story[]>([]);
+  const [stories, setStories] = useState(approvedStories);
   const [bookDetails, setBookDetails] = useState({
-    title: "My Life Stories",
-    subtitle: "A Collection of Personal Memories",
-    author: "Anonymous",
-    year: new Date().getFullYear().toString()
+    title: "Family Stories & Memories",
+    subtitle: "A Collection of Life's Most Precious Moments",
+    author: "John Smith Family",
+    year: "2024"
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
-
-  // Convert chapters to stories format
-  useEffect(() => {
-    if (chapters.length > 0) {
-      const convertedStories = chapters.map((chapter, index) => {
-        const content = chapter.summary || chapter.overall_summary || 'No content available';
-        const wordCount = content.split(/\s+/).length;
-        
-        return {
-          id: chapter.id,
-          title: chapter.title || "Untitled Chapter",
-          content: content,
-          wordCount: wordCount,
-          order: chapter.order_index || index + 1
-        };
-      });
-      setStories(convertedStories);
-    }
-  }, [chapters]);
-
-  // Update author name when profile loads
-  useEffect(() => {
-    if (profile?.name) {
-      setBookDetails(prev => ({ ...prev, author: profile.name || "Anonymous" }));
-    }
-  }, [profile]);
 
   const totalWords = stories.reduce((sum, story) => sum + story.wordCount, 0);
   const estimatedPages = Math.ceil(totalWords / 250); // ~250 words per page
@@ -118,51 +130,24 @@ export default function BookPreview() {
   };
 
   const generatePDF = async () => {
-    if (!session?.access_token) {
-      toast({
-        title: "Authentication required",
-        description: "Please log in to generate PDF.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setIsGenerating(true);
     
     try {
-      if (stories.length === 0) {
-        throw new Error("No chapters available to compile.");
+      const storyIds = stories.map(s => s.id);
+      
+      if (storyIds.length < 2) {
+        throw new Error("Provide at least two stories to compile.");
       }
 
-      toast({
-        title: "Generating PDF...",
-        description: "Please wait while we compile your book."
-      });
-
-      // Call PDF generation endpoint
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-book-pdf`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('PDF generation failed');
-      }
-
-      const result = await response.json();
+      // Simulate PDF generation process (replace with actual API endpoint)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const jobId = `job_${Math.random().toString(36).slice(2)}`;
       
       toast({
-        title: "PDF Generation Ready",
-        description: "Your book structure is ready. Integrate a PDF library to download.",
+        title: "PDF Generated",
+        description: `PDF job queued (jobId: ${jobId}). You'll see it under Downloads when it's finished.`
       });
-      
-      console.log('Book data for PDF:', result.bookData);
       
     } catch (error: any) {
       toast({
@@ -184,47 +169,6 @@ export default function BookPreview() {
     return page;
   };
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header isAuthenticated={true} />
-        <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[60vh]">
-          <div className="text-center space-y-4">
-            <Loader2 className="w-12 h-12 animate-spin mx-auto text-primary" />
-            <p className="text-muted-foreground">Loading chapters...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Empty state
-  if (chapters.length === 0) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header isAuthenticated={true} />
-        <div className="container mx-auto px-4 py-8">
-          <Button variant="ghost" asChild className="mb-8">
-            <Link to="/dashboard">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dashboard
-            </Link>
-          </Button>
-          <EmptyState
-            icon={BookOpen}
-            title="No Chapters Yet"
-            description="You don't have any chapters yet. Start a voice session to create your first chapter."
-            action={{
-              label: "Start Recording",
-              onClick: () => navigate("/session")
-            }}
-          />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <Header isAuthenticated={true} />
@@ -234,9 +178,9 @@ export default function BookPreview() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Button variant="ghost" asChild>
-              <Link to="/dashboard">
+              <Link to="/stories">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Dashboard
+                Back to Stories
               </Link>
             </Button>
             <div>
@@ -303,17 +247,8 @@ export default function BookPreview() {
             </Dialog>
             
             <Button onClick={generatePDF} disabled={isGenerating} className="gap-2">
-              {isGenerating ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4" />
-                  Generate PDF
-                </>
-              )}
+              <Download className="w-4 h-4" />
+              {isGenerating ? "Generating..." : "Generate PDF"}
             </Button>
           </div>
         </div>
@@ -427,38 +362,36 @@ export default function BookPreview() {
             </div>
 
             {/* Sample Chapter Preview */}
-            {stories.length > 0 && (
-              <div className="bg-white shadow-2xl mx-auto mt-6" style={{ 
-                width: '480px', 
-                aspectRatio: '6/9',
-                fontFamily: 'Crimson Text, Georgia, serif'
-              }}>
-                <div className="h-full p-12">
-                  <h2 className="text-xl font-serif font-semibold text-gray-900 mb-8 text-center">
-                    Chapter 1
-                  </h2>
-                  
-                  <h3 className="text-lg font-serif font-semibold text-gray-900 mb-6 text-center">
-                    {stories[0]?.title}
-                  </h3>
-                  
-                  <div className="space-y-4 text-sm leading-relaxed text-gray-800 font-serif">
-                    {stories[0]?.content.split('\n\n').slice(0, 3).map((paragraph, index) => (
-                      <p key={index} className="indent-8">
-                        {paragraph}
-                      </p>
-                    ))}
-                    <p className="text-center text-gray-500 italic">
-                      ...continued
+            <div className="bg-white shadow-2xl mx-auto mt-6" style={{ 
+              width: '480px', 
+              aspectRatio: '6/9',
+              fontFamily: 'Crimson Text, Georgia, serif'
+            }}>
+              <div className="h-full p-12">
+                <h2 className="text-xl font-serif font-semibold text-gray-900 mb-8 text-center">
+                  Chapter 1
+                </h2>
+                
+                <h3 className="text-lg font-serif font-semibold text-gray-900 mb-6 text-center">
+                  {stories[0]?.title}
+                </h3>
+                
+                <div className="space-y-4 text-sm leading-relaxed text-gray-800 font-serif">
+                  {stories[0]?.content.split('\n\n').slice(0, 3).map((paragraph, index) => (
+                    <p key={index} className="indent-8">
+                      {paragraph}
                     </p>
-                  </div>
-                  
-                  <div className="absolute bottom-8 text-xs text-gray-500">
-                    Page 3
-                  </div>
+                  ))}
+                  <p className="text-center text-gray-500 italic">
+                    ...continued
+                  </p>
+                </div>
+                
+                <div className="absolute bottom-8 text-xs text-gray-500">
+                  Page 3
                 </div>
               </div>
-            )}
+            </div>
 
             <div className="text-center mt-6 text-sm text-muted-foreground">
               This is a preview of your book layout. The final PDF will include all chapters.

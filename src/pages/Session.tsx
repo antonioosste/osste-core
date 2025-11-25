@@ -773,7 +773,7 @@ export default function Session() {
         // End the session first
         await endSession(sessionId);
         
-        // Transcribe and create chapter
+        // Generate chapters for the session
         setIsGeneratingChapters(true);
         
         try {
@@ -784,40 +784,18 @@ export default function Session() {
             throw new Error('No authentication token available');
           }
           
-          console.log('🔄 Transcribing session:', sessionId);
+          console.log('🔄 Generating chapters for session:', sessionId);
+          await generateChapters(token, sessionId);
           
-          // Call transcription endpoint to create chapter from transcripts
-          const transcribeResponse = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transcribe-session`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify({ sessionId })
-            }
-          );
-
-          if (!transcribeResponse.ok) {
-            throw new Error('Transcription failed');
-          }
-
-          const result = await transcribeResponse.json();
-          
-          toast({
-            title: "Story transcribed into a chapter",
-            description: "Your recording has been saved and transcribed successfully."
-          });
-          
-          // Navigate to chapters page
-          navigate('/chapters');
-          return;
-        } catch (chapterError) {
-          console.error('Error creating chapter:', chapterError);
           toast({
             title: "Session saved",
-            description: "Session saved, but transcription failed. You can retry later.",
+            description: "Your recording session and chapters have been generated successfully."
+          });
+        } catch (chapterError) {
+          console.error('Error generating chapters:', chapterError);
+          toast({
+            title: "Session saved",
+            description: "Session saved, but chapter generation failed. You can retry later.",
             variant: "default"
           });
         } finally {
@@ -832,7 +810,7 @@ export default function Session() {
         });
       }
     }
-    navigate("/chapters");
+    navigate("/dashboard");
   };
 
   const retryConnection = () => {
