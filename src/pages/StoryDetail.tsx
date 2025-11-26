@@ -132,7 +132,36 @@ export default function StoryDetail() {
     };
 
     loadStory();
+    loadExistingImages();
   }, [id]);
+
+  const loadExistingImages = async () => {
+    if (!id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('story_images')
+        .select('*')
+        .eq('story_id', id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      if (data) {
+        const images: UploadedImage[] = data.map(img => ({
+          id: img.id,
+          file_name: img.file_name,
+          url: supabase.storage.from('story-images').getPublicUrl(img.storage_path).data.publicUrl,
+          width: img.width || undefined,
+          height: img.height || undefined,
+          usage: img.usage || 'embedded'
+        }));
+        setUploadedImages(images);
+      }
+    } catch (error) {
+      console.error('Error loading existing images:', error);
+    }
+  };
 
   const handlePlayAudio = () => {
     setIsPlaying(!isPlaying);
