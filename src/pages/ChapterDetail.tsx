@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { StoryImageUploader, UploadedImage } from "@/components/ui/story-image-uploader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +19,7 @@ export default function ChapterDetail() {
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [overallSummary, setOverallSummary] = useState("");
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const { getChapter, updateChapter } = useChapters();
 
   useEffect(() => {
@@ -39,6 +41,10 @@ export default function ChapterDetail() {
       summary,
       overall_summary: overallSummary,
     });
+  };
+
+  const handleImageUploadSuccess = (images: UploadedImage[]) => {
+    setUploadedImages(prev => [...prev, ...images]);
   };
 
   if (!chapter) {
@@ -118,6 +124,48 @@ export default function ChapterDetail() {
                 <Link to={`/recordings/${chapter.recording_id}`}>Cancel</Link>
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ImageIcon className="w-5 h-5" />
+              Chapter Images
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Upload images to include in this chapter. They will be stored and available for the book.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <StoryImageUploader 
+              sessionId={chapter.session_id}
+              chapterId={chapter.id}
+              usage="embedded"
+              maxFiles={10}
+              maxSizeMB={8}
+              onUploadSuccess={handleImageUploadSuccess}
+            />
+            
+            {uploadedImages.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium mb-2">Uploaded Images ({uploadedImages.length})</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {uploadedImages.map((img) => (
+                    <div key={img.id} className="relative rounded-lg border border-border overflow-hidden">
+                      <img 
+                        src={img.url} 
+                        alt={img.file_name}
+                        className="w-full aspect-square object-cover"
+                      />
+                      <div className="p-2 bg-background/95">
+                        <p className="text-xs line-clamp-1">{img.file_name}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>
