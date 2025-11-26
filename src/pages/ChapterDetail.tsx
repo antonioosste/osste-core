@@ -67,12 +67,14 @@ export default function ChapterDetail() {
             mime_type: img.mime_type
           });
           
-          // Strip bucket name prefix from storage_path if it exists
-          let cleanPath = img.storage_path;
-          if (cleanPath.startsWith('story_images/')) {
-            cleanPath = cleanPath.substring('story_images/'.length);
-            console.log('🔧 Cleaned storage path:', cleanPath);
+          // Strip bucket name prefix from storage_path if it exists (defensive)
+          let cleanPath = img.storage_path || "";
+          const prefix = "story_images/";
+          const prefixIndex = cleanPath.indexOf(prefix);
+          if (prefixIndex !== -1) {
+            cleanPath = cleanPath.substring(prefixIndex + prefix.length);
           }
+          console.log('🔧 Cleaned storage path:', { original: img.storage_path, cleanPath });
           
           // Try to get signed URL first (for private buckets)
           const { data: signedUrlData, error: signedUrlError } = await supabase.storage
