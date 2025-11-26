@@ -11,6 +11,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { useChapters } from "@/hooks/useChapters";
 import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function ChapterDetail() {
   const { id } = useParams<{ id: string }>();
@@ -30,8 +31,37 @@ export default function ChapterDetail() {
         setSummary(data?.summary || "");
         setOverallSummary(data?.overall_summary || "");
       });
+      loadExistingImages();
     }
   }, [id]);
+  
+  const loadExistingImages = async () => {
+    if (!id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('story_images')
+        .select('*')
+        .eq('chapter_id', id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      if (data) {
+        const images: UploadedImage[] = data.map(img => ({
+          id: img.id,
+          file_name: img.file_name,
+          url: supabase.storage.from('story-images').getPublicUrl(img.storage_path).data.publicUrl,
+          width: img.width || undefined,
+          height: img.height || undefined,
+          usage: img.usage || 'embedded'
+        }));
+        setUploadedImages(images);
+      }
+    } catch (error) {
+      console.error('Error loading existing images:', error);
+    }
+  };
 
   const handleSave = async () => {
     if (!id) return;
