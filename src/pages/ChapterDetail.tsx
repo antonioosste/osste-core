@@ -12,10 +12,12 @@ import { Footer } from "@/components/layout/Footer";
 import { useChapters } from "@/hooks/useChapters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ChapterDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [chapter, setChapter] = useState<any>(null);
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
@@ -39,27 +41,74 @@ export default function ChapterDetail() {
     if (!id) return;
     
     try {
+      console.log('📸 Loading existing images for chapter:', id);
+      
       const { data, error } = await supabase
         .from('story_images')
         .select('*')
         .eq('chapter_id', id)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error fetching story_images:', error);
+        throw error;
+      }
       
-      if (data) {
-        const images: UploadedImage[] = data.map(img => ({
-          id: img.id,
-          file_name: img.file_name,
-          url: supabase.storage.from('story-images').getPublicUrl(img.storage_path).data.publicUrl,
-          width: img.width || undefined,
-          height: img.height || undefined,
-          usage: img.usage || 'embedded'
-        }));
+      console.log('📋 Fetched story_images data:', data);
+      
+      if (data && data.length > 0) {
+        const images: UploadedImage[] = [];
+        
+        for (const img of data) {
+          console.log('🖼️ Processing image:', {
+            id: img.id,
+            file_name: img.file_name,
+            storage_path: img.storage_path,
+            mime_type: img.mime_type
+          });
+          
+          // Try to get signed URL first (for private buckets)
+          const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+            .from('story-images')
+            .createSignedUrl(img.storage_path, 86400); // 24 hours
+          
+          let imageUrl = '';
+          
+          if (signedUrlError) {
+            console.warn('⚠️ Could not create signed URL, trying public URL:', signedUrlError);
+            // Fallback to public URL
+            const publicUrlData = supabase.storage
+              .from('story-images')
+              .getPublicUrl(img.storage_path);
+            imageUrl = publicUrlData.data.publicUrl;
+          } else {
+            imageUrl = signedUrlData.signedUrl;
+          }
+          
+          console.log('✅ Image URL constructed:', imageUrl);
+          
+          images.push({
+            id: img.id,
+            file_name: img.file_name,
+            url: imageUrl,
+            width: img.width || undefined,
+            height: img.height || undefined,
+            usage: img.usage || 'embedded'
+          });
+        }
+        
+        console.log('📦 Total images loaded:', images.length);
         setUploadedImages(images);
+      } else {
+        console.log('ℹ️ No images found for this chapter');
       }
     } catch (error) {
-      console.error('Error loading existing images:', error);
+      console.error('❌ Error loading existing images:', error);
+      toast({
+        title: "Failed to load images",
+        description: error instanceof Error ? error.message : "Could not load chapter images",
+        variant: "destructive"
+      });
     }
   };
 
@@ -181,18 +230,26 @@ export default function ChapterDetail() {
               <div className="mt-4">
                 <h4 className="text-sm font-medium mb-2">Uploaded Images ({uploadedImages.length})</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {uploadedImages.map((img) => (
-                    <div key={img.id} className="relative rounded-lg border border-border overflow-hidden">
-                      <img 
-                        src={img.url} 
-                        alt={img.file_name}
-                        className="w-full aspect-square object-cover"
-                      />
-                      <div className="p-2 bg-background/95">
-                        <p className="text-xs line-clamp-1">{img.file_name}</p>
-                      </div>
+                {uploadedImages.map((img) => (
+                  <div key={img.id} className="relative rounded-lg border border-border overflow-hidden">
+                    <img 
+                      src={img.url} 
+                      alt={img.file_name}
+                      className="w-full aspect-square object-cover"
+                      onLoad={() => console.log('✅ Image loaded successfully:', img.file_name)}
+                      onError={(e) => {
+                        console.error('❌ Image failed to load:', {
+                          file_name: img.file_name,
+                          url: img.url,
+                          error: e
+                        });
+                      }}
+                    />
+                    <div className="p-2 bg-background/95">
+                      <p className="text-xs line-clamp-1">{img.file_name}</p>
                     </div>
-                  ))}
+                  </div>
+                ))}
                 </div>
               </div>
             )}
