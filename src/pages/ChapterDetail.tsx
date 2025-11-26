@@ -69,7 +69,7 @@ export default function ChapterDetail() {
           
           // Try to get signed URL first (for private buckets)
           const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-            .from('story-images')
+            .from('story_images')
             .createSignedUrl(img.storage_path, 86400); // 24 hours
           
           let imageUrl = '';
@@ -78,7 +78,7 @@ export default function ChapterDetail() {
             console.warn('⚠️ Could not create signed URL, trying public URL:', signedUrlError);
             // Fallback to public URL
             const publicUrlData = supabase.storage
-              .from('story-images')
+              .from('story_images')
               .getPublicUrl(img.storage_path);
             imageUrl = publicUrlData.data.publicUrl;
           } else {
