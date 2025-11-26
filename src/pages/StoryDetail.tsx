@@ -25,8 +25,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
-import { ImageUpload } from "@/components/ui/image-upload";
 import { useStories } from "@/hooks/useStories";
+import { StoryImageUploader, UploadedImage } from "@/components/ui/story-image-uploader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -108,7 +108,7 @@ export default function StoryDetail() {
   const [editedContent, setEditedContent] = useState("");
   const [regenerateDialog, setRegenerateDialog] = useState(false);
   const [factsDrawerOpen, setFactsDrawerOpen] = useState(false);
-  const [chapterImages, setChapterImages] = useState<File[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [styleInstruction, setStyleInstruction] = useState("");
   const [isRegenerating, setIsRegenerating] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -232,12 +232,8 @@ export default function StoryDetail() {
     }
   };
 
-  const handleImageUpload = (files: File[]) => {
-    setChapterImages(prev => [...prev, ...files]);
-    toast({
-      title: "Images uploaded",
-      description: `${files.length} image(s) added to this chapter. They will appear in the final PDF.`
-    });
+  const handleImageUploadSuccess = (images: UploadedImage[]) => {
+    setUploadedImages(prev => [...prev, ...images]);
   };
 
   const formatTimestamp = (timestamp: string) => {
@@ -444,22 +440,46 @@ export default function StoryDetail() {
           </Card>
         </div>
 
-        {/* Chapter Images Section */}
+        {/* Story Images Section */}
         <Card className="mt-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ImageIcon className="w-5 h-5" />
-              Chapter Images
+              Story Images
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Upload images to include in this chapter. They will appear in the final PDF version.
+              Upload images to include with this story. They will be stored and can be included in the final book.
             </p>
           </CardHeader>
           <CardContent>
-            <ImageUpload 
-              onImageChange={handleImageUpload}
-              maxImages={5}
+            <StoryImageUploader 
+              sessionId={story.session_id}
+              storyId={story.id}
+              usage="embedded"
+              maxFiles={10}
+              maxSizeMB={8}
+              onUploadSuccess={handleImageUploadSuccess}
             />
+            
+            {uploadedImages.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium mb-2">Uploaded Images ({uploadedImages.length})</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {uploadedImages.map((img) => (
+                    <div key={img.id} className="relative rounded-lg border border-border overflow-hidden">
+                      <img 
+                        src={img.url} 
+                        alt={img.file_name}
+                        className="w-full aspect-square object-cover"
+                      />
+                      <div className="p-2 bg-background/95">
+                        <p className="text-xs line-clamp-1">{img.file_name}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
