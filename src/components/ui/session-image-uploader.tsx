@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { ImageIcon, Upload, X, Check } from "lucide-react";
+import { ImageIcon, Upload, X, Check, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useFileInput } from "@/hooks/useFileInput";
+import { BACKEND_URL } from "@/config/backend";
 
 type Props = {
   sessionId: string;
@@ -17,13 +17,24 @@ type Props = {
   className?: string;
   maxFiles?: number;
   maxSizeMB?: number;
+  onUploadSuccess?: (images: UploadedImage[]) => void;
 };
+
+export interface UploadedImage {
+  id: string;
+  file_name: string;
+  url: string;
+  width?: number;
+  height?: number;
+  usage: string;
+}
 
 type PendingFile = {
   file: File;
   previewUrl: string;
   progress: number;
   status: "pending" | "uploading" | "done" | "error";
+  uploadedImage?: UploadedImage;
   error?: string;
 };
 
@@ -35,10 +46,25 @@ export function SessionImageUploader({
   className,
   maxFiles = 10,
   maxSizeMB = 8,
+  onUploadSuccess,
 }: Props) {
   const [files, setFiles] = useState<PendingFile[]>([]);
-  const { fileInputRef } = useFileInput({ accept: "image/*", maxSize: maxSizeMB });
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const validateFile = (file: File): string | null => {
+    const validTypes = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/gif"];
+    
+    if (!validTypes.includes(file.type)) {
+      return "Invalid file type. Only JPEG, PNG, WEBP, HEIC, and GIF are allowed.";
+    }
+    
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      return `File size exceeds ${maxSizeMB}MB limit.`;
+    }
+    
+    return null;
+  };
 
   const onPick = () => fileInputRef.current?.click();
 
@@ -47,28 +73,28 @@ export function SessionImageUploader({
     if (!list.length) return;
 
     const next = list
-      .filter((f) => f.type.startsWith("image/"))
       .slice(0, maxFiles - files.length)
       .map((file) => {
-        if (file.size > maxSizeMB * 1024 * 1024) {
-          return {
-            file,
-            previewUrl: "",
-            progress: 0,
-            status: "error" as const,
-            error: `Max ${maxSizeMB}MB`,
-          };
-        }
+        const error = validateFile(file);
         return {
           file,
-          previewUrl: URL.createObjectURL(file),
+          previewUrl: error ? "" : URL.createObjectURL(file),
           progress: 0,
-          status: "pending" as const,
+          status: error ? ("error" as const) : ("pending" as const),
+          error,
         };
       });
 
     setFiles((prev) => [...prev, ...next]);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    
+    if (next.some(f => f.error)) {
+      toast({
+        title: "Some files were rejected",
+        description: "Check file types and sizes",
+        variant: "destructive",
+      });
+    }
   };
 
   const removeFile = (idx: number) => {
@@ -84,62 +110,105 @@ export function SessionImageUploader({
   const uploadAll = async () => {
     const toUpload = files
       .map((f, idx) => ({ file: f, index: idx }))
-      .filter((item) => item.file.status !== "done");
+      .filter((item) => item.file.status === "pending");
     
-    await Promise.all(toUpload.map((item) => uploadOne(item.file, item.index)));
+    if (toUpload.length === 0) return;
+
+    const uploadedImages: UploadedImage[] = [];
+
+    for (const item of toUpload) {
+      const result = await uploadOne(item.file, item.index);
+      if (result) {
+        uploadedImages.push(result);
+      }
+    }
     
-    toast({
-      title: "Upload complete",
-      description: `Successfully uploaded ${toUpload.length} image(s)`,
-    });
+    if (uploadedImages.length > 0) {
+      toast({
+        title: "Upload complete",
+        description: `Successfully uploaded ${uploadedImages.length} image(s)`,
+      });
+      
+      if (onUploadSuccess) {
+        onUploadSuccess(uploadedImages);
+      }
+    }
   };
 
-  const uploadOne = async (item: PendingFile, idx: number) => {
-    if (item.status === "done") return;
+  const uploadOne = async (item: PendingFile, idx: number): Promise<UploadedImage | null> => {
+    if (item.status !== "pending") return null;
 
     setFiles((prev) => {
       const copy = [...prev];
-      copy[idx] = { ...item, status: "uploading", progress: 5 };
+      copy[idx] = { ...item, status: "uploading", progress: 10 };
       return copy;
     });
 
     try {
-      const ts = Date.now();
-      const path = `${userId ?? "anon"}/${sessionId}/${ts}-${encodeURIComponent(item.file.name)}`;
+      // Get Supabase JWT token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error("Authentication required");
+      }
 
-      // Upload to storage
-      const { error: upErr } = await supabase.storage
-        .from("session-media")
-        .upload(path, item.file, { cacheControl: "3600", upsert: false });
-
-      if (upErr) throw upErr;
-
-      // Get public URL
-      const { data } = supabase.storage.from("session-media").getPublicUrl(path);
-      const publicUrl = data.publicUrl;
-
-      // Write metadata
-      const { error: insErr } = await supabase
-        .from("session_media" as any)
-        .insert({
-          user_id: userId ?? null,
-          session_id: sessionId,
-          chapter_id: chapterId ?? null,
-          prompt: currentPrompt ?? null,
-          file_name: item.file.name,
-          mime_type: item.file.type,
-          size_bytes: item.file.size,
-          url: publicUrl,
-        });
-
-      if (insErr) throw insErr;
+      // Build FormData
+      const formData = new FormData();
+      formData.append("file", item.file);
+      formData.append("session_id", sessionId);
+      
+      if (chapterId) formData.append("chapter_id", chapterId);
+      formData.append("usage", "session_media");
 
       setFiles((prev) => {
         const copy = [...prev];
-        copy[idx] = { ...copy[idx], status: "done", progress: 100 };
+        copy[idx] = { ...copy[idx], progress: 30 };
         return copy;
       });
+
+      // Upload to backend API
+      const response = await fetch(`${BACKEND_URL}/api/story/upload-image`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+        },
+        body: formData,
+      });
+
+      setFiles((prev) => {
+        const copy = [...prev];
+        copy[idx] = { ...copy[idx], progress: 70 };
+        return copy;
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Upload failed with status ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success || !result.image) {
+        throw new Error("Invalid response from server");
+      }
+
+      const uploadedImage: UploadedImage = result.image;
+
+      setFiles((prev) => {
+        const copy = [...prev];
+        copy[idx] = { 
+          ...copy[idx], 
+          status: "done", 
+          progress: 100,
+          uploadedImage 
+        };
+        return copy;
+      });
+
+      return uploadedImage;
     } catch (err: any) {
+      console.error("Upload error:", err);
+      
       setFiles((prev) => {
         const copy = [...prev];
         copy[idx] = {
@@ -149,8 +218,20 @@ export function SessionImageUploader({
         };
         return copy;
       });
+
+      toast({
+        title: "Upload failed",
+        description: err?.message ?? "Failed to upload image",
+        variant: "destructive",
+      });
+
+      return null;
     }
   };
+
+  const pendingCount = files.filter((f) => f.status === "pending").length;
+  const uploadingCount = files.filter((f) => f.status === "uploading").length;
+  const isUploading = uploadingCount > 0;
 
   return (
     <Card className={cn("bg-card/80 backdrop-blur", className)}>
@@ -162,13 +243,30 @@ export function SessionImageUploader({
             <Badge variant="secondary" className="text-xs">Optional</Badge>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={onPick} className="gap-2" size="sm">
+            <Button 
+              variant="outline" 
+              onClick={onPick} 
+              className="gap-2" 
+              size="sm"
+              disabled={isUploading || files.length >= maxFiles}
+            >
               <Upload className="h-4 w-4" />
-              Select images
+              Select Images
             </Button>
-            {files.filter((f) => f.status !== "done").length > 0 && (
-              <Button onClick={uploadAll} size="sm">
-                Upload {files.filter((f) => f.status !== "done").length}
+            {pendingCount > 0 && (
+              <Button 
+                onClick={uploadAll} 
+                size="sm"
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  `Upload ${pendingCount}`
+                )}
               </Button>
             )}
           </div>
@@ -177,7 +275,7 @@ export function SessionImageUploader({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp,image/heic,image/gif"
           multiple
           className="hidden"
           onChange={onSelect}
@@ -188,7 +286,7 @@ export function SessionImageUploader({
             {files.map((f, idx) => (
               <div
                 key={idx}
-                className="relative rounded-lg border bg-card overflow-hidden"
+                className="relative rounded-lg border border-border bg-card overflow-hidden transition-all hover:shadow-md"
               >
                 <div className="aspect-square bg-muted">
                   {f.previewUrl ? (
@@ -205,25 +303,35 @@ export function SessionImageUploader({
                 </div>
 
                 <div className="p-2 space-y-1">
-                  <div className="text-xs line-clamp-1">{f.file.name}</div>
+                  <div className="text-xs line-clamp-1 text-foreground">
+                    {f.file.name}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {(f.file.size / 1024).toFixed(0)} KB
+                  </div>
+                  
                   {f.status === "uploading" && (
                     <Progress value={f.progress} className="h-2" />
                   )}
+                  
                   {f.status === "done" && (
-                    <div className="flex items-center gap-1 text-emerald-700 text-xs">
+                    <div className="flex items-center gap-1 text-success text-xs">
                       <Check className="h-3.5 w-3.5" /> Uploaded
                     </div>
                   )}
+                  
                   {f.status === "error" && (
-                    <div className="text-xs text-destructive">{f.error}</div>
+                    <div className="text-xs text-destructive line-clamp-2">
+                      {f.error}
+                    </div>
                   )}
                 </div>
 
                 {f.status !== "uploading" && (
                   <button
                     onClick={() => removeFile(idx)}
-                    className="absolute top-1.5 right-1.5 p-1 rounded-md bg-background/90 hover:bg-background"
-                    aria-label="Remove"
+                    className="absolute top-1.5 right-1.5 p-1 rounded-md bg-background/90 hover:bg-background border border-border transition-colors"
+                    aria-label="Remove image"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -233,10 +341,16 @@ export function SessionImageUploader({
           </div>
         ) : (
           <div
-            className="w-full rounded-lg border-2 border-dashed p-8 text-center text-sm text-muted-foreground cursor-pointer hover:border-primary/50 transition-colors"
+            className="w-full rounded-lg border-2 border-dashed p-8 text-center text-sm transition-colors cursor-pointer border-border hover:border-primary/50"
             onClick={onPick}
           >
-            Click to select family photos (JPG/PNG, up to {maxFiles} images, {maxSizeMB}MB each)
+            <ImageIcon className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
+            <p className="text-muted-foreground mb-1">
+              Click to select family photos
+            </p>
+            <p className="text-xs text-muted-foreground">
+              JPEG, PNG, WEBP, HEIC, GIF • Max {maxFiles} files • {maxSizeMB}MB each
+            </p>
           </div>
         )}
       </CardContent>
