@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { fetchImagesFromBackend, deleteImageViaBackend, BackendImageResponse } from '@/lib/backend-api';
+import { listStoryImages, deleteImageViaBackend, BackendImageResponse } from '@/lib/backend-api';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface StoryImage {
@@ -27,10 +27,6 @@ export function useStoryImages({ sessionId, chapterId, storyId }: UseStoryImages
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // NOTE: Images are no longer auto-fetched from backend (/api/images doesn't exist)
-  // To add images, use the upload API which returns image data with proper URLs
-  // Then call setImages or manually add to the images array
-
   const fetchImages = async () => {
     if (!sessionId && !chapterId && !storyId) return;
     
@@ -43,8 +39,8 @@ export function useStoryImages({ sessionId, chapterId, storyId }: UseStoryImages
         throw new Error("Authentication required");
       }
 
-      // Fetch from backend API which returns images with proper URLs
-      const backendImages = await fetchImagesFromBackend(session.access_token, {
+      // Fetch from backend API which returns images with proper signed URLs
+      const backendImages = await listStoryImages(session.access_token, {
         sessionId,
         chapterId,
         storyId,
@@ -109,11 +105,9 @@ export function useStoryImages({ sessionId, chapterId, storyId }: UseStoryImages
     }
   };
 
-  // DISABLED: Auto-fetch removed because backend does not have /api/images endpoint
-  // Images should be managed locally and only use URLs from upload API responses
-  // useEffect(() => {
-  //   fetchImages();
-  // }, [sessionId, chapterId, storyId]);
+  useEffect(() => {
+    fetchImages();
+  }, [sessionId, chapterId, storyId]);
 
   return {
     images,
