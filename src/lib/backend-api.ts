@@ -273,10 +273,27 @@ export async function fetchImagesFromBackend(
 }
 
 /**
- * DEPRECATED: Backend does not have DELETE /api/images endpoint
- * Image deletion should be handled through the proper backend endpoint when available
+ * Delete a story image via backend API
+ * Uses the backend DELETE /api/story/delete-image endpoint
  */
 export async function deleteImageViaBackend(token: string, imageId: string): Promise<void> {
-  console.warn('deleteImageViaBackend is deprecated. Backend does not have /api/images endpoint.');
-  throw new Error('Image deletion endpoint not available. Contact backend team for proper endpoint.');
+  const response = await fetchWithRetry(
+    `${BACKEND_BASE}/api/story/delete-image`,
+    {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ image_id: imageId }),
+    }
+  );
+
+  if (!response.ok) {
+    const error = new Error(`Failed to delete image: ${response.statusText}`) as BackendError;
+    error.status = response.status;
+    throw error;
+  }
+
+  await response.json();
 }
