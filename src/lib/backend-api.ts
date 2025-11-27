@@ -195,3 +195,79 @@ export async function getFollowUpQuestions(token: string, sessionId: string) {
   console.warn('getFollowUpQuestions is deprecated. Follow-up questions come from turn upload response.');
   throw new Error('This endpoint is no longer available. Follow-up questions are included in the turn upload response.');
 }
+
+// Image management functions
+
+export interface BackendImageResponse {
+  id: string;
+  file_name: string;
+  storage_path: string;
+  url: string; // Signed or public URL from backend
+  session_id?: string;
+  chapter_id?: string;
+  story_id?: string;
+  mime_type: string;
+  width?: number;
+  height?: number;
+  caption?: string;
+  alt_text?: string;
+}
+
+/**
+ * Fetch images for a session/chapter/story from the backend API
+ * The backend constructs proper signed/public URLs
+ */
+export async function fetchImagesFromBackend(
+  token: string,
+  params: {
+    sessionId?: string;
+    chapterId?: string;
+    storyId?: string;
+  }
+): Promise<BackendImageResponse[]> {
+  const queryParams = new URLSearchParams();
+  if (params.sessionId) queryParams.append('session_id', params.sessionId);
+  if (params.chapterId) queryParams.append('chapter_id', params.chapterId);
+  if (params.storyId) queryParams.append('story_id', params.storyId);
+
+  const response = await fetchWithRetry(
+    `${BACKEND_BASE}/api/images?${queryParams}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const error = new Error(`Failed to fetch images: ${response.statusText}`) as BackendError;
+    error.status = response.status;
+    throw error;
+  }
+
+  const result = await response.json();
+  return result.images || [];
+}
+
+/**
+ * Delete an image via backend API
+ */
+export async function deleteImageViaBackend(token: string, imageId: string): Promise<void> {
+  const response = await fetchWithRetry(
+    `${BACKEND_BASE}/api/images/${imageId}`,
+    {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const error = new Error(`Failed to delete image: ${response.statusText}`) as BackendError;
+    error.status = response.status;
+    throw error;
+  }
+}

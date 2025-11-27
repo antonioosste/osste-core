@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { fetchImagesFromBackend, deleteImageViaBackend, BackendImageResponse } from '@/lib/backend-api';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface StoryImage {
   id: string;
   storage_path: string;
   file_name: string;
   mime_type: string;
-  url: string;
+  url: string; // This is provided by the backend API with proper signed/public URL
   session_id?: string | null;
   chapter_id?: string | null;
   story_id?: string | null;
@@ -31,61 +32,35 @@ export function useStoryImages({ sessionId, chapterId, storyId }: UseStoryImages
     
     setLoading(true);
     try {
-      let query = supabase.from('story_images').select('*');
+      // Get auth token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (sessionId) {
-        query = query.eq('session_id', sessionId);
-      }
-      if (chapterId) {
-        query = query.eq('chapter_id', chapterId);
-      }
-      if (storyId) {
-        query = query.eq('story_id', storyId);
+      if (sessionError || !session) {
+        throw new Error("Authentication required");
       }
 
-      const { data, error } = await query.order('created_at', { ascending: true });
+      // Fetch from backend API which returns images with proper URLs
+      const backendImages = await fetchImagesFromBackend(session.access_token, {
+        sessionId,
+        chapterId,
+        storyId,
+      });
 
-      if (error) throw error;
+      // Map backend response to StoryImage format
+      const mappedImages: StoryImage[] = backendImages.map((img) => ({
+        id: img.id,
+        storage_path: img.storage_path,
+        file_name: img.file_name,
+        mime_type: img.mime_type,
+        url: img.url, // Use URL directly from backend - DO NOT construct manually
+        session_id: img.session_id || null,
+        chapter_id: img.chapter_id || null,
+        story_id: img.story_id || null,
+        caption: img.caption || null,
+        alt_text: img.alt_text || null,
+      }));
 
-      if (data) {
-        const imagesWithUrls = await Promise.all(
-          data.map(async (img) => {
-            let url = '';
-            
-            // Clean the storage_path by removing bucket name prefix if present
-            let cleanPath = img.storage_path;
-            if (cleanPath.startsWith('story_images/')) {
-              cleanPath = cleanPath.substring('story_images/'.length);
-            }
-
-            try {
-              // Try signed URL first
-              const { data: signedData, error: signedError } = await supabase.storage
-                .from('story_images')
-                .createSignedUrl(cleanPath, 86400); // 24 hours
-
-              if (signedData?.signedUrl) {
-                url = signedData.signedUrl;
-              } else if (!signedError) {
-                // Fallback to public URL
-                const { data: publicData } = supabase.storage
-                  .from('story_images')
-                  .getPublicUrl(cleanPath);
-                url = publicData.publicUrl;
-              }
-            } catch (urlError) {
-              console.error('Error creating URL for image:', urlError);
-            }
-
-            return {
-              ...img,
-              url,
-            };
-          })
-        );
-
-        setImages(imagesWithUrls);
-      }
+      setImages(mappedImages);
     } catch (error) {
       console.error('Error fetching images:', error);
       toast({
@@ -100,32 +75,15 @@ export function useStoryImages({ sessionId, chapterId, storyId }: UseStoryImages
 
   const deleteImage = async (imageId: string, storagePath: string) => {
     try {
-      // Clean the storage_path
-      let cleanPath = storagePath;
-      if (cleanPath.startsWith('story_images/')) {
-        cleanPath = cleanPath.substring('story_images/'.length);
+      // Get auth token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error("Authentication required");
       }
 
-      // Delete from storage
-      const { error: storageError } = await supabase.storage
-        .from('story_images')
-        .remove([cleanPath]);
-
-      if (storageError) {
-        console.error('Storage deletion error:', storageError);
-        throw new Error('Failed to delete image from storage');
-      }
-
-      // Delete from database
-      const { error: dbError } = await supabase
-        .from('story_images')
-        .delete()
-        .eq('id', imageId);
-
-      if (dbError) {
-        console.error('Database deletion error:', dbError);
-        throw new Error('Failed to delete image from database');
-      }
+      // Delete via backend API - backend handles storage cleanup
+      await deleteImageViaBackend(session.access_token, imageId);
 
       // Update local state
       setImages((prev) => prev.filter((img) => img.id !== imageId));
@@ -158,3 +116,4 @@ export function useStoryImages({ sessionId, chapterId, storyId }: UseStoryImages
     deleteImage,
   };
 }
+
