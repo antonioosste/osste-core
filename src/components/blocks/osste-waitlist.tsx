@@ -131,12 +131,6 @@ export function OssteWaitlist() {
               </button>
             </div>
           </div>
-
-          <div className="text-center">
-            <Link to="/home" className="underline text-sm text-muted-foreground hover:text-primary transition-colors">
-              Skip to the full site
-            </Link>
-          </div>
         </div>
       </div>
     </div>
