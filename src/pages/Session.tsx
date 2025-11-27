@@ -20,6 +20,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Header } from "@/components/layout/Header";
 import { QuestionSwitcher } from "@/components/ui/question-switcher";
 import { StoryImageUploader, UploadedImage } from "@/components/ui/story-image-uploader";
+import { useStoryImages } from "@/hooks/useStoryImages";
+import { Trash2 } from "lucide-react";
 import { CategorySelector } from "@/components/session/CategorySelector";
 import { GuidedSetup } from "@/components/session/GuidedSetup";
 import { ConversationSkeleton } from "@/components/loaders/ConversationSkeleton";
@@ -115,8 +117,10 @@ export default function Session() {
   // Conversation scroll reference
   const conversationEndRef = useRef<HTMLDivElement>(null);
   
-  // Image uploads state
-  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  // Image uploads state - use the new hook for real-time sync
+  const { images: uploadedImages, deleteImage: deleteImageFromDb, refetch: refetchImages } = useStoryImages({ 
+    sessionId: sessionId || undefined 
+  });
 
   // TTS audio playback
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
@@ -1204,7 +1208,7 @@ export default function Session() {
                       maxFiles={10}
                       maxSizeMB={8}
                       onUploadSuccess={(images) => {
-                        setUploadedImages(prev => [...prev, ...images]);
+                        refetchImages();
                         toast({
                           title: "Images uploaded",
                           description: `Added ${images.length} image(s) to your session`,
@@ -1226,10 +1230,26 @@ export default function Session() {
                                   alt={img.file_name}
                                   className="w-full aspect-square object-cover"
                                 />
-                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                  <p className="text-white text-[10px] px-2 text-center line-clamp-2">
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                  <p className="text-white text-[10px] px-2 text-center line-clamp-2 flex-1">
                                     {img.file_name}
                                   </p>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    className="h-7 w-7 p-0"
+                                    onClick={async () => {
+                                      const success = await deleteImageFromDb(img.id, img.storage_path);
+                                      if (success) {
+                                        toast({
+                                          title: "Image removed",
+                                          description: "Image deleted from session",
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
                                 </div>
                               </div>
                             ))}
