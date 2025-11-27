@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, ImageIcon } from "lucide-react";
+import { ArrowLeft, Save, ImageIcon, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StoryImageUploader, UploadedImage } from "@/components/ui/story-image-uploader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,8 +11,8 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { useChapters } from "@/hooks/useChapters";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useStoryImages } from "@/hooks/useStoryImages";
 
 export default function ChapterDetail() {
   const { id } = useParams<{ id: string }>();
@@ -22,8 +22,14 @@ export default function ChapterDetail() {
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [overallSummary, setOverallSummary] = useState("");
-  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  const [sessionId, setSessionId] = useState<string | undefined>();
   const { getChapter, updateChapter } = useChapters();
+  
+  // Use hook for synchronized image management
+  const { images: uploadedImages, deleteImage, refetch: refetchImages } = useStoryImages({ 
+    sessionId,
+    chapterId: id 
+  });
 
   useEffect(() => {
     if (id) {
@@ -32,94 +38,16 @@ export default function ChapterDetail() {
         setTitle(data?.title || "");
         setSummary(data?.summary || "");
         setOverallSummary(data?.overall_summary || "");
+        setSessionId(data?.session_id || undefined);
       });
-      loadExistingImages();
     }
   }, [id]);
   
-  const loadExistingImages = async () => {
-    if (!id) return;
-    
-    try {
-      console.log('📸 Loading existing images for chapter:', id);
-      
-      const { data, error } = await supabase
-        .from('story_images')
-        .select('*')
-        .eq('chapter_id', id)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('❌ Error fetching story_images:', error);
-        throw error;
-      }
-      
-      console.log('📋 Fetched story_images data:', data);
-      
-      if (data && data.length > 0) {
-        const images: UploadedImage[] = [];
-        
-        for (const img of data) {
-          console.log('🖼️ Processing image:', {
-            id: img.id,
-            file_name: img.file_name,
-            storage_path: img.storage_path,
-            mime_type: img.mime_type
-          });
-          
-          // Strip bucket name prefix from storage_path if it exists (defensive)
-          let cleanPath = img.storage_path || "";
-          const prefix = "story_images/";
-          const prefixIndex = cleanPath.indexOf(prefix);
-          if (prefixIndex !== -1) {
-            cleanPath = cleanPath.substring(prefixIndex + prefix.length);
-          }
-          console.log('🔧 Cleaned storage path:', { original: img.storage_path, cleanPath });
-          
-          // Try to get signed URL first (for private buckets)
-          const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-            .from('story_images')
-            .createSignedUrl(cleanPath, 86400); // 24 hours
-          
-          let imageUrl = '';
-          
-          if (signedUrlError) {
-            console.warn('⚠️ Could not create signed URL, trying public URL:', signedUrlError);
-            // Fallback to public URL
-            const publicUrlData = supabase.storage
-              .from('story_images')
-              .getPublicUrl(cleanPath);
-            imageUrl = publicUrlData.data.publicUrl;
-          } else {
-            imageUrl = signedUrlData.signedUrl;
-          }
-          
-          console.log('✅ Image URL constructed:', imageUrl);
-          
-          images.push({
-            id: img.id,
-            file_name: img.file_name,
-            url: imageUrl,
-            width: img.width || undefined,
-            height: img.height || undefined,
-            usage: img.usage || 'embedded'
-          });
-        }
-        
-        console.log('📦 Total images loaded:', images.length);
-        setUploadedImages(images);
-      } else {
-        console.log('ℹ️ No images found for this chapter');
-      }
-    } catch (error) {
-      console.error('❌ Error loading existing images:', error);
-      toast({
-        title: "Failed to load images",
-        description: error instanceof Error ? error.message : "Could not load chapter images",
-        variant: "destructive"
-      });
+  useEffect(() => {
+    if (sessionId) {
+      refetchImages();
     }
-  };
+  }, [sessionId]);
 
   const handleSave = async () => {
     if (!id) return;
@@ -131,8 +59,12 @@ export default function ChapterDetail() {
     });
   };
 
-  const handleImageUploadSuccess = (images: UploadedImage[]) => {
-    setUploadedImages(prev => [...prev, ...images]);
+  const handleImageUploadSuccess = () => {
+    refetchImages();
+    toast({
+      title: "Images uploaded",
+      description: "Image(s) added to session",
+    });
   };
 
   if (!chapter) {
@@ -226,36 +158,40 @@ export default function ChapterDetail() {
             </p>
           </CardHeader>
           <CardContent>
-            <StoryImageUploader 
-              sessionId={chapter.session_id}
-              chapterId={chapter.id}
-              usage="embedded"
-              maxFiles={10}
-              maxSizeMB={8}
-              onUploadSuccess={handleImageUploadSuccess}
-            />
+            {sessionId && (
+              <StoryImageUploader 
+                sessionId={sessionId}
+                chapterId={id}
+                usage="embedded"
+                maxFiles={10}
+                maxSizeMB={8}
+                onUploadSuccess={handleImageUploadSuccess}
+              />
+            )}
             
             {uploadedImages.length > 0 && (
               <div className="mt-4">
-                <h4 className="text-sm font-medium mb-2">Uploaded Images ({uploadedImages.length})</h4>
+                <h4 className="text-sm font-medium mb-2">Session Images ({uploadedImages.length})</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {uploadedImages.map((img) => (
-                  <div key={img.id} className="relative rounded-lg border border-border overflow-hidden">
+                  <div key={img.id} className="relative rounded-lg border border-border overflow-hidden group">
                     <img 
                       src={img.url} 
                       alt={img.file_name}
                       className="w-full aspect-square object-cover"
-                      onLoad={() => console.log('✅ Image loaded successfully:', img.file_name)}
-                      onError={(e) => {
-                        console.error('❌ Image failed to load:', {
-                          file_name: img.file_name,
-                          url: img.url,
-                          error: e
-                        });
-                      }}
                     />
-                    <div className="p-2 bg-background/95">
-                      <p className="text-xs line-clamp-1">{img.file_name}</p>
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <p className="text-white text-xs px-2 text-center line-clamp-2 flex-1">
+                        {img.file_name}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="h-7 w-7 p-0"
+                        onClick={() => deleteImage(img.id, img.storage_path)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
                     </div>
                   </div>
                 ))}

@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { assembleStory } from "@/lib/backend-api";
 import { useStories } from "@/hooks/useStories";
 import { useState } from "react";
+import { useStoryImages } from "@/hooks/useStoryImages";
 
 export default function Chapters() {
   const navigate = useNavigate();
@@ -130,35 +131,75 @@ export default function Chapters() {
         {/* Chapters List */}
         {!loading && chapters.length > 0 && (
           <div className="space-y-8">
-            {Object.entries(groupedChapters).map(([sessionId, sessionChapters]) => (
-              <div key={sessionId}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-4">
-                    <h2 className="text-xl font-semibold text-foreground">
-                      Recording Session
-                    </h2>
-                    <Badge variant="secondary">
-                      {sessionChapters.length} {sessionChapters.length === 1 ? 'Chapter' : 'Chapters'}
-                    </Badge>
+            {Object.entries(groupedChapters).map(([sessionId, sessionChapters]) => {
+              const SessionImages = () => {
+                const { images, deleteImage } = useStoryImages({ sessionId });
+                
+                if (images.length === 0) return null;
+                
+                return (
+                  <Card className="mb-4">
+                    <CardHeader>
+                      <CardTitle className="text-sm">Session Images ({images.length})</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                        {images.map((img) => (
+                          <div key={img.id} className="relative rounded-lg border border-border overflow-hidden group">
+                            <img 
+                              src={img.url} 
+                              alt={img.file_name}
+                              className="w-full aspect-square object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="h-7 w-7 p-0"
+                                onClick={() => deleteImage(img.id, img.storage_path)}
+                              >
+                                <FileText className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              };
+              
+              return (
+                <div key={sessionId}>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                      <h2 className="text-xl font-semibold text-foreground">
+                        Recording Session
+                      </h2>
+                      <Badge variant="secondary">
+                        {sessionChapters.length} {sessionChapters.length === 1 ? 'Chapter' : 'Chapters'}
+                      </Badge>
+                    </div>
+                    <Button
+                      onClick={() => handleAssembleStory(sessionId)}
+                      disabled={assemblingSessionId === sessionId}
+                      className="gap-2"
+                    >
+                      {assemblingSessionId === sessionId ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" />
+                          Generate Story
+                        </>
+                      )}
+                    </Button>
                   </div>
-                  <Button
-                    onClick={() => handleAssembleStory(sessionId)}
-                    disabled={assemblingSessionId === sessionId}
-                    className="gap-2"
-                  >
-                    {assemblingSessionId === sessionId ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4" />
-                        Generate Story
-                      </>
-                    )}
-                  </Button>
-                </div>
+                  
+                  <SessionImages />
 
                 <div className="space-y-6">
                   {sessionChapters
@@ -258,9 +299,10 @@ export default function Chapters() {
                     ))}
                 </div>
 
-                <Separator className="my-8" />
-              </div>
-            ))}
+                  <Separator className="my-8" />
+                </div>
+              );
+            })}
           </div>
         )}
       </main>
