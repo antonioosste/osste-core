@@ -214,8 +214,9 @@ export interface BackendImageResponse {
 }
 
 /**
- * Fetch images for a session/chapter/story from the backend API
- * The backend constructs proper signed/public URLs
+ * DEPRECATED: Backend does not have a GET /api/images endpoint
+ * Images should only be accessed via URLs returned by the upload API
+ * This function is kept for backward compatibility but returns an empty array
  */
 export async function fetchImagesFromBackend(
   token: string,
@@ -225,49 +226,15 @@ export async function fetchImagesFromBackend(
     storyId?: string;
   }
 ): Promise<BackendImageResponse[]> {
-  const queryParams = new URLSearchParams();
-  if (params.sessionId) queryParams.append('session_id', params.sessionId);
-  if (params.chapterId) queryParams.append('chapter_id', params.chapterId);
-  if (params.storyId) queryParams.append('story_id', params.storyId);
-
-  const response = await fetchWithRetry(
-    `${BACKEND_BASE}/api/images?${queryParams}`,
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-
-  if (!response.ok) {
-    const error = new Error(`Failed to fetch images: ${response.statusText}`) as BackendError;
-    error.status = response.status;
-    throw error;
-  }
-
-  const result = await response.json();
-  return result.images || [];
+  console.warn('fetchImagesFromBackend is deprecated. Backend does not have /api/images endpoint. Use image URLs from upload API response.');
+  return [];
 }
 
 /**
- * Delete an image via backend API
+ * DEPRECATED: Backend does not have DELETE /api/images endpoint
+ * Image deletion should be handled through the proper backend endpoint when available
  */
 export async function deleteImageViaBackend(token: string, imageId: string): Promise<void> {
-  const response = await fetchWithRetry(
-    `${BACKEND_BASE}/api/images/${imageId}`,
-    {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-
-  if (!response.ok) {
-    const error = new Error(`Failed to delete image: ${response.statusText}`) as BackendError;
-    error.status = response.status;
-    throw error;
-  }
+  console.warn('deleteImageViaBackend is deprecated. Backend does not have /api/images endpoint.');
+  throw new Error('Image deletion endpoint not available. Contact backend team for proper endpoint.');
 }
