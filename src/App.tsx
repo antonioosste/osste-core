@@ -3,8 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { GrainLayer } from "@/components/ui/grain-layer";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Waitlist from "./pages/Waitlist";
 import Landing from "./pages/Landing";
@@ -38,6 +38,24 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Production-only waitlist lock: redirects non-authenticated users to waitlist
+function WaitlistGuard({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+  
+  // Check if we're in production (not Lovable preview or local dev)
+  const isProduction = !window.location.hostname.includes('lovable') && 
+                       !window.location.hostname.includes('localhost');
+  
+  // Allow access if: not in production, user is authenticated, or already on waitlist
+  if (!isProduction || loading || user || location.pathname === '/') {
+    return <>{children}</>;
+  }
+  
+  // In production, redirect non-authenticated users to waitlist
+  return <Navigate to="/" replace />;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -48,10 +66,10 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Waitlist />} />
-            <Route path="/home" element={<Landing />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            <Route path="/home" element={<WaitlistGuard><Landing /></WaitlistGuard>} />
+            <Route path="/pricing" element={<WaitlistGuard><Pricing /></WaitlistGuard>} />
+            <Route path="/login" element={<WaitlistGuard><Login /></WaitlistGuard>} />
+            <Route path="/signup" element={<WaitlistGuard><Signup /></WaitlistGuard>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/session" element={<ProtectedRoute><Session /></ProtectedRoute>} />
             <Route path="/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
@@ -70,11 +88,11 @@ const App = () => (
             <Route path="/admin/import-questions" element={<ProtectedRoute><QuestionBankImport /></ProtectedRoute>} />
             <Route path="/admin/question-import" element={<ProtectedRoute><QuestionImport /></ProtectedRoute>} />
             <Route path="/interview" element={<ProtectedRoute><Interview /></ProtectedRoute>} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/cookies" element={<Cookies />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/help" element={<Help />} />
+            <Route path="/terms" element={<WaitlistGuard><Terms /></WaitlistGuard>} />
+            <Route path="/privacy" element={<WaitlistGuard><Privacy /></WaitlistGuard>} />
+            <Route path="/cookies" element={<WaitlistGuard><Cookies /></WaitlistGuard>} />
+            <Route path="/faq" element={<WaitlistGuard><FAQ /></WaitlistGuard>} />
+            <Route path="/help" element={<WaitlistGuard><Help /></WaitlistGuard>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
