@@ -214,9 +214,51 @@ export interface BackendImageResponse {
 }
 
 /**
- * DEPRECATED: Backend does not have a GET /api/images endpoint
- * Images should only be accessed via URLs returned by the upload API
- * This function is kept for backward compatibility but returns an empty array
+ * List story images with optional filters and pagination
+ * Uses the backend GET /api/story/list-images endpoint
+ */
+export async function listStoryImages(
+  token: string,
+  params: {
+    sessionId?: string;
+    chapterId?: string;
+    storyId?: string;
+    turnId?: string;
+    usage?: string;
+    limit?: number;
+    offset?: number;
+  }
+): Promise<BackendImageResponse[]> {
+  const queryParams = new URLSearchParams();
+  if (params.sessionId) queryParams.append('session_id', params.sessionId);
+  if (params.chapterId) queryParams.append('chapter_id', params.chapterId);
+  if (params.storyId) queryParams.append('story_id', params.storyId);
+  if (params.turnId) queryParams.append('turn_id', params.turnId);
+  if (params.usage) queryParams.append('usage', params.usage);
+  if (params.limit) queryParams.append('limit', params.limit.toString());
+  if (params.offset) queryParams.append('offset', params.offset.toString());
+
+  const url = `${BACKEND_BASE}/api/story/list-images${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+
+  const response = await fetchWithRetry(url, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = new Error(`Failed to list images: ${response.statusText}`) as BackendError;
+    error.status = response.status;
+    throw error;
+  }
+
+  const result = await response.json();
+  return result.images || [];
+}
+
+/**
+ * DEPRECATED: Use listStoryImages instead
  */
 export async function fetchImagesFromBackend(
   token: string,
@@ -226,8 +268,8 @@ export async function fetchImagesFromBackend(
     storyId?: string;
   }
 ): Promise<BackendImageResponse[]> {
-  console.warn('fetchImagesFromBackend is deprecated. Backend does not have /api/images endpoint. Use image URLs from upload API response.');
-  return [];
+  console.warn('fetchImagesFromBackend is deprecated. Use listStoryImages instead.');
+  return listStoryImages(token, params);
 }
 
 /**
