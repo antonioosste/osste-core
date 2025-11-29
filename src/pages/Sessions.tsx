@@ -2,21 +2,16 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Plus, Trash2, Edit, Calendar, Clock, Compass, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { useSessions } from "@/hooks/useSessions";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-states/EmptyState";
-import { useAuth } from "@/hooks/useAuth";
 
 export default function Sessions() {
   const navigate = useNavigate();
   const { sessions, loading, deleteSession } = useSessions();
-  const { session } = useAuth();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const handleDelete = async () => {
@@ -28,7 +23,11 @@ export default function Sessions() {
 
   const formatDate = (date: string | null) => {
     if (!date) return "N/A";
-    return new Date(date).toLocaleDateString();
+    return new Date(date).toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
   };
 
   const formatDuration = (start: string | null, end: string | null) => {
@@ -40,123 +39,100 @@ export default function Sessions() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header isAuthenticated={true} />
-      
-      <main className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Recording Sessions</h1>
-            <p className="text-muted-foreground mt-2">
-              Manage your storytelling sessions
-            </p>
-          </div>
-          <Button onClick={() => navigate('/session')}>
-            <Plus className="w-4 h-4 mr-2" />
-            New Session
-          </Button>
+    <div className="container mx-auto px-6 py-8 max-w-6xl">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-serif font-bold text-foreground mb-2">Recording Sessions</h1>
+          <p className="text-muted-foreground">
+            Manage your storytelling sessions
+          </p>
         </div>
+        <Button onClick={() => navigate('/session')} size="lg">
+          <Plus className="w-4 h-4 mr-2" />
+          New Session
+        </Button>
+      </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>All Sessions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </div>
-            ) : sessions.length === 0 ? (
-              <div>
-                <EmptyState
-                  icon={Calendar}
-                  title="No sessions yet"
-                  description="Start your first recording session to begin capturing stories"
-                />
-                <div className="mt-4 flex justify-center">
-                  <Button asChild>
-                    <Link to="/session">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Start Recording
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Mode</TableHead>
-                    <TableHead>Duration</TableHead>
-                    <TableHead>Started</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sessions.map((session) => (
-                    <TableRow key={session.id}>
-                      <TableCell className="font-medium">
+      {loading ? (
+        <div className="grid gap-4">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-32 w-full" />
+          ))}
+        </div>
+      ) : sessions.length === 0 ? (
+        <EmptyState
+          icon={Calendar}
+          title="No sessions yet"
+          description="Start your first recording session to begin capturing stories"
+          action={{
+            label: "Start Recording",
+            onClick: () => navigate('/session')
+          }}
+        />
+      ) : (
+        <div className="grid gap-4">
+          {sessions.map((session) => (
+            <Card key={session.id} className="border-border/40 hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-lg font-semibold text-foreground">
                         {(session as any).title || "Untitled Session"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={session.status === 'completed' ? 'default' : 'secondary'}>
-                          {session.status || 'active'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          {(session as any).mode === 'non-guided' ? (
-                            <>
-                              <Sparkles className="w-4 h-4 text-primary" />
-                              <span className="text-sm">Non-Guided</span>
-                            </>
-                          ) : (
-                            <>
-                              <Compass className="w-4 h-4 text-muted-foreground" />
-                              <span className="text-sm">Guided</span>
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        <div className="flex items-center">
-                          <Clock className="w-4 h-4 mr-1" />
-                          {formatDuration(session.started_at, session.ended_at)}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
+                      </h3>
+                      <Badge variant={session.status === 'completed' ? 'default' : 'secondary'}>
+                        {session.status || 'active'}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1.5">
+                        {(session as any).mode === 'non-guided' ? (
+                          <>
+                            <Sparkles className="w-4 h-4 text-primary" />
+                            <span>Non-Guided</span>
+                          </>
+                        ) : (
+                          <>
+                            <Compass className="w-4 h-4" />
+                            <span>Guided</span>
+                          </>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-4 h-4" />
+                        {formatDuration(session.started_at, session.ended_at)}
+                      </div>
+                      
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="w-4 h-4" />
                         {formatDate(session.started_at)}
-                      </TableCell>
-                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link to={`/session?id=${session.id}`}>
-                              <Edit className="w-4 h-4" />
-                            </Link>
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => setDeleteId(session.id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-      </main>
-
-      <Footer />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to={`/session?id=${session.id}`}>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit
+                      </Link>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setDeleteId(session.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
