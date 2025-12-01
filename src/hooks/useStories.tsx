@@ -5,7 +5,7 @@ import { useToast } from './use-toast';
 
 export interface Story {
   id: string;
-  session_id: string | null;
+  story_group_id: string | null;
   title: string | null;
   raw_text: string | null;
   edited_text: string | null;

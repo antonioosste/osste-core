@@ -5,7 +5,6 @@ import { useToast } from './use-toast';
 
 export interface Chapter {
   id: string;
-  recording_id: string | null;
   session_id: string | null;
   title: string | null;
   summary: string | null;
@@ -17,7 +16,7 @@ export interface Chapter {
   created_at: string | null;
 }
 
-export function useChapters(recordingId?: string) {
+export function useChapters(sessionId?: string) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [chapters, setChapters] = useState<Chapter[]>([]);
@@ -34,19 +33,19 @@ export function useChapters(recordingId?: string) {
     try {
       setLoading(true);
       
-      if (recordingId) {
-        // Fetch chapters for a specific recording
-        const { data, error: fetchError } = await (supabase as any)
+      if (sessionId) {
+        // Fetch chapters for a specific session
+        const { data, error: fetchError } = await supabase
           .from('chapters')
           .select('*')
-          .eq('recording_id', recordingId)
+          .eq('session_id', sessionId)
           .order('order_index', { ascending: true });
 
         if (fetchError) throw fetchError;
-        setChapters((data as any) || []);
+        setChapters(data || []);
       } else {
-        // First get all session IDs for the current user
-        const { data: sessions, error: sessionsError } = await (supabase as any)
+        // Fetch all chapters for user's sessions
+        const { data: sessions, error: sessionsError } = await supabase
           .from('sessions')
           .select('id')
           .eq('user_id', user.id);
@@ -58,35 +57,17 @@ export function useChapters(recordingId?: string) {
           return;
         }
 
-        const sessionIds = sessions.map((s: any) => s.id);
+        const sessionIds = sessions.map(s => s.id);
 
-        // Then get all recording IDs for those sessions
-        const { data: recordings, error: recordingsError } = await (supabase as any)
-          .from('recordings')
-          .select('id')
-          .in('session_id', sessionIds);
-
-        if (recordingsError) throw recordingsError;
-
-        const recordingIds = recordings?.map((r: any) => r.id) || [];
-
-        // Fetch chapters that are either:
-        // 1. Directly linked to user's sessions
-        // 2. Linked to recordings from user's sessions
-        let query = (supabase as any)
+        // Fetch chapters linked to user's sessions
+        const { data, error: fetchError } = await supabase
           .from('chapters')
-          .select('*');
-
-        if (recordingIds.length > 0) {
-          query = query.or(`session_id.in.(${sessionIds.join(',')}),recording_id.in.(${recordingIds.join(',')})`);
-        } else {
-          query = query.in('session_id', sessionIds);
-        }
-
-        const { data, error: fetchError } = await query.order('order_index', { ascending: true });
+          .select('*')
+          .in('session_id', sessionIds)
+          .order('order_index', { ascending: true });
 
         if (fetchError) throw fetchError;
-        setChapters((data as any) || []);
+        setChapters(data || []);
       }
     } catch (err) {
       setError(err as Error);
@@ -148,7 +129,7 @@ export function useChapters(recordingId?: string) {
 
   useEffect(() => {
     fetchChapters();
-  }, [user, recordingId]);
+  }, [user, sessionId]);
 
   return {
     chapters,

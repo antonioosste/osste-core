@@ -35,6 +35,7 @@ import { useTurns } from "@/hooks/useTurns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { generateChapters } from "@/lib/backend-api";
+import { useStoryGroups } from "@/hooks/useStoryGroups";
 
 type SessionStatus = "idle" | "listening" | "thinking" | "speaking" | "paused" | "error";
 type PermissionState = "granted" | "denied" | "pending" | "prompt";
@@ -67,6 +68,7 @@ export default function Session() {
   
   const { toast } = useToast();
   const { user } = useAuth();
+  const { storyGroups, createStoryGroup } = useStoryGroups();
   const { sessionId, startSession: startSessionDb, endSession, loadSession } = useSession(existingSessionId);
   const { 
     isRecording, 
@@ -77,6 +79,9 @@ export default function Session() {
     cancelRecording 
   } = useAudioRecorder(sessionId);
   const { turns, loading: turnsLoading, refetch: refetchTurns } = useTurns(sessionId || undefined);
+  
+  // Story group state
+  const [defaultStoryGroupId, setDefaultStoryGroupId] = useState<string | null>(null);
   
   // Core session state
   const [status, setStatus] = useState<SessionStatus>("idle");
@@ -126,12 +131,40 @@ export default function Session() {
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Get or create default story group
+  useEffect(() => {
+    const getOrCreateDefaultStoryGroup = async () => {
+      if (!user || defaultStoryGroupId) return;
+      
+      // Check if user has a default story group
+      const defaultGroup = storyGroups.find(g => g.title === 'My Life Story');
+      
+      if (defaultGroup) {
+        setDefaultStoryGroupId(defaultGroup.id);
+      } else if (storyGroups.length > 0) {
+        // Use the first story group if no default found
+        setDefaultStoryGroupId(storyGroups[0].id);
+      } else {
+        // Create a default story group
+        try {
+          const newGroup = await createStoryGroup('My Life Story', 'Your life story and memories');
+          setDefaultStoryGroupId(newGroup.id);
+        } catch (error) {
+          console.error('Error creating default story group:', error);
+        }
+      }
+    };
+
+    getOrCreateDefaultStoryGroup();
+  }, [user, storyGroups, defaultStoryGroupId]);
+
   // Start non-guided session automatically
   useEffect(() => {
     const startNonGuidedSession = async () => {
-      if (modeParam === 'non-guided' && !existingSessionId && !sessionId) {
+      if (modeParam === 'non-guided' && !existingSessionId && !sessionId && defaultStoryGroupId) {
         try {
           await startSessionDb({
+            story_group_id: defaultStoryGroupId,
             persona: 'friendly',
             themes: [],
             language: 'en',
@@ -147,7 +180,7 @@ export default function Session() {
     };
 
     startNonGuidedSession();
-  }, [modeParam, existingSessionId, sessionId]);
+  }, [modeParam, existingSessionId, sessionId, defaultStoryGroupId]);
 
   // Load existing session data on mount
   useEffect(() => {
@@ -343,9 +376,19 @@ export default function Session() {
     setShowGuidedSetup(false);
     setSessionMode('non-guided'); // Use non-guided flow after guidance
 
+    if (!defaultStoryGroupId) {
+      toast({
+        title: "Error",
+        description: "Story group not ready. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Start session in database
     try {
       await startSessionDb({
+        story_group_id: defaultStoryGroupId,
         persona: 'friendly',
         themes: [],
         language: 'en',
@@ -373,9 +416,19 @@ export default function Session() {
     setShowGuidedSetup(false);
     setSessionMode('non-guided');
     
+    if (!defaultStoryGroupId) {
+      toast({
+        title: "Error",
+        description: "Story group not ready. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Start non-guided session
     try {
       await startSessionDb({
+        story_group_id: defaultStoryGroupId,
         persona: 'friendly',
         themes: [],
         language: 'en',
@@ -407,9 +460,19 @@ export default function Session() {
     const finalCategory = category === "surprise" ? undefined : category;
     setSelectedCategory(finalCategory);
 
+    if (!defaultStoryGroupId) {
+      toast({
+        title: "Error",
+        description: "Story group not ready. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Start session in database
     try {
       await startSessionDb({
+        story_group_id: defaultStoryGroupId,
         persona: 'friendly',
         themes: finalCategory ? [finalCategory] : [],
         language: 'en',
@@ -507,9 +570,19 @@ export default function Session() {
 
     // Start session in database if not already started
     if (!sessionId) {
+      if (!defaultStoryGroupId) {
+        toast({
+          title: "Error",
+          description: "Story group not ready. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // This shouldn't happen if mode selector works correctly
       try {
         await startSessionDb({
+          story_group_id: defaultStoryGroupId,
           persona: 'friendly',
           themes: selectedCategory ? [selectedCategory] : [],
           language: 'en',

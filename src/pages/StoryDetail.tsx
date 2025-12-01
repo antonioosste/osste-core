@@ -131,7 +131,9 @@ export default function StoryDetail() {
         if (data) {
           setStory(data);
           setEditedContent(data.edited_text || data.raw_text || "");
-          setSessionIdForImages(data.session_id || undefined);
+          // Story no longer has session_id, it has story_group_id
+          // Images should be linked to story_id directly
+          setSessionIdForImages(undefined);
         }
       } catch (error) {
         console.error('Error loading story:', error);

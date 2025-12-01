@@ -4,6 +4,7 @@ import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 
 interface SessionParams {
+  story_group_id: string; // REQUIRED
   persona?: string;
   themes?: string[];
   language?: string;
@@ -22,7 +23,7 @@ export function useSession(initialSessionId?: string | null) {
     return id;
   };
 
-  const startSession = async (params: SessionParams = {}) => {
+  const startSession = async (params: SessionParams) => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -32,51 +33,24 @@ export function useSession(initialSessionId?: string | null) {
       throw new Error("User not authenticated");
     }
 
+    if (!params.story_group_id) {
+      toast({
+        title: "Story group required",
+        description: "Please select a story project first.",
+        variant: "destructive",
+      });
+      throw new Error("Story group ID is required");
+    }
+
     try {
       setLoading(true);
 
-      // Try backend endpoint first if available
-      const backendUrl = (window as any).__BACKEND_START_SESSION_URL || '/api/start-session';
-      
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const accessToken = session?.access_token;
-
-        if (accessToken) {
-          const response = await fetch(backendUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${accessToken}`
-            },
-            body: JSON.stringify({
-              persona: params.persona || 'friendly',
-              themes: params.themes || [],
-              language: params.language || 'en',
-              mode: params.mode || 'guided',
-              category: params.category
-            })
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            setSessionId(data.session_id);
-            toast({
-              title: "Session started",
-              description: "Your recording session is now active.",
-            });
-            return data.session_id;
-          }
-        }
-      } catch (backendError) {
-        console.log('Backend endpoint not available, falling back to direct insert');
-      }
-
-      // Fallback: Direct Supabase insert
+      // Direct Supabase insert with story_group_id
       const { data, error: insertError } = await supabase
         .from('sessions')
         .insert({
           user_id: user.id,
+          story_group_id: params.story_group_id,
           persona: params.persona || 'friendly',
           themes: params.themes || [],
           language: params.language || 'en',
