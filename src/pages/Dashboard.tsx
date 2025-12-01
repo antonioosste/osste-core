@@ -1,25 +1,41 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { 
   Mic, 
   BookOpen, 
   Play, 
   ArrowRight,
   Crown,
-  FileAudio
+  FileAudio,
+  Plus,
+  FolderOpen,
+  Sparkles,
+  ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useSessions } from "@/hooks/useSessions";
 import { useStories } from "@/hooks/useStories";
 import { useProfile } from "@/hooks/useProfile";
 import { useRecordings } from "@/hooks/useRecordings";
+import { useStoryGroups } from "@/hooks/useStoryGroups";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { sessions, loading: sessionsLoading } = useSessions();
+  const { sessions } = useSessions();
   const { stories } = useStories();
   const { profile } = useProfile();
   const { recordings } = useRecordings();
+  const { storyGroups, loading: groupsLoading, createStoryGroup } = useStoryGroups();
+  
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newGroupTitle, setNewGroupTitle] = useState('');
+  const [newGroupDescription, setNewGroupDescription] = useState('');
   
   const userPaid = profile?.plan !== 'free';
   
@@ -31,25 +47,100 @@ export default function Dashboard() {
   // Find active session
   const activeSession = sessions.find(s => s.status === 'active' || !s.ended_at);
 
+  // Get session count per story group
+  const getSessionCount = (groupId: string) => {
+    return sessions.filter(s => s.story_group_id === groupId).length;
+  };
+
+  // Get story for a group
+  const getGroupStory = (groupId: string) => {
+    return stories.find(s => s.story_group_id === groupId);
+  };
+
+  const handleCreateGroup = async () => {
+    if (!newGroupTitle.trim()) return;
+    
+    try {
+      await createStoryGroup(newGroupTitle.trim(), newGroupDescription.trim() || undefined);
+      setIsCreateDialogOpen(false);
+      setNewGroupTitle('');
+      setNewGroupDescription('');
+    } catch (error) {
+      console.error('Failed to create story group:', error);
+    }
+  };
+
   return (
     <div className="container mx-auto px-6 py-8 max-w-6xl">
       {/* Hero Section */}
       <div className="mb-12">
         <h1 className="text-4xl font-serif font-bold text-foreground mb-3">
-          Welcome back to your story archive
+          Welcome back{profile?.name ? `, ${profile.name}` : ''}
         </h1>
         <p className="text-lg text-muted-foreground mb-8">
           Continue capturing the memories that matter most
         </p>
         
-        <Button 
-          size="lg" 
-          className="gap-2 text-lg px-8 py-6 h-auto"
-          onClick={() => navigate('/session')}
-        >
-          <Play className="w-5 h-5" />
-          Start Recording
-        </Button>
+        <div className="flex gap-3">
+          <Button 
+            size="lg" 
+            className="gap-2 text-lg px-8 py-6 h-auto"
+            onClick={() => navigate('/session')}
+          >
+            <Play className="w-5 h-5" />
+            Start Recording
+          </Button>
+          
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="gap-2 text-lg px-8 py-6 h-auto"
+              >
+                <Plus className="w-5 h-5" />
+                New Story Project
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Story Project</DialogTitle>
+                <DialogDescription>
+                  Start a new story collection. You can add multiple recording sessions to build a complete narrative.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    placeholder="e.g., Family Story, Career Journey, Travel Adventures"
+                    value={newGroupTitle}
+                    onChange={(e) => setNewGroupTitle(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description (Optional)</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="What will this story be about?"
+                    value={newGroupDescription}
+                    onChange={(e) => setNewGroupDescription(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleCreateGroup} disabled={!newGroupTitle.trim()}>
+                  Create Project
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Paywall Card for Unpaid Users */}
@@ -106,6 +197,117 @@ export default function Dashboard() {
             <p className="text-sm font-medium text-muted-foreground">Stories Created</p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Story Groups Section */}
+      <div className="mb-12">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-serif font-bold text-foreground">Your Story Projects</h2>
+            <p className="text-muted-foreground">Organize your recordings into meaningful collections</p>
+          </div>
+        </div>
+
+        {groupsLoading ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="animate-pulse border-border/40">
+                <CardHeader className="space-y-3">
+                  <div className="h-6 bg-muted rounded w-3/4" />
+                  <div className="h-4 bg-muted rounded w-full" />
+                </CardHeader>
+                <CardContent>
+                  <div className="h-10 bg-muted rounded" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : storyGroups && storyGroups.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {storyGroups.map((group) => {
+              const sessionCount = getSessionCount(group.id);
+              const groupStory = getGroupStory(group.id);
+              
+              return (
+                <Card key={group.id} className="border-border/40 hover:shadow-md transition-shadow group">
+                  <CardHeader>
+                    <div className="flex items-start justify-between mb-2">
+                      <FolderOpen className="h-5 w-5 text-primary" />
+                      <Badge variant={groupStory ? "default" : "secondary"}>
+                        {sessionCount} {sessionCount === 1 ? 'session' : 'sessions'}
+                      </Badge>
+                    </div>
+                    <CardTitle className="line-clamp-1 text-foreground">{group.title}</CardTitle>
+                    {group.description && (
+                      <CardDescription className="line-clamp-2">
+                        {group.description}
+                      </CardDescription>
+                    )}
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Button 
+                      size="sm" 
+                      className="w-full"
+                      variant="outline"
+                      onClick={() => navigate(`/sessions?group=${group.id}`)}
+                    >
+                      View Sessions
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                    
+                    {sessionCount > 0 && (
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => navigate(`/chapters?group=${group.id}`)}
+                        >
+                          View Chapters
+                        </Button>
+                        {!groupStory && (
+                          <Button 
+                            size="sm" 
+                            className="flex-1"
+                            onClick={() => navigate(`/chapters?group=${group.id}`)}
+                          >
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            Generate Story
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                    
+                    {groupStory && (
+                      <Button 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => navigate(`/stories/${groupStory.id}`)}
+                      >
+                        <BookOpen className="mr-2 h-4 w-4" />
+                        View Story
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <Card className="border-dashed border-2 border-border/40">
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              <FolderOpen className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">No Story Projects Yet</h3>
+              <p className="text-muted-foreground mb-4">
+                Create your first story project to start organizing your recordings
+              </p>
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Story Project
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Continue Active Session */}
