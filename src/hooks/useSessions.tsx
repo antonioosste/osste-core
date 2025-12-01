@@ -109,20 +109,31 @@ export function useSessions() {
         }
       }
 
-      // Delete story images from storage
-      const { data: storyImages } = await supabase
-        .from('story_images')
-        .select('storage_path')
+      // Delete story images from storage (no longer linked to session_id directly)
+      // They're linked via chapter_id, turn_id, or story_id
+      // We need to get chapters for this session first
+      const { data: sessionChapters } = await supabase
+        .from('chapters')
+        .select('id')
         .eq('session_id', id);
 
-      if (storyImages && storyImages.length > 0) {
-        const imagePaths = storyImages.map(img => img.storage_path);
-        const { error: imageStorageError } = await supabase.storage
-          .from('story_media')
-          .remove(imagePaths);
+      if (sessionChapters && sessionChapters.length > 0) {
+        const chapterIds = sessionChapters.map(ch => ch.id);
         
-        if (imageStorageError) {
-          console.error('Error deleting story images:', imageStorageError);
+        const { data: storyImages } = await supabase
+          .from('story_images')
+          .select('storage_path')
+          .in('chapter_id', chapterIds);
+
+        if (storyImages && storyImages.length > 0) {
+          const imagePaths = storyImages.map(img => img.storage_path);
+          const { error: imageStorageError } = await supabase.storage
+            .from('story_images')
+            .remove(imagePaths);
+          
+          if (imageStorageError) {
+            console.error('Error deleting story images:', imageStorageError);
+          }
         }
       }
 
@@ -130,7 +141,7 @@ export function useSessions() {
       // 1. Delete turns (references session)
       await supabase.from('turns').delete().eq('session_id', id);
       
-      // 2. Delete transcripts and chapters that reference this session via recordings
+      // 2. Delete transcripts that reference recordings in this session
       const { data: sessionRecordings } = await supabase
         .from('recordings')
         .select('id')
@@ -139,19 +150,18 @@ export function useSessions() {
       if (sessionRecordings && sessionRecordings.length > 0) {
         const recordingIds = sessionRecordings.map(r => r.id);
         await supabase.from('transcripts').delete().in('recording_id', recordingIds);
-        await supabase.from('chapters').delete().in('recording_id', recordingIds);
       }
 
-      // 3. Also delete any chapters that reference this session directly
+      // 3. Delete chapters linked to this session
       await supabase.from('chapters').delete().eq('session_id', id);
 
-      // 4. Delete story images
-      await supabase.from('story_images').delete().eq('session_id', id);
+      // 4. Delete story images linked to chapters
+      if (sessionChapters && sessionChapters.length > 0) {
+        const chapterIds = sessionChapters.map(ch => ch.id);
+        await supabase.from('story_images').delete().in('chapter_id', chapterIds);
+      }
       
-      // 5. Delete stories
-      await supabase.from('stories').delete().eq('session_id', id);
-      
-      // 6. Delete recordings
+      // 5. Delete recordings
       await supabase.from('recordings').delete().eq('session_id', id);
 
       // 7. Finally delete the session

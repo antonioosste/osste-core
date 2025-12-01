@@ -14,10 +14,10 @@ export type Database = {
   }
   public: {
     Tables: {
-      chapters: {
+      backup_chapters: {
         Row: {
           created_at: string | null
-          id: string
+          id: string | null
           image_hints: Json | null
           order_index: number | null
           overall_summary: string | null
@@ -32,7 +32,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          id?: string
+          id?: string | null
           image_hints?: Json | null
           order_index?: number | null
           overall_summary?: string | null
@@ -47,7 +47,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
-          id?: string
+          id?: string | null
           image_hints?: Json | null
           order_index?: number | null
           overall_summary?: string | null
@@ -60,14 +60,334 @@ export type Database = {
           summary?: string | null
           title?: string | null
         }
+        Relationships: []
+      }
+      backup_recordings: {
+        Row: {
+          created_at: string | null
+          duration_seconds: number | null
+          id: string | null
+          language: string | null
+          mime_type: string | null
+          processed_at: string | null
+          session_id: string | null
+          status: string | null
+          storage_path: string | null
+          transcribed_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string | null
+          language?: string | null
+          mime_type?: string | null
+          processed_at?: string | null
+          session_id?: string | null
+          status?: string | null
+          storage_path?: string | null
+          transcribed_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string | null
+          language?: string | null
+          mime_type?: string | null
+          processed_at?: string | null
+          session_id?: string | null
+          status?: string | null
+          storage_path?: string | null
+          transcribed_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      backup_sessions: {
+        Row: {
+          ended_at: string | null
+          id: string | null
+          language: string | null
+          last_activity_at: string | null
+          mode: string | null
+          persona: string | null
+          started_at: string | null
+          status: string | null
+          story_anchor: string | null
+          story_group_id: string | null
+          summary: string | null
+          themes: string[] | null
+          title: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ended_at?: string | null
+          id?: string | null
+          language?: string | null
+          last_activity_at?: string | null
+          mode?: string | null
+          persona?: string | null
+          started_at?: string | null
+          status?: string | null
+          story_anchor?: string | null
+          story_group_id?: string | null
+          summary?: string | null
+          themes?: string[] | null
+          title?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ended_at?: string | null
+          id?: string | null
+          language?: string | null
+          last_activity_at?: string | null
+          mode?: string | null
+          persona?: string | null
+          started_at?: string | null
+          status?: string | null
+          story_anchor?: string | null
+          story_group_id?: string | null
+          summary?: string | null
+          themes?: string[] | null
+          title?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      backup_stories: {
+        Row: {
+          approved: boolean | null
+          created_at: string | null
+          edited_text: string | null
+          id: string | null
+          order_index: number | null
+          raw_text: string | null
+          recording_id: string | null
+          session_id: string | null
+          story_group_id: string | null
+          style_instruction: string | null
+          title: string | null
+        }
+        Insert: {
+          approved?: boolean | null
+          created_at?: string | null
+          edited_text?: string | null
+          id?: string | null
+          order_index?: number | null
+          raw_text?: string | null
+          recording_id?: string | null
+          session_id?: string | null
+          story_group_id?: string | null
+          style_instruction?: string | null
+          title?: string | null
+        }
+        Update: {
+          approved?: boolean | null
+          created_at?: string | null
+          edited_text?: string | null
+          id?: string | null
+          order_index?: number | null
+          raw_text?: string | null
+          recording_id?: string | null
+          session_id?: string | null
+          story_group_id?: string | null
+          style_instruction?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
+      backup_story_images: {
+        Row: {
+          alt_text: string | null
+          caption: string | null
+          chapter_id: string | null
+          created_at: string | null
+          file_name: string | null
+          height: number | null
+          id: string | null
+          mime_type: string | null
+          session_id: string | null
+          size_bytes: number | null
+          storage_path: string | null
+          story_id: string | null
+          thumbnail_path: string | null
+          turn_id: string | null
+          usage: string | null
+          user_id: string | null
+          width: number | null
+        }
+        Insert: {
+          alt_text?: string | null
+          caption?: string | null
+          chapter_id?: string | null
+          created_at?: string | null
+          file_name?: string | null
+          height?: number | null
+          id?: string | null
+          mime_type?: string | null
+          session_id?: string | null
+          size_bytes?: number | null
+          storage_path?: string | null
+          story_id?: string | null
+          thumbnail_path?: string | null
+          turn_id?: string | null
+          usage?: string | null
+          user_id?: string | null
+          width?: number | null
+        }
+        Update: {
+          alt_text?: string | null
+          caption?: string | null
+          chapter_id?: string | null
+          created_at?: string | null
+          file_name?: string | null
+          height?: number | null
+          id?: string | null
+          mime_type?: string | null
+          session_id?: string | null
+          size_bytes?: number | null
+          storage_path?: string | null
+          story_id?: string | null
+          thumbnail_path?: string | null
+          turn_id?: string | null
+          usage?: string | null
+          user_id?: string | null
+          width?: number | null
+        }
+        Relationships: []
+      }
+      backup_transcripts: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          language: string | null
+          model_used: string | null
+          recording_id: string | null
+          text: string | null
+          word_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          language?: string | null
+          model_used?: string | null
+          recording_id?: string | null
+          text?: string | null
+          word_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          language?: string | null
+          model_used?: string | null
+          recording_id?: string | null
+          text?: string | null
+          word_count?: number | null
+        }
+        Relationships: []
+      }
+      backup_turns: {
+        Row: {
+          answer_text: string | null
+          created_at: string | null
+          entities: Json | null
+          follow_up_needed: boolean | null
+          follow_up_suggestions: Json | null
+          id: string | null
+          images: Json | null
+          prompt_text: string | null
+          recording_id: string | null
+          sentiment: string | null
+          session_id: string | null
+          status: string | null
+          stt_text: string | null
+          tts_audio_path: string | null
+          tts_voice: string | null
+          turn_index: number | null
+        }
+        Insert: {
+          answer_text?: string | null
+          created_at?: string | null
+          entities?: Json | null
+          follow_up_needed?: boolean | null
+          follow_up_suggestions?: Json | null
+          id?: string | null
+          images?: Json | null
+          prompt_text?: string | null
+          recording_id?: string | null
+          sentiment?: string | null
+          session_id?: string | null
+          status?: string | null
+          stt_text?: string | null
+          tts_audio_path?: string | null
+          tts_voice?: string | null
+          turn_index?: number | null
+        }
+        Update: {
+          answer_text?: string | null
+          created_at?: string | null
+          entities?: Json | null
+          follow_up_needed?: boolean | null
+          follow_up_suggestions?: Json | null
+          id?: string | null
+          images?: Json | null
+          prompt_text?: string | null
+          recording_id?: string | null
+          sentiment?: string | null
+          session_id?: string | null
+          status?: string | null
+          stt_text?: string | null
+          tts_audio_path?: string | null
+          tts_voice?: string | null
+          turn_index?: number | null
+        }
+        Relationships: []
+      }
+      chapters: {
+        Row: {
+          created_at: string | null
+          id: string
+          image_hints: Json | null
+          order_index: number | null
+          overall_summary: string | null
+          polished_text: string | null
+          quotes: Json | null
+          raw_transcript: string | null
+          session_id: string | null
+          suggested_cover_title: string | null
+          summary: string | null
+          title: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          image_hints?: Json | null
+          order_index?: number | null
+          overall_summary?: string | null
+          polished_text?: string | null
+          quotes?: Json | null
+          raw_transcript?: string | null
+          session_id?: string | null
+          suggested_cover_title?: string | null
+          summary?: string | null
+          title?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          image_hints?: Json | null
+          order_index?: number | null
+          overall_summary?: string | null
+          polished_text?: string | null
+          quotes?: Json | null
+          raw_transcript?: string | null
+          session_id?: string | null
+          suggested_cover_title?: string | null
+          summary?: string | null
+          title?: string | null
+        }
         Relationships: [
-          {
-            foreignKeyName: "chapters_recording_id_fkey"
-            columns: ["recording_id"]
-            isOneToOne: false
-            referencedRelation: "recordings"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "chapters_session_id_fkey"
             columns: ["session_id"]
@@ -266,6 +586,7 @@ export type Database = {
           started_at: string | null
           status: string | null
           story_anchor: string | null
+          story_group_id: string | null
           summary: string | null
           themes: string[] | null
           title: string | null
@@ -281,6 +602,7 @@ export type Database = {
           started_at?: string | null
           status?: string | null
           story_anchor?: string | null
+          story_group_id?: string | null
           summary?: string | null
           themes?: string[] | null
           title?: string | null
@@ -296,12 +618,21 @@ export type Database = {
           started_at?: string | null
           status?: string | null
           story_anchor?: string | null
+          story_group_id?: string | null
           summary?: string | null
           themes?: string[] | null
           title?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sessions_story_group_id_fkey"
+            columns: ["story_group_id"]
+            isOneToOne: false
+            referencedRelation: "story_groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stories: {
         Row: {
@@ -311,8 +642,7 @@ export type Database = {
           id: string
           order_index: number | null
           raw_text: string | null
-          recording_id: string | null
-          session_id: string | null
+          story_group_id: string | null
           style_instruction: string | null
           title: string | null
         }
@@ -323,8 +653,7 @@ export type Database = {
           id?: string
           order_index?: number | null
           raw_text?: string | null
-          recording_id?: string | null
-          session_id?: string | null
+          story_group_id?: string | null
           style_instruction?: string | null
           title?: string | null
         }
@@ -335,24 +664,16 @@ export type Database = {
           id?: string
           order_index?: number | null
           raw_text?: string | null
-          recording_id?: string | null
-          session_id?: string | null
+          story_group_id?: string | null
           style_instruction?: string | null
           title?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "stories_recording_id_fkey"
-            columns: ["recording_id"]
+            foreignKeyName: "stories_story_group_id_fkey"
+            columns: ["story_group_id"]
             isOneToOne: false
-            referencedRelation: "recordings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stories_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: true
-            referencedRelation: "sessions"
+            referencedRelation: "story_groups"
             referencedColumns: ["id"]
           },
         ]
@@ -386,6 +707,30 @@ export type Database = {
           },
         ]
       }
+      story_groups: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       story_images: {
         Row: {
           alt_text: string | null
@@ -396,7 +741,6 @@ export type Database = {
           height: number | null
           id: string
           mime_type: string
-          session_id: string | null
           size_bytes: number | null
           storage_path: string
           story_id: string | null
@@ -415,7 +759,6 @@ export type Database = {
           height?: number | null
           id?: string
           mime_type: string
-          session_id?: string | null
           size_bytes?: number | null
           storage_path: string
           story_id?: string | null
@@ -434,7 +777,6 @@ export type Database = {
           height?: number | null
           id?: string
           mime_type?: string
-          session_id?: string | null
           size_bytes?: number | null
           storage_path?: string
           story_id?: string | null
@@ -450,13 +792,6 @@ export type Database = {
             columns: ["chapter_id"]
             isOneToOne: false
             referencedRelation: "chapters"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "story_images_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "sessions"
             referencedColumns: ["id"]
           },
           {

@@ -152,12 +152,17 @@ export function SessionImageUploader({
         throw new Error("Authentication required");
       }
 
-      // Build FormData
+      // Build FormData - Must include chapter_id or turn_id per new schema
       const formData = new FormData();
       formData.append("file", item.file);
-      formData.append("session_id", sessionId);
       
-      if (chapterId) formData.append("chapter_id", chapterId);
+      // REQUIRED: Must provide chapter_id, turn_id, or story_id
+      if (chapterId) {
+        formData.append("chapter_id", chapterId);
+      } else {
+        throw new Error("chapter_id is required for image uploads");
+      }
+      
       formData.append("usage", "session_media");
 
       setFiles((prev) => {

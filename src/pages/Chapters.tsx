@@ -26,7 +26,7 @@ export default function Chapters() {
 
   // Group chapters by session_id
   const groupedChapters = chapters.reduce((acc, chapter) => {
-    const key = chapter.session_id || chapter.recording_id || 'unknown';
+    const key = chapter.session_id || 'unknown';
     if (!acc[key]) {
       acc[key] = [];
     }
