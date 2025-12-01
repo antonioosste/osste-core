@@ -1,11 +1,14 @@
-import { Link, useNavigate } from "react-router-dom";
-import { BookOpen, Calendar, FileText, Loader2, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { BookOpen, Calendar, FileText, Loader2, Sparkles, ChevronDown, ChevronUp, FolderOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useChapters } from "@/hooks/useChapters";
+import { useSessions } from "@/hooks/useSessions";
+import { useStoryGroups } from "@/hooks/useStoryGroups";
 import { EmptyState } from "@/components/empty-states/EmptyState";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -17,15 +20,29 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 export default function Chapters() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { chapters, loading } = useChapters();
+  const { sessions } = useSessions();
+  const { storyGroups } = useStoryGroups();
+  const { stories } = useStories();
   const { session } = useAuth();
   const { toast } = useToast();
   const { refetch: refetchStories } = useStories();
   const [assemblingSessionId, setAssemblingSessionId] = useState<string | null>(null);
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
 
+  const selectedGroupId = searchParams.get('group') || 'all';
+
+  // Filter chapters by story group
+  const filteredChapters = selectedGroupId === 'all'
+    ? chapters
+    : chapters.filter(chapter => {
+        const chapterSession = sessions.find(s => s.id === chapter.session_id);
+        return chapterSession?.story_group_id === selectedGroupId;
+      });
+
   // Group chapters by session_id
-  const groupedChapters = chapters.reduce((acc, chapter) => {
+  const groupedChapters = filteredChapters.reduce((acc, chapter) => {
     const key = chapter.session_id || 'unknown';
     if (!acc[key]) {
       acc[key] = [];
@@ -33,6 +50,17 @@ export default function Chapters() {
     acc[key].push(chapter);
     return acc;
   }, {} as Record<string, typeof chapters>);
+
+  // Get story group info
+  const selectedGroup = storyGroups?.find(g => g.id === selectedGroupId);
+  const groupStory = stories.find(s => s.story_group_id === selectedGroupId);
+  
+  // Get a session ID from this group for story generation
+  const getSessionIdForGroup = () => {
+    if (selectedGroupId === 'all') return null;
+    const groupSessions = sessions.filter(s => s.story_group_id === selectedGroupId);
+    return groupSessions[0]?.id || null;
+  };
 
   const toggleChapter = (chapterId: string) => {
     setExpandedChapters(prev => {
@@ -87,14 +115,81 @@ export default function Chapters() {
   return (
     <div className="container mx-auto px-6 py-8 max-w-5xl">
       <div className="mb-8">
-        <div className="flex items-center space-x-3 mb-2">
-          <BookOpen className="w-8 h-8 text-primary" />
-          <h1 className="text-3xl font-serif font-bold text-foreground">Your Chapters</h1>
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <div className="flex items-center space-x-3 mb-2">
+              <BookOpen className="w-8 h-8 text-primary" />
+              <h1 className="text-3xl font-serif font-bold text-foreground">Your Chapters</h1>
+            </div>
+            <p className="text-muted-foreground">
+              View AI-generated chapters and create stories from your recordings
+            </p>
+          </div>
+          
+          {/* Generate Story Button for Selected Group */}
+          {selectedGroupId !== 'all' && !groupStory && Object.keys(groupedChapters).length > 0 && (
+            <Button 
+              size="lg"
+              onClick={() => {
+                const sessionId = getSessionIdForGroup();
+                if (sessionId) handleAssembleStory(sessionId);
+              }}
+              disabled={assemblingSessionId !== null}
+            >
+              {assemblingSessionId ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  Generate Story
+                </>
+              )}
+            </Button>
+          )}
+          
+          {selectedGroupId !== 'all' && groupStory && (
+            <Button 
+              size="lg"
+              variant="outline"
+              onClick={() => navigate(`/stories/${groupStory.id}`)}
+            >
+              <BookOpen className="mr-2 h-5 w-5" />
+              View Story
+            </Button>
+          )}
         </div>
-        <p className="text-muted-foreground">
-          View all AI-generated chapters from your recording sessions
-        </p>
       </div>
+
+      {/* Filter by Story Group */}
+      {storyGroups && storyGroups.length > 0 && (
+        <div className="flex items-center gap-3 mb-6">
+          <FolderOpen className="h-5 w-5 text-muted-foreground" />
+          <Select 
+            value={selectedGroupId} 
+            onValueChange={(value) => setSearchParams(value === 'all' ? {} : { group: value })}
+          >
+            <SelectTrigger className="w-[280px]">
+              <SelectValue placeholder="Filter by story project" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Story Projects</SelectItem>
+              {storyGroups.map((group) => (
+                <SelectItem key={group.id} value={group.id}>
+                  {group.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedGroup && (
+            <div className="text-sm text-muted-foreground">
+              {Object.keys(groupedChapters).length} {Object.keys(groupedChapters).length === 1 ? 'session' : 'sessions'} with chapters
+            </div>
+          )}
+        </div>
+      )}
 
       {loading && (
         <div className="space-y-6">
@@ -113,11 +208,14 @@ export default function Chapters() {
         </div>
       )}
 
-      {!loading && chapters.length === 0 && (
+      {!loading && filteredChapters.length === 0 && (
         <EmptyState
           icon={BookOpen}
-          title="No Chapters Yet"
-          description="Chapters will be generated when you complete a recording session."
+          title={selectedGroupId === 'all' ? "No Chapters Yet" : "No Chapters in this Project"}
+          description={selectedGroupId === 'all' 
+            ? "Chapters will be generated when you complete a recording session."
+            : "Complete a recording session in this story project to generate chapters."
+          }
           action={{
             label: "Start Recording",
             onClick: () => navigate("/session")
@@ -125,7 +223,7 @@ export default function Chapters() {
         />
       )}
 
-      {!loading && chapters.length > 0 && (
+      {!loading && filteredChapters.length > 0 && (
         <div className="space-y-8">
           {Object.entries(groupedChapters).map(([sessionId, sessionChapters]) => {
             const SessionImages = () => {

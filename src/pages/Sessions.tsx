@@ -1,18 +1,36 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Plus, Trash2, Edit, Calendar, Clock, Compass, Sparkles } from "lucide-react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { Plus, Trash2, Edit, Calendar, Clock, Compass, Sparkles, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSessions } from "@/hooks/useSessions";
+import { useStoryGroups } from "@/hooks/useStoryGroups";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-states/EmptyState";
 
 export default function Sessions() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { sessions, loading, deleteSession } = useSessions();
+  const { storyGroups } = useStoryGroups();
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const selectedGroupId = searchParams.get('group') || 'all';
+
+  // Filter sessions by story group
+  const filteredSessions = selectedGroupId === 'all' 
+    ? sessions 
+    : sessions.filter(s => s.story_group_id === selectedGroupId);
+
+  // Get story group name
+  const getGroupName = (groupId?: string) => {
+    if (!groupId) return 'Ungrouped';
+    const group = storyGroups?.find(g => g.id === groupId);
+    return group?.title || 'Unknown Group';
+  };
 
   const handleDelete = async () => {
     if (deleteId) {
@@ -53,17 +71,43 @@ export default function Sessions() {
         </Button>
       </div>
 
+      {/* Filter by Story Group */}
+      {storyGroups && storyGroups.length > 0 && (
+        <div className="flex items-center gap-3 mb-6">
+          <FolderOpen className="h-5 w-5 text-muted-foreground" />
+          <Select 
+            value={selectedGroupId} 
+            onValueChange={(value) => setSearchParams(value === 'all' ? {} : { group: value })}
+          >
+            <SelectTrigger className="w-[280px]">
+              <SelectValue placeholder="Filter by story project" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Story Projects</SelectItem>
+              {storyGroups.map((group) => (
+                <SelectItem key={group.id} value={group.id}>
+                  {group.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       {loading ? (
         <div className="grid gap-4">
           {[...Array(5)].map((_, i) => (
             <Skeleton key={i} className="h-32 w-full" />
           ))}
         </div>
-      ) : sessions.length === 0 ? (
+      ) : filteredSessions.length === 0 ? (
         <EmptyState
           icon={Calendar}
-          title="No sessions yet"
-          description="Start your first recording session to begin capturing stories"
+          title={selectedGroupId === 'all' ? "No sessions yet" : "No sessions in this project"}
+          description={selectedGroupId === 'all' 
+            ? "Start your first recording session to begin capturing stories"
+            : "Start a new recording session for this story project"
+          }
           action={{
             label: "Start Recording",
             onClick: () => navigate('/session')
@@ -71,7 +115,7 @@ export default function Sessions() {
         />
       ) : (
         <div className="grid gap-4">
-          {sessions.map((session) => (
+          {filteredSessions.map((session) => (
             <Card key={session.id} className="border-border/40 hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
@@ -86,6 +130,11 @@ export default function Sessions() {
                     </div>
                     
                     <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1.5">
+                        <FolderOpen className="w-4 h-4 text-primary" />
+                        <span>{getGroupName(session.story_group_id)}</span>
+                      </div>
+                      
                       <div className="flex items-center gap-1.5">
                         {(session as any).mode === 'non-guided' ? (
                           <>
