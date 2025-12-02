@@ -3,32 +3,40 @@ import { useToast } from '@/hooks/use-toast';
 import { listStoryImages, deleteImageViaBackend, BackendImageResponse } from '@/lib/backend-api';
 import { supabase } from '@/integrations/supabase/client';
 
+/**
+ * StoryImage interface - aligned with new backend schema
+ * 
+ * IMPORTANT: session_id is no longer stored in the story_images table.
+ * Images must be linked to chapter_id, turn_id, or story_id.
+ * session_id can still be used for filtering (backend finds images via chapters/turns).
+ */
 export interface StoryImage {
   id: string;
   storage_path: string;
   file_name: string;
   mime_type: string;
   url: string; // This is provided by the backend API with proper signed/public URL
-  session_id?: string | null;
   chapter_id?: string | null;
+  turn_id?: string | null;
   story_id?: string | null;
   caption?: string | null;
   alt_text?: string | null;
 }
 
 interface UseStoryImagesParams {
-  sessionId?: string;
+  sessionId?: string;  // For filtering - backend finds images via chapters/turns
   chapterId?: string;
   storyId?: string;
+  turnId?: string;
 }
 
-export function useStoryImages({ sessionId, chapterId, storyId }: UseStoryImagesParams) {
+export function useStoryImages({ sessionId, chapterId, storyId, turnId }: UseStoryImagesParams) {
   const [images, setImages] = useState<StoryImage[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const fetchImages = async () => {
-    if (!sessionId && !chapterId && !storyId) return;
+    if (!sessionId && !chapterId && !storyId && !turnId) return;
     
     setLoading(true);
     try {
@@ -44,6 +52,7 @@ export function useStoryImages({ sessionId, chapterId, storyId }: UseStoryImages
         sessionId,
         chapterId,
         storyId,
+        turnId,
       });
 
       // Map backend response to StoryImage format
@@ -53,8 +62,8 @@ export function useStoryImages({ sessionId, chapterId, storyId }: UseStoryImages
         file_name: img.file_name,
         mime_type: img.mime_type,
         url: img.url, // Use URL directly from backend - DO NOT construct manually
-        session_id: img.session_id || null,
         chapter_id: img.chapter_id || null,
+        turn_id: img.turn_id || null,
         story_id: img.story_id || null,
         caption: img.caption || null,
         alt_text: img.alt_text || null,
@@ -107,7 +116,7 @@ export function useStoryImages({ sessionId, chapterId, storyId }: UseStoryImages
 
   useEffect(() => {
     fetchImages();
-  }, [sessionId, chapterId, storyId]);
+  }, [sessionId, chapterId, storyId, turnId]);
 
   return {
     images,
@@ -116,4 +125,3 @@ export function useStoryImages({ sessionId, chapterId, storyId }: UseStoryImages
     deleteImage,
   };
 }
-

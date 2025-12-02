@@ -9,9 +9,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { BACKEND_URL } from "@/config/backend";
 
+/**
+ * SessionImageUploader Props
+ * 
+ * IMPORTANT: Per new backend schema, images MUST be linked to at least one of:
+ * - chapter_id
+ * - turn_id
+ * - story_id
+ * 
+ * session_id is only used for file path organization, not stored in DB.
+ */
 type Props = {
-  sessionId: string;
-  chapterId?: string | null;
+  sessionId?: string;      // For file path organization only (optional)
+  chapterId?: string | null;  // Link to chapter (preferred for session images)
+  turnId?: string | null;     // Link to turn
   currentPrompt?: string;
   userId?: string;
   className?: string;
@@ -41,6 +52,7 @@ type PendingFile = {
 export function SessionImageUploader({
   sessionId,
   chapterId = null,
+  turnId = null,
   currentPrompt,
   userId,
   className,
@@ -51,6 +63,9 @@ export function SessionImageUploader({
   const [files, setFiles] = useState<PendingFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Validate that at least one context ID is provided
+  const hasRequiredContext = !!(chapterId || turnId);
 
   const validateFile = (file: File): string | null => {
     const validTypes = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/gif"];
@@ -108,6 +123,15 @@ export function SessionImageUploader({
   };
 
   const uploadAll = async () => {
+    if (!hasRequiredContext) {
+      toast({
+        title: "Missing context",
+        description: "Images must be linked to a chapter or turn",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const toUpload = files
       .map((f, idx) => ({ file: f, index: idx }))
       .filter((item) => item.file.status === "pending");
@@ -138,6 +162,20 @@ export function SessionImageUploader({
   const uploadOne = async (item: PendingFile, idx: number): Promise<UploadedImage | null> => {
     if (item.status !== "pending") return null;
 
+    // Verify context before upload
+    if (!hasRequiredContext) {
+      setFiles((prev) => {
+        const copy = [...prev];
+        copy[idx] = {
+          ...copy[idx],
+          status: "error",
+          error: "Missing chapter_id or turn_id",
+        };
+        return copy;
+      });
+      return null;
+    }
+
     setFiles((prev) => {
       const copy = [...prev];
       copy[idx] = { ...item, status: "uploading", progress: 10 };
@@ -156,12 +194,12 @@ export function SessionImageUploader({
       const formData = new FormData();
       formData.append("file", item.file);
       
-      // REQUIRED: Must provide chapter_id, turn_id, or story_id
-      if (chapterId) {
-        formData.append("chapter_id", chapterId);
-      } else {
-        throw new Error("chapter_id is required for image uploads");
-      }
+      // Optional: session_id for file path organization
+      if (sessionId) formData.append("session_id", sessionId);
+      
+      // REQUIRED: At least one of these must be provided
+      if (chapterId) formData.append("chapter_id", chapterId);
+      if (turnId) formData.append("turn_id", turnId);
       
       formData.append("usage", "session_media");
 
@@ -244,7 +282,7 @@ export function SessionImageUploader({
         <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
           <div className="flex items-center gap-2">
             <ImageIcon className="h-5 w-5 text-muted-foreground" />
-            <h3 className="font-semibold">Add Photos to This Session</h3>
+            <h3 className="font-semibold">Add Photos to This Chapter</h3>
             <Badge variant="secondary" className="text-xs">Optional</Badge>
           </div>
           <div className="flex items-center gap-2">
@@ -253,7 +291,7 @@ export function SessionImageUploader({
               onClick={onPick} 
               className="gap-2" 
               size="sm"
-              disabled={isUploading || files.length >= maxFiles}
+              disabled={isUploading || files.length >= maxFiles || !hasRequiredContext}
             >
               <Upload className="h-4 w-4" />
               Select Images
@@ -262,7 +300,7 @@ export function SessionImageUploader({
               <Button 
                 onClick={uploadAll} 
                 size="sm"
-                disabled={isUploading}
+                disabled={isUploading || !hasRequiredContext}
               >
                 {isUploading ? (
                   <>
@@ -276,6 +314,12 @@ export function SessionImageUploader({
             )}
           </div>
         </div>
+
+        {!hasRequiredContext && (
+          <div className="mb-4 p-3 rounded-lg bg-muted/50 border border-border text-sm text-muted-foreground">
+            Complete at least one recording to enable photo uploads.
+          </div>
+        )}
 
         <input
           ref={fileInputRef}
@@ -346,8 +390,11 @@ export function SessionImageUploader({
           </div>
         ) : (
           <div
-            className="w-full rounded-lg border-2 border-dashed p-8 text-center text-sm transition-colors cursor-pointer border-border hover:border-primary/50"
-            onClick={onPick}
+            className={cn(
+              "w-full rounded-lg border-2 border-dashed p-8 text-center text-sm transition-colors cursor-pointer border-border hover:border-primary/50",
+              !hasRequiredContext && "opacity-50 cursor-not-allowed"
+            )}
+            onClick={hasRequiredContext ? onPick : undefined}
           >
             <ImageIcon className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
             <p className="text-muted-foreground mb-1">

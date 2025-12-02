@@ -3,8 +3,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 
+/**
+ * SessionParams for creating a new session (Chapter Recording)
+ * 
+ * New Data Hierarchy:
+ * User -> Story Group (Book) -> Session (Chapter Recording) -> Chapter
+ * 
+ * IMPORTANT: story_group_id is REQUIRED when creating a session.
+ * Each session must belong to a Story Group (Book).
+ */
 interface SessionParams {
-  story_group_id: string; // REQUIRED
+  story_group_id: string; // REQUIRED - Book ID
   persona?: string;
   themes?: string[];
   language?: string;
@@ -23,6 +32,12 @@ export function useSession(initialSessionId?: string | null) {
     return id;
   };
 
+  /**
+   * Start a new session (Chapter Recording)
+   * 
+   * @param params - Session parameters including REQUIRED story_group_id
+   * @returns The created session ID
+   */
   const startSession = async (params: SessionParams) => {
     if (!user) {
       toast({
@@ -35,17 +50,17 @@ export function useSession(initialSessionId?: string | null) {
 
     if (!params.story_group_id) {
       toast({
-        title: "Story group required",
-        description: "Please select a story project first.",
+        title: "Book required",
+        description: "Please select a book first.",
         variant: "destructive",
       });
-      throw new Error("Story group ID is required");
+      throw new Error("Story group ID (Book) is required");
     }
 
     try {
       setLoading(true);
 
-      // Direct Supabase insert with story_group_id
+      // Create session with story_group_id linkage
       const { data, error: insertError } = await supabase
         .from('sessions')
         .insert({
@@ -65,7 +80,7 @@ export function useSession(initialSessionId?: string | null) {
 
       setSessionId(data.id);
       toast({
-        title: "Session started",
+        title: "Chapter recording started",
         description: "Your recording session is now active.",
       });
       return data.id;
@@ -98,7 +113,7 @@ export function useSession(initialSessionId?: string | null) {
 
       setSessionId(null);
       toast({
-        title: "Session ended",
+        title: "Chapter recording ended",
         description: "Your recording has been saved.",
       });
     } catch (err) {

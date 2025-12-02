@@ -9,10 +9,21 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BACKEND_URL } from "@/config/backend";
 
+/**
+ * StoryImageUploader Props
+ * 
+ * IMPORTANT: Per new backend schema, images MUST be linked to at least one of:
+ * - chapter_id
+ * - turn_id
+ * - story_id
+ * 
+ * session_id is only used for file path organization, not stored in DB.
+ */
 type Props = {
-  sessionId?: string;
-  storyId?: string;
-  chapterId?: string;
+  sessionId?: string;   // For file path organization only (not stored in DB)
+  storyId?: string;     // Link to story
+  chapterId?: string;   // Link to chapter
+  turnId?: string;      // Link to turn
   usage?: string;
   className?: string;
   maxFiles?: number;
@@ -42,6 +53,7 @@ export function StoryImageUploader({
   sessionId,
   storyId,
   chapterId,
+  turnId,
   usage = "embedded",
   className,
   maxFiles = 10,
@@ -52,6 +64,9 @@ export function StoryImageUploader({
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Validate that at least one context ID is provided
+  const hasRequiredContext = !!(chapterId || turnId || storyId);
 
   const validateFile = (file: File): string | null => {
     const validTypes = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/gif"];
@@ -127,6 +142,15 @@ export function StoryImageUploader({
   };
 
   const uploadAll = async () => {
+    if (!hasRequiredContext) {
+      toast({
+        title: "Missing context",
+        description: "Images must be linked to a chapter, turn, or story",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const toUpload = files
       .map((f, idx) => ({ file: f, index: idx }))
       .filter((item) => item.file.status === "pending");
@@ -157,6 +181,20 @@ export function StoryImageUploader({
   const uploadOne = async (item: PendingFile, idx: number): Promise<UploadedImage | null> => {
     if (item.status !== "pending") return null;
 
+    // Verify context before upload
+    if (!hasRequiredContext) {
+      setFiles((prev) => {
+        const copy = [...prev];
+        copy[idx] = {
+          ...copy[idx],
+          status: "error",
+          error: "Missing chapter_id, turn_id, or story_id",
+        };
+        return copy;
+      });
+      return null;
+    }
+
     setFiles((prev) => {
       const copy = [...prev];
       copy[idx] = { ...item, status: "uploading", progress: 10 };
@@ -171,13 +209,18 @@ export function StoryImageUploader({
         throw new Error("Authentication required");
       }
 
-      // Build FormData
+      // Build FormData - Must include chapter_id, turn_id, or story_id
       const formData = new FormData();
       formData.append("file", item.file);
       
+      // Optional: session_id for file path organization only
       if (sessionId) formData.append("session_id", sessionId);
+      
+      // REQUIRED: At least one of these must be provided
       if (storyId) formData.append("story_id", storyId);
       if (chapterId) formData.append("chapter_id", chapterId);
+      if (turnId) formData.append("turn_id", turnId);
+      
       formData.append("usage", usage);
 
       setFiles((prev) => {
@@ -270,7 +313,7 @@ export function StoryImageUploader({
               onClick={onPick} 
               className="gap-2" 
               size="sm"
-              disabled={isUploading || files.length >= maxFiles}
+              disabled={isUploading || files.length >= maxFiles || !hasRequiredContext}
             >
               <Upload className="h-4 w-4" />
               Select Images
@@ -279,7 +322,7 @@ export function StoryImageUploader({
               <Button 
                 onClick={uploadAll} 
                 size="sm"
-                disabled={isUploading}
+                disabled={isUploading || !hasRequiredContext}
               >
                 {isUploading ? (
                   <>
@@ -293,6 +336,12 @@ export function StoryImageUploader({
             )}
           </div>
         </div>
+
+        {!hasRequiredContext && (
+          <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+            Images must be linked to a chapter, turn, or story.
+          </div>
+        )}
 
         <input
           ref={fileInputRef}
@@ -367,11 +416,12 @@ export function StoryImageUploader({
               "w-full rounded-lg border-2 border-dashed p-8 text-center text-sm transition-colors cursor-pointer",
               isDragging 
                 ? "border-primary bg-primary/5" 
-                : "border-border hover:border-primary/50"
+                : "border-border hover:border-primary/50",
+              !hasRequiredContext && "opacity-50 cursor-not-allowed"
             )}
-            onClick={onPick}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
+            onClick={hasRequiredContext ? onPick : undefined}
+            onDrop={hasRequiredContext ? onDrop : undefined}
+            onDragOver={hasRequiredContext ? onDragOver : undefined}
             onDragLeave={onDragLeave}
           >
             <ImageIcon className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />

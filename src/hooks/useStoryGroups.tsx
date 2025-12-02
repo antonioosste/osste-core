@@ -3,6 +3,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 
+/**
+ * StoryGroup interface (aka "Book" in the UI)
+ * 
+ * New Data Hierarchy:
+ * User -> Story Group (Book) -> Story
+ *                            -> Sessions (Chapters) -> Chapter content
+ * 
+ * Story Groups are containers for:
+ * - One Story (the final narrative)
+ * - Multiple Sessions (chapter recordings)
+ */
 export interface StoryGroup {
   id: string;
   user_id: string;

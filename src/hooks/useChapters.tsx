@@ -3,12 +3,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 
+/**
+ * Chapter interface - aligned with new backend schema
+ * 
+ * Key change: Chapters are linked to session_id (not recording_id)
+ * Each Session (Chapter Recording) can have one generated Chapter
+ */
 export interface Chapter {
   id: string;
   session_id: string | null;
   title: string | null;
   summary: string | null;
   overall_summary: string | null;
+  raw_transcript: string | null;
+  polished_text: string | null;
   order_index: number | null;
   suggested_cover_title: string | null;
   image_hints: any | null;
@@ -34,7 +42,7 @@ export function useChapters(sessionId?: string) {
       setLoading(true);
       
       if (sessionId) {
-        // Fetch chapters for a specific session
+        // Fetch chapter(s) for a specific session
         const { data, error: fetchError } = await supabase
           .from('chapters')
           .select('*')
@@ -77,9 +85,12 @@ export function useChapters(sessionId?: string) {
     }
   };
 
+  /**
+   * Get a single chapter by ID
+   */
   const getChapter = async (id: string) => {
     try {
-      const { data, error: fetchError } = await (supabase as any)
+      const { data, error: fetchError } = await supabase
         .from('chapters')
         .select('*')
         .eq('id', id)
@@ -97,9 +108,33 @@ export function useChapters(sessionId?: string) {
     }
   };
 
+  /**
+   * Get chapter by session ID
+   * In the new schema, each session has one chapter
+   */
+  const getChapterBySessionId = async (sessId: string): Promise<Chapter | null> => {
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('chapters')
+        .select('*')
+        .eq('session_id', sessId)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+      return data;
+    } catch (err) {
+      toast({
+        title: "Error loading chapter",
+        description: err instanceof Error ? err.message : "Failed to load chapter for this session",
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
   const updateChapter = async (id: string, updates: Partial<Chapter>) => {
     try {
-      const { data, error: updateError } = await (supabase as any)
+      const { data, error: updateError } = await supabase
         .from('chapters')
         .update(updates)
         .eq('id', id)
@@ -109,7 +144,7 @@ export function useChapters(sessionId?: string) {
       if (updateError) throw updateError;
 
       setChapters(prev => 
-        prev.map(chapter => chapter.id === id ? data as any : chapter)
+        prev.map(chapter => chapter.id === id ? data : chapter)
       );
 
       toast({
@@ -136,6 +171,7 @@ export function useChapters(sessionId?: string) {
     loading,
     error,
     getChapter,
+    getChapterBySessionId,
     updateChapter,
     refetch: fetchChapters,
   };
