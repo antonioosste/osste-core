@@ -163,7 +163,7 @@ export default function Chapters() {
         </div>
       </div>
 
-      {/* Filter by Story Group */}
+      {/* Filter by Book */}
       {storyGroups && storyGroups.length > 0 && (
         <div className="flex items-center gap-3 mb-6">
           <FolderOpen className="h-5 w-5 text-muted-foreground" />
@@ -172,10 +172,10 @@ export default function Chapters() {
             onValueChange={(value) => setSearchParams(value === 'all' ? {} : { group: value })}
           >
             <SelectTrigger className="w-[280px]">
-              <SelectValue placeholder="Filter by story project" />
+              <SelectValue placeholder="Filter by book" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Story Projects</SelectItem>
+              <SelectItem value="all">All Books</SelectItem>
               {storyGroups.map((group) => (
                 <SelectItem key={group.id} value={group.id}>
                   {group.title}
@@ -185,7 +185,7 @@ export default function Chapters() {
           </Select>
           {selectedGroup && (
             <div className="text-sm text-muted-foreground">
-              {Object.keys(groupedChapters).length} {Object.keys(groupedChapters).length === 1 ? 'session' : 'sessions'} with chapters
+              {Object.keys(groupedChapters).length} {Object.keys(groupedChapters).length === 1 ? 'chapter' : 'chapters'}
             </div>
           )}
         </div>
@@ -211,10 +211,10 @@ export default function Chapters() {
       {!loading && filteredChapters.length === 0 && (
         <EmptyState
           icon={BookOpen}
-          title={selectedGroupId === 'all' ? "No Chapters Yet" : "No Chapters in this Project"}
+          title={selectedGroupId === 'all' ? "No Chapters Yet" : "No Chapters in this Book"}
           description={selectedGroupId === 'all' 
             ? "Chapters will be generated when you complete a recording session."
-            : "Complete a recording session in this story project to generate chapters."
+            : "Complete a recording session in this book to generate chapters."
           }
           action={{
             label: "Start Recording",

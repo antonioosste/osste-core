@@ -99,22 +99,22 @@ export default function Dashboard() {
                 className="gap-2 text-lg px-8 py-6 h-auto"
               >
                 <Plus className="w-5 h-5" />
-                New Story Project
+                New Book
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create New Story Project</DialogTitle>
+                <DialogTitle>Create New Book</DialogTitle>
                 <DialogDescription>
-                  Start a new story collection. You can add multiple recording sessions to build a complete narrative.
+                  Start a new book project. You can add multiple chapters through recording sessions to build your complete story.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="title">Title</Label>
+                  <Label htmlFor="title">Book Title</Label>
                   <Input
                     id="title"
-                    placeholder="e.g., Family Story, Career Journey, Travel Adventures"
+                    placeholder="e.g., My Family Story, My Career Journey, Travel Adventures"
                     value={newGroupTitle}
                     onChange={(e) => setNewGroupTitle(e.target.value)}
                   />
@@ -123,7 +123,7 @@ export default function Dashboard() {
                   <Label htmlFor="description">Description (Optional)</Label>
                   <Textarea
                     id="description"
-                    placeholder="What will this story be about?"
+                    placeholder="What will this book be about?"
                     value={newGroupDescription}
                     onChange={(e) => setNewGroupDescription(e.target.value)}
                     rows={3}
@@ -135,7 +135,7 @@ export default function Dashboard() {
                   Cancel
                 </Button>
                 <Button onClick={handleCreateGroup} disabled={!newGroupTitle.trim()}>
-                  Create Project
+                  Create Book
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -199,12 +199,12 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Story Groups Section */}
+      {/* Books Section */}
       <div className="mb-12">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-serif font-bold text-foreground">Your Story Projects</h2>
-            <p className="text-muted-foreground">Organize your recordings into meaningful collections</p>
+            <h2 className="text-2xl font-serif font-bold text-foreground">Your Books</h2>
+            <p className="text-muted-foreground">Build and organize your life story books</p>
           </div>
         </div>
 
@@ -234,7 +234,7 @@ export default function Dashboard() {
                     <div className="flex items-start justify-between mb-2">
                       <FolderOpen className="h-5 w-5 text-primary" />
                       <Badge variant={groupStory ? "default" : "secondary"}>
-                        {sessionCount} {sessionCount === 1 ? 'session' : 'sessions'}
+                        {sessionCount} {sessionCount === 1 ? 'chapter' : 'chapters'}
                       </Badge>
                     </div>
                     <CardTitle className="line-clamp-1 text-foreground">{group.title}</CardTitle>
@@ -249,33 +249,21 @@ export default function Dashboard() {
                       size="sm" 
                       className="w-full"
                       variant="outline"
-                      onClick={() => navigate(`/sessions?group=${group.id}`)}
+                      onClick={() => navigate(`/chapters?group=${group.id}`)}
                     >
-                      View Sessions
+                      View Chapters
                       <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
                     
-                    {sessionCount > 0 && (
-                      <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          className="flex-1"
-                          onClick={() => navigate(`/chapters?group=${group.id}`)}
-                        >
-                          View Chapters
-                        </Button>
-                        {!groupStory && (
-                          <Button 
-                            size="sm" 
-                            className="flex-1"
-                            onClick={() => navigate(`/chapters?group=${group.id}`)}
-                          >
-                            <Sparkles className="mr-2 h-4 w-4" />
-                            Generate Story
-                          </Button>
-                        )}
-                      </div>
+                    {sessionCount > 0 && !groupStory && (
+                      <Button 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => navigate(`/chapters?group=${group.id}`)}
+                      >
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        Generate Story
+                      </Button>
                     )}
                     
                     {groupStory && (
@@ -297,13 +285,13 @@ export default function Dashboard() {
           <Card className="border-dashed border-2 border-border/40">
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
               <FolderOpen className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">No Story Projects Yet</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-2">No Books Yet</h3>
               <p className="text-muted-foreground mb-4">
-                Create your first story project to start organizing your recordings
+                Create your first book to start building your life story
               </p>
               <Button onClick={() => setIsCreateDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
-                Create Story Project
+                Create Your First Book
               </Button>
             </CardContent>
           </Card>
