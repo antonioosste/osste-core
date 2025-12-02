@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Mic, 
   BookOpen, 
@@ -39,6 +40,8 @@ export default function Dashboard() {
   const [newGroupTitle, setNewGroupTitle] = useState('');
   const [newGroupDescription, setNewGroupDescription] = useState('');
   const [deleteGroupId, setDeleteGroupId] = useState<string | null>(null);
+  const [isAllBooksDialogOpen, setIsAllBooksDialogOpen] = useState(false);
+  const { toast } = useToast();
   
   const userPaid = profile?.plan !== 'free';
   
@@ -89,6 +92,13 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Failed to delete story group:', error);
     }
+  };
+
+  const handleRequestPrintCopy = (bookTitle: string) => {
+    toast({
+      title: "Print Request",
+      description: `Your request for "${bookTitle}" has been submitted. We'll contact you shortly with pricing and shipping details.`,
+    });
   };
 
   return (
@@ -218,13 +228,16 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/40 hover:shadow-md transition-shadow">
+        <Card className="border-border/40 hover:shadow-md transition-shadow cursor-pointer" onClick={() => setIsAllBooksDialogOpen(true)}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <BookOpen className="h-8 w-8 text-primary/70" />
-              <span className="text-3xl font-bold text-foreground">{totalStories}</span>
+              <span className="text-3xl font-bold text-foreground">{storyGroups?.length || 0}</span>
             </div>
-            <p className="text-sm font-medium text-muted-foreground">Stories Created</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-muted-foreground">Books Created</p>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -378,6 +391,97 @@ export default function Dashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={isAllBooksDialogOpen} onOpenChange={setIsAllBooksDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>All Your Books</DialogTitle>
+            <DialogDescription>
+              View all your books and request print copies
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            {storyGroups && storyGroups.length > 0 ? (
+              storyGroups.map((group) => {
+                const sessionCount = getSessionCount(group.id);
+                const groupStory = getGroupStory(group.id);
+                
+                return (
+                  <Card key={group.id} className="border-border/40">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <FolderOpen className="h-5 w-5 text-primary" />
+                            <Badge variant={groupStory ? "default" : "secondary"}>
+                              {sessionCount} {sessionCount === 1 ? 'chapter' : 'chapters'}
+                            </Badge>
+                          </div>
+                          <CardTitle className="text-foreground">{group.title}</CardTitle>
+                          {group.description && (
+                            <CardDescription className="mt-2">
+                              {group.description}
+                            </CardDescription>
+                          )}
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setIsAllBooksDialogOpen(false);
+                          navigate(`/chapters?group=${group.id}`);
+                        }}
+                      >
+                        View Chapters
+                      </Button>
+                      {groupStory && (
+                        <>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setIsAllBooksDialogOpen(false);
+                              navigate(`/stories/${groupStory.id}`);
+                            }}
+                          >
+                            View Story
+                          </Button>
+                          <Button 
+                            size="sm"
+                            onClick={() => handleRequestPrintCopy(group.title)}
+                          >
+                            Request Print Copy
+                          </Button>
+                        </>
+                      )}
+                      {!groupStory && sessionCount > 0 && (
+                        <Button 
+                          size="sm" 
+                          onClick={() => {
+                            setIsAllBooksDialogOpen(false);
+                            navigate(`/chapters?group=${group.id}`);
+                          }}
+                        >
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          Generate Story
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No books created yet</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
