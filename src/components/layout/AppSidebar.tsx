@@ -1,4 +1,4 @@
-import { Home, Mic, BookOpen, FileText, Settings, HelpCircle, LogOut } from "lucide-react";
+import { Home, BookOpen, FileText, Settings, HelpCircle, LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -20,9 +20,8 @@ import { useProfile } from "@/hooks/useProfile";
 
 const mainNavItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
-  { title: "Recording Sessions", url: "/sessions", icon: Mic },
-  { title: "Chapters", url: "/chapters", icon: FileText },
-  { title: "Stories", url: "/stories", icon: BookOpen },
+  { title: "My Books", url: "/books", icon: BookOpen },
+  { title: "My Stories", url: "/stories", icon: FileText },
 ];
 
 const secondaryNavItems = [
@@ -38,7 +37,7 @@ export function AppSidebar() {
   const { profile } = useProfile();
   
   const collapsed = state === "collapsed";
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
   
   const handleSignOut = async () => {
     await signOut();

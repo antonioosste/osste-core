@@ -14,54 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      backup_chapters: {
-        Row: {
-          created_at: string | null
-          id: string | null
-          image_hints: Json | null
-          order_index: number | null
-          overall_summary: string | null
-          polished_text: string | null
-          quotes: Json | null
-          raw_transcript: string | null
-          recording_id: string | null
-          session_id: string | null
-          suggested_cover_title: string | null
-          summary: string | null
-          title: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string | null
-          image_hints?: Json | null
-          order_index?: number | null
-          overall_summary?: string | null
-          polished_text?: string | null
-          quotes?: Json | null
-          raw_transcript?: string | null
-          recording_id?: string | null
-          session_id?: string | null
-          suggested_cover_title?: string | null
-          summary?: string | null
-          title?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string | null
-          image_hints?: Json | null
-          order_index?: number | null
-          overall_summary?: string | null
-          polished_text?: string | null
-          quotes?: Json | null
-          raw_transcript?: string | null
-          recording_id?: string | null
-          session_id?: string | null
-          suggested_cover_title?: string | null
-          summary?: string | null
-          title?: string | null
-        }
-        Relationships: []
-      }
       backup_recordings: {
         Row: {
           created_at: string | null

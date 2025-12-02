@@ -64,6 +64,7 @@ export default function Session() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const existingSessionId = searchParams.get('id');
+  const bookIdParam = searchParams.get('bookId'); // Book ID to add chapter to
   const modeParam = searchParams.get('mode') as 'guided' | 'non-guided' | null;
   
   const { toast } = useToast();
@@ -80,8 +81,8 @@ export default function Session() {
   } = useAudioRecorder(sessionId);
   const { turns, loading: turnsLoading, refetch: refetchTurns } = useTurns(sessionId || undefined);
   
-  // Story group state
-  const [defaultStoryGroupId, setDefaultStoryGroupId] = useState<string | null>(null);
+  // Book (story group) state - use bookIdParam if provided
+  const [targetBookId, setTargetBookId] = useState<string | null>(bookIdParam);
   
   // Core session state
   const [status, setStatus] = useState<SessionStatus>("idle");
@@ -131,40 +132,46 @@ export default function Session() {
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Get or create default story group
+  // Get or create target book for this chapter
   useEffect(() => {
-    const getOrCreateDefaultStoryGroup = async () => {
-      if (!user || defaultStoryGroupId) return;
+    const getOrCreateTargetBook = async () => {
+      if (!user || targetBookId) return;
       
-      // Check if user has a default story group
-      const defaultGroup = storyGroups.find(g => g.title === 'My Life Story');
+      // If bookIdParam was provided, use it directly
+      if (bookIdParam) {
+        setTargetBookId(bookIdParam);
+        return;
+      }
       
-      if (defaultGroup) {
-        setDefaultStoryGroupId(defaultGroup.id);
+      // Otherwise, find or create a default book
+      const defaultBook = storyGroups.find(g => g.title === 'My Life Story');
+      
+      if (defaultBook) {
+        setTargetBookId(defaultBook.id);
       } else if (storyGroups.length > 0) {
-        // Use the first story group if no default found
-        setDefaultStoryGroupId(storyGroups[0].id);
+        // Use the first book if no default found
+        setTargetBookId(storyGroups[0].id);
       } else {
-        // Create a default story group
+        // Create a default book
         try {
-          const newGroup = await createStoryGroup('My Life Story', 'Your life story and memories');
-          setDefaultStoryGroupId(newGroup.id);
+          const newBook = await createStoryGroup('My Life Story', 'Your life story and memories');
+          setTargetBookId(newBook.id);
         } catch (error) {
-          console.error('Error creating default story group:', error);
+          console.error('Error creating default book:', error);
         }
       }
     };
 
-    getOrCreateDefaultStoryGroup();
-  }, [user, storyGroups, defaultStoryGroupId]);
+    getOrCreateTargetBook();
+  }, [user, storyGroups, targetBookId, bookIdParam]);
 
   // Start non-guided session automatically
   useEffect(() => {
     const startNonGuidedSession = async () => {
-      if (modeParam === 'non-guided' && !existingSessionId && !sessionId && defaultStoryGroupId) {
+      if (modeParam === 'non-guided' && !existingSessionId && !sessionId && targetBookId) {
         try {
           await startSessionDb({
-            story_group_id: defaultStoryGroupId,
+            story_group_id: targetBookId,
             persona: 'friendly',
             themes: [],
             language: 'en',
@@ -174,13 +181,13 @@ export default function Session() {
           // Set initial prompt for non-guided
           setCurrentPrompt("Tell me a story from your life that's meaningful to you.");
         } catch (error) {
-          console.error('Error starting non-guided session:', error);
+          console.error('Error starting chapter:', error);
         }
       }
     };
 
     startNonGuidedSession();
-  }, [modeParam, existingSessionId, sessionId, defaultStoryGroupId]);
+  }, [modeParam, existingSessionId, sessionId, targetBookId]);
 
   // Load existing session data on mount
   useEffect(() => {
@@ -376,19 +383,19 @@ export default function Session() {
     setShowGuidedSetup(false);
     setSessionMode('non-guided'); // Use non-guided flow after guidance
 
-    if (!defaultStoryGroupId) {
+    if (!targetBookId) {
       toast({
         title: "Error",
-        description: "Story group not ready. Please try again.",
+        description: "Book not ready. Please try again.",
         variant: "destructive",
       });
       return;
     }
 
-    // Start session in database
+    // Start chapter in database
     try {
       await startSessionDb({
-        story_group_id: defaultStoryGroupId,
+        story_group_id: targetBookId,
         persona: 'friendly',
         themes: [],
         language: 'en',
@@ -416,19 +423,19 @@ export default function Session() {
     setShowGuidedSetup(false);
     setSessionMode('non-guided');
     
-    if (!defaultStoryGroupId) {
+    if (!targetBookId) {
       toast({
         title: "Error",
-        description: "Story group not ready. Please try again.",
+        description: "Book not ready. Please try again.",
         variant: "destructive",
       });
       return;
     }
 
-    // Start non-guided session
+    // Start free recording chapter
     try {
       await startSessionDb({
-        story_group_id: defaultStoryGroupId,
+        story_group_id: targetBookId,
         persona: 'friendly',
         themes: [],
         language: 'en',
@@ -460,19 +467,19 @@ export default function Session() {
     const finalCategory = category === "surprise" ? undefined : category;
     setSelectedCategory(finalCategory);
 
-    if (!defaultStoryGroupId) {
+    if (!targetBookId) {
       toast({
         title: "Error",
-        description: "Story group not ready. Please try again.",
+        description: "Book not ready. Please try again.",
         variant: "destructive",
       });
       return;
     }
 
-    // Start session in database
+    // Start chapter in database
     try {
       await startSessionDb({
-        story_group_id: defaultStoryGroupId,
+        story_group_id: targetBookId,
         persona: 'friendly',
         themes: finalCategory ? [finalCategory] : [],
         language: 'en',
@@ -568,12 +575,12 @@ export default function Session() {
       return;
     }
 
-    // Start session in database if not already started
+    // Start chapter in database if not already started
     if (!sessionId) {
-      if (!defaultStoryGroupId) {
+      if (!targetBookId) {
         toast({
           title: "Error",
-          description: "Story group not ready. Please try again.",
+          description: "Book not ready. Please try again.",
           variant: "destructive",
         });
         return;
@@ -582,7 +589,7 @@ export default function Session() {
       // This shouldn't happen if mode selector works correctly
       try {
         await startSessionDb({
-          story_group_id: defaultStoryGroupId,
+          story_group_id: targetBookId,
           persona: 'friendly',
           themes: selectedCategory ? [selectedCategory] : [],
           language: 'en',
@@ -836,11 +843,12 @@ export default function Session() {
     }
     
     toast({
-      title: "Session cancelled",
+      title: "Chapter cancelled",
       description: "Exiting without saving."
     });
     
-    navigate("/dashboard");
+    // Navigate back to book if bookId was provided, otherwise dashboard
+    navigate(bookIdParam ? `/books/${bookIdParam}` : "/dashboard");
   };
 
   const saveAndExit = async () => {
@@ -850,10 +858,10 @@ export default function Session() {
     
     if (sessionId) {
       try {
-        // End the session first
+        // End the chapter first
         await endSession(sessionId);
         
-        // Generate chapters for the session
+        // Generate chapter content
         setIsGeneratingChapters(true);
         
         try {
@@ -864,33 +872,34 @@ export default function Session() {
             throw new Error('No authentication token available');
           }
           
-          console.log('🔄 Generating chapters for session:', sessionId);
+          console.log('🔄 Generating chapter content for:', sessionId);
           await generateChapters(token, sessionId);
           
           toast({
-            title: "Session saved",
-            description: "Your recording session and chapters have been generated successfully."
+            title: "Chapter saved",
+            description: "Your chapter has been saved successfully."
           });
         } catch (chapterError) {
-          console.error('Error generating chapters:', chapterError);
+          console.error('Error generating chapter:', chapterError);
           toast({
-            title: "Session saved",
-            description: "Session saved, but chapter generation failed. You can retry later.",
+            title: "Chapter saved",
+            description: "Chapter saved, but content generation failed. You can retry later.",
             variant: "default"
           });
         } finally {
           setIsGeneratingChapters(false);
         }
       } catch (error) {
-        console.error('Error saving session:', error);
+        console.error('Error saving chapter:', error);
         toast({
           title: "Save failed",
-          description: "Failed to save session, but your recordings are stored.",
+          description: "Failed to save chapter, but your recordings are stored.",
           variant: "destructive"
         });
       }
     }
-    navigate("/dashboard");
+    // Navigate back to book if bookId was provided, otherwise dashboard
+    navigate(bookIdParam ? `/books/${bookIdParam}` : "/dashboard");
   };
 
   const retryConnection = () => {
@@ -979,7 +988,7 @@ export default function Session() {
           {/* Minimalistic Header */}
           <div className="flex items-center justify-between py-4 border-b border-border/50 flex-shrink-0">
             <div className="flex items-center gap-4">
-              <h1 className="text-lg font-medium text-foreground">Recording Session</h1>
+              <h1 className="text-lg font-medium text-foreground">Chapter Recording</h1>
               {getStatusBadge()}
               <span className="text-sm text-muted-foreground tabular-nums">{formatTime(sessionTime)}</span>
             </div>
