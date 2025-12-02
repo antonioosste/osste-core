@@ -10,12 +10,14 @@ import {
   Plus,
   FolderOpen,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,11 +33,12 @@ export default function Dashboard() {
   const { stories } = useStories();
   const { profile } = useProfile();
   const { recordings } = useRecordings();
-  const { storyGroups, loading: groupsLoading, createStoryGroup } = useStoryGroups();
+  const { storyGroups, loading: groupsLoading, createStoryGroup, deleteStoryGroup } = useStoryGroups();
   
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newGroupTitle, setNewGroupTitle] = useState('');
   const [newGroupDescription, setNewGroupDescription] = useState('');
+  const [deleteGroupId, setDeleteGroupId] = useState<string | null>(null);
   
   const userPaid = profile?.plan !== 'free';
   
@@ -67,6 +70,17 @@ export default function Dashboard() {
       setNewGroupDescription('');
     } catch (error) {
       console.error('Failed to create story group:', error);
+    }
+  };
+
+  const handleDeleteGroup = async () => {
+    if (!deleteGroupId) return;
+    
+    try {
+      await deleteStoryGroup(deleteGroupId);
+      setDeleteGroupId(null);
+    } catch (error) {
+      console.error('Failed to delete story group:', error);
     }
   };
 
@@ -232,10 +246,23 @@ export default function Dashboard() {
                 <Card key={group.id} className="border-border/40 hover:shadow-md transition-shadow group">
                   <CardHeader>
                     <div className="flex items-start justify-between mb-2">
-                      <FolderOpen className="h-5 w-5 text-primary" />
-                      <Badge variant={groupStory ? "default" : "secondary"}>
-                        {sessionCount} {sessionCount === 1 ? 'chapter' : 'chapters'}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <FolderOpen className="h-5 w-5 text-primary" />
+                        <Badge variant={groupStory ? "default" : "secondary"}>
+                          {sessionCount} {sessionCount === 1 ? 'chapter' : 'chapters'}
+                        </Badge>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteGroupId(group.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                     <CardTitle className="line-clamp-1 text-foreground">{group.title}</CardTitle>
                     {group.description && (
@@ -320,6 +347,21 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+
+      <AlertDialog open={!!deleteGroupId} onOpenChange={() => setDeleteGroupId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this book and all its chapters. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteGroup}>Yes</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
