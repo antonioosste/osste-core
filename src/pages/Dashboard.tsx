@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { 
   Mic, 
   BookOpen, 
@@ -12,7 +11,8 @@ import {
   FolderOpen,
   Sparkles,
   ChevronRight,
-  Trash2
+  Trash2,
+  Printer
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,7 +41,6 @@ export default function Dashboard() {
   const [newGroupDescription, setNewGroupDescription] = useState('');
   const [deleteGroupId, setDeleteGroupId] = useState<string | null>(null);
   const [isAllBooksDialogOpen, setIsAllBooksDialogOpen] = useState(false);
-  const { toast } = useToast();
   
   const userPaid = profile?.plan !== 'free';
   
@@ -92,13 +91,6 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Failed to delete story group:', error);
     }
-  };
-
-  const handleRequestPrintCopy = (bookTitle: string) => {
-    toast({
-      title: "Print Request",
-      description: `Your request for "${bookTitle}" has been submitted. We'll contact you shortly with pricing and shipping details.`,
-    });
   };
 
   return (
@@ -323,14 +315,25 @@ export default function Dashboard() {
                     )}
                     
                     {groupStory && (
-                      <Button 
-                        size="sm" 
-                        className="w-full"
-                        onClick={() => navigate(`/stories/${groupStory.id}`)}
-                      >
-                        <BookOpen className="mr-2 h-4 w-4" />
-                        View Story
-                      </Button>
+                      <>
+                        <Button 
+                          size="sm" 
+                          className="w-full"
+                          variant="outline"
+                          onClick={() => navigate(`/stories/${groupStory.id}`)}
+                        >
+                          <BookOpen className="mr-2 h-4 w-4" />
+                          View Story
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="w-full"
+                          onClick={() => navigate(`/print-request?group=${group.id}`)}
+                        >
+                          <Printer className="mr-2 h-4 w-4" />
+                          Order Print Copy
+                        </Button>
+                      </>
                     )}
                   </CardContent>
                 </Card>
@@ -451,9 +454,13 @@ export default function Dashboard() {
                           </Button>
                           <Button 
                             size="sm"
-                            onClick={() => handleRequestPrintCopy(group.title)}
+                            onClick={() => {
+                              setIsAllBooksDialogOpen(false);
+                              navigate(`/print-request?group=${group.id}`);
+                            }}
                           >
-                            Request Print Copy
+                            <Printer className="mr-2 h-4 w-4" />
+                            Order Print Copy
                           </Button>
                         </>
                       )}
