@@ -28,6 +28,7 @@ import AdminQuestions from "./pages/AdminQuestions";
 import QuestionBankImport from "./pages/QuestionBankImport";
 import QuestionImport from "./pages/QuestionImport";
 import Interview from "./pages/Interview";
+import ChapterDetail from "./pages/ChapterDetail";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Cookies from "./pages/Cookies";
@@ -77,6 +78,7 @@ const App = () => (
             <Route path="/books/:id" element={<ProtectedRoute><BookDetail /></ProtectedRoute>} />
             <Route path="/stories" element={<ProtectedRoute><DashboardLayout><Stories /></DashboardLayout></ProtectedRoute>} />
             <Route path="/stories/:id" element={<ProtectedRoute><StoryDetail /></ProtectedRoute>} />
+            <Route path="/chapters/:id" element={<ProtectedRoute><ChapterDetail /></ProtectedRoute>} />
             <Route path="/book/preview" element={<ProtectedRoute><BookPreview /></ProtectedRoute>} />
             <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
             <Route path="/checkout/success" element={<ProtectedRoute><CheckoutSuccess /></ProtectedRoute>} />

@@ -31,6 +31,7 @@ import { Header } from "@/components/layout/Header";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
 import { useSessions } from "@/hooks/useSessions";
 import { useStories } from "@/hooks/useStories";
+import { useChapters } from "@/hooks/useChapters";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { assembleStory } from "@/lib/backend-api";
@@ -43,6 +44,7 @@ export default function BookDetail() {
   const { getStoryGroup, updateStoryGroup } = useStoryGroups();
   const { sessions, deleteSession } = useSessions();
   const { stories, refetch: refetchStories } = useStories();
+  const { chapters } = useChapters();
   
   const [book, setBook] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -54,8 +56,16 @@ export default function BookDetail() {
   const [showStyleDialog, setShowStyleDialog] = useState(false);
   const [styleInstruction, setStyleInstruction] = useState("");
 
-  // Get chapters (sessions) for this book
-  const bookChapters = sessions.filter(s => s.story_group_id === bookId);
+  // Get sessions for this book
+  const bookSessions = sessions.filter(s => s.story_group_id === bookId);
+  
+  // Create a map of session_id -> chapter data from chapters table
+  const chaptersBySessionId = chapters.reduce((acc, ch) => {
+    if (ch.session_id) {
+      acc[ch.session_id] = ch;
+    }
+    return acc;
+  }, {} as Record<string, typeof chapters[0]>);
   
   // Get story for this book
   const bookStory = stories.find(s => s.story_group_id === bookId);
@@ -132,10 +142,10 @@ export default function BookDetail() {
   };
 
   const handleGenerateStory = async (withStyle: boolean = false) => {
-    if (!session?.access_token || bookChapters.length === 0) {
+    if (!session?.access_token || bookSessions.length === 0) {
       toast({
         title: "Cannot generate story",
-        description: bookChapters.length === 0 
+        description: bookSessions.length === 0 
           ? "Add at least one chapter first" 
           : "Please log in to generate a story",
         variant: "destructive"
@@ -152,12 +162,12 @@ export default function BookDetail() {
         description: "This may take a moment while AI crafts your narrative"
       });
 
-      // Use the first chapter's session ID (the API assembles by story_group)
-      const firstChapterSessionId = bookChapters[0].id;
+      // Use the first session's ID (the API assembles by story_group)
+      const firstSessionId = bookSessions[0].id;
       
       await assembleStory(
         session.access_token,
-        firstChapterSessionId,
+        firstSessionId,
         withStyle ? styleInstruction.trim() : null
       );
 
@@ -299,7 +309,7 @@ export default function BookDetail() {
                 )}
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <Badge variant="secondary">
-                    {bookChapters.length} {bookChapters.length === 1 ? 'Chapter' : 'Chapters'}
+                    {bookSessions.length} {bookSessions.length === 1 ? 'Chapter' : 'Chapters'}
                   </Badge>
                   {bookStory && (
                     <Badge variant="default">Story Generated</Badge>
@@ -328,7 +338,7 @@ export default function BookDetail() {
                     Your Story
                   </CardTitle>
                   <CardDescription>
-                    Generated from {bookChapters.length} chapter{bookChapters.length !== 1 ? 's' : ''}
+                    Generated from {bookSessions.length} chapter{bookSessions.length !== 1 ? 's' : ''}
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
@@ -360,13 +370,13 @@ export default function BookDetail() {
               </p>
             </CardContent>
           </Card>
-        ) : bookChapters.length > 0 ? (
+        ) : bookSessions.length > 0 ? (
           <Card className="mb-8 border-dashed border-2">
             <CardContent className="flex flex-col items-center justify-center py-8 text-center">
               <Sparkles className="w-12 h-12 text-primary/50 mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">Ready to Generate Your Story</h3>
               <p className="text-muted-foreground mb-4 max-w-md">
-                You have {bookChapters.length} chapter{bookChapters.length !== 1 ? 's' : ''} recorded. 
+                You have {bookSessions.length} chapter{bookSessions.length !== 1 ? 's' : ''} recorded. 
                 Generate your story to create a polished narrative from all your recordings.
               </p>
               <div className="flex gap-2">
@@ -412,7 +422,7 @@ export default function BookDetail() {
             </Button>
           </div>
 
-          {bookChapters.length === 0 ? (
+          {bookSessions.length === 0 ? (
             <EmptyState
               icon={Mic}
               title="No chapters yet"
@@ -424,70 +434,87 @@ export default function BookDetail() {
             />
           ) : (
             <div className="space-y-4">
-              {bookChapters
+              {bookSessions
                 .sort((a, b) => new Date(a.started_at || 0).getTime() - new Date(b.started_at || 0).getTime())
-                .map((chapter, index) => (
-                  <Card key={chapter.id} className="border-border/40 hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <Badge variant="outline">Chapter {index + 1}</Badge>
-                            <h3 className="text-lg font-semibold text-foreground">
-                              {(chapter as any).title || `Recording ${formatDate(chapter.started_at)}`}
-                            </h3>
-                            <Badge variant={chapter.status === 'completed' ? 'default' : 'secondary'}>
-                              {chapter.status === 'completed' ? 'Completed' : 'In Progress'}
-                            </Badge>
+                .map((sessionItem, index) => {
+                  // Get chapter data from the chapters table
+                  const chapterData = chaptersBySessionId[sessionItem.id];
+                  const chapterTitle = chapterData?.suggested_cover_title || chapterData?.title || sessionItem.title || `Recording ${formatDate(sessionItem.started_at)}`;
+                  
+                  return (
+                    <Card key={sessionItem.id} className="border-border/40 hover:shadow-md transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <Badge variant="outline">Chapter {index + 1}</Badge>
+                              <h3 className="text-lg font-semibold text-foreground">
+                                {chapterTitle}
+                              </h3>
+                              <Badge variant={sessionItem.status === 'completed' ? 'default' : 'secondary'}>
+                                {sessionItem.status === 'completed' ? 'Completed' : 'In Progress'}
+                              </Badge>
+                            </div>
+                            
+                            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1.5">
+                                <Calendar className="w-4 h-4" />
+                                {formatDate(sessionItem.started_at)}
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <Clock className="w-4 h-4" />
+                                {formatDuration(sessionItem.started_at, sessionItem.ended_at)}
+                              </div>
+                              {sessionItem.mode && (
+                                <div className="flex items-center gap-1.5">
+                                  <Mic className="w-4 h-4" />
+                                  {sessionItem.mode === 'guided' ? 'Guided' : 'Free Recording'}
+                                </div>
+                              )}
+                            </div>
                           </div>
                           
-                          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-1.5">
-                              <Calendar className="w-4 h-4" />
-                              {formatDate(chapter.started_at)}
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <Clock className="w-4 h-4" />
-                              {formatDuration(chapter.started_at, chapter.ended_at)}
-                            </div>
-                            {(chapter as any).mode && (
-                              <div className="flex items-center gap-1.5">
-                                <Mic className="w-4 h-4" />
-                                {(chapter as any).mode === 'guided' ? 'Guided' : 'Free Recording'}
-                              </div>
-                            )}
+                          <div className="flex items-center gap-2 ml-4">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                // Navigate using chapter ID if available, otherwise show toast
+                                if (chapterData?.id) {
+                                  navigate(`/chapters/${chapterData.id}`);
+                                } else {
+                                  toast({
+                                    title: "Chapter not generated yet",
+                                    description: "Complete the recording and save to generate the chapter",
+                                    variant: "destructive"
+                                  });
+                                }
+                              }}
+                            >
+                              <FileText className="w-4 h-4 mr-1" />
+                              View
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => navigate(`/session?id=${sessionItem.id}`)}
+                            >
+                              <Edit className="w-4 h-4 mr-1" />
+                              {sessionItem.status === 'completed' ? 'Edit' : 'Continue'}
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => setDeleteChapterId(sessionItem.id)}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
                           </div>
                         </div>
-                        
-                        <div className="flex items-center gap-2 ml-4">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => navigate(`/chapters/${chapter.id}`)}
-                          >
-                            <FileText className="w-4 h-4 mr-1" />
-                            View
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => navigate(`/session?id=${chapter.id}`)}
-                          >
-                            <Edit className="w-4 h-4 mr-1" />
-                            {chapter.status === 'completed' ? 'Edit' : 'Continue'}
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => setDeleteChapterId(chapter.id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
             </div>
           )}
         </div>
