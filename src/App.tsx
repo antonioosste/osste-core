@@ -36,6 +36,8 @@ import Cookies from "./pages/Cookies";
 import FAQ from "./pages/FAQ";
 import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
+import PrintRequest from "./pages/PrintRequest";
+import PrintSuccess from "./pages/PrintSuccess";
 
 const queryClient = new QueryClient();
 
@@ -94,6 +96,8 @@ const App = () => (
             <Route path="/cookies" element={<WaitlistGuard><Cookies /></WaitlistGuard>} />
             <Route path="/faq" element={<WaitlistGuard><FAQ /></WaitlistGuard>} />
             <Route path="/help" element={<WaitlistGuard><Help /></WaitlistGuard>} />
+            <Route path="/print-request" element={<ProtectedRoute><DashboardLayout><PrintRequest /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/print-success" element={<ProtectedRoute><DashboardLayout><PrintSuccess /></DashboardLayout></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
