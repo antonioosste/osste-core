@@ -12,7 +12,8 @@ import {
   Sparkles,
   ChevronRight,
   Trash2,
-  Printer
+  Printer,
+  Pencil
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,12 +35,14 @@ export default function Dashboard() {
   const { stories } = useStories();
   const { profile } = useProfile();
   const { recordings } = useRecordings();
-  const { storyGroups, loading: groupsLoading, createStoryGroup, deleteStoryGroup } = useStoryGroups();
+  const { storyGroups, loading: groupsLoading, createStoryGroup, deleteStoryGroup, updateStoryGroup } = useStoryGroups();
   
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newBookTitle, setNewBookTitle] = useState('');
   const [newBookDescription, setNewBookDescription] = useState('');
   const [deleteBookId, setDeleteBookId] = useState<string | null>(null);
+  const [editBookId, setEditBookId] = useState<string | null>(null);
+  const [editBookTitle, setEditBookTitle] = useState('');
   
   const userPaid = profile?.plan !== 'free';
   
@@ -99,6 +102,23 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Failed to delete book:', error);
     }
+  };
+
+  const handleEditBook = async () => {
+    if (!editBookId || !editBookTitle.trim()) return;
+    
+    try {
+      await updateStoryGroup(editBookId, { title: editBookTitle.trim() });
+      setEditBookId(null);
+      setEditBookTitle('');
+    } catch (error) {
+      console.error('Failed to update book:', error);
+    }
+  };
+
+  const openEditDialog = (book: { id: string; title: string }) => {
+    setEditBookId(book.id);
+    setEditBookTitle(book.title);
   };
 
   return (
@@ -292,17 +312,30 @@ export default function Dashboard() {
                           {chapterCount} {chapterCount === 1 ? 'chapter' : 'chapters'}
                         </Badge>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteBookId(book.id);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditDialog(book);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteBookId(book.id);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                     <CardTitle className="line-clamp-1 text-foreground">{book.title}</CardTitle>
                     {book.description && (
@@ -410,6 +443,36 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* Edit Book Dialog */}
+      <Dialog open={!!editBookId} onOpenChange={() => setEditBookId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Book Name</DialogTitle>
+            <DialogDescription>
+              Update the title of your book.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-title">Book Title</Label>
+              <Input
+                id="edit-title"
+                value={editBookTitle}
+                onChange={(e) => setEditBookTitle(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditBookId(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditBook} disabled={!editBookTitle.trim()}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deleteBookId} onOpenChange={() => setDeleteBookId(null)}>
         <AlertDialogContent>
