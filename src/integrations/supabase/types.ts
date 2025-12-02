@@ -433,6 +433,80 @@ export type Database = {
         }
         Relationships: []
       }
+      print_orders: {
+        Row: {
+          book_title: string
+          created_at: string | null
+          format: string
+          id: string
+          quantity: number
+          shipping_address: string
+          shipping_city: string
+          shipping_country: string
+          shipping_name: string
+          shipping_state: string
+          shipping_zip: string
+          size: string
+          status: string
+          story_group_id: string
+          stripe_payment_intent: string | null
+          stripe_session_id: string | null
+          total_price: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          book_title: string
+          created_at?: string | null
+          format: string
+          id?: string
+          quantity?: number
+          shipping_address: string
+          shipping_city: string
+          shipping_country?: string
+          shipping_name: string
+          shipping_state: string
+          shipping_zip: string
+          size: string
+          status?: string
+          story_group_id: string
+          stripe_payment_intent?: string | null
+          stripe_session_id?: string | null
+          total_price: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          book_title?: string
+          created_at?: string | null
+          format?: string
+          id?: string
+          quantity?: number
+          shipping_address?: string
+          shipping_city?: string
+          shipping_country?: string
+          shipping_name?: string
+          shipping_state?: string
+          shipping_zip?: string
+          size?: string
+          status?: string
+          story_group_id?: string
+          stripe_payment_intent?: string | null
+          stripe_session_id?: string | null
+          total_price?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "print_orders_story_group_id_fkey"
+            columns: ["story_group_id"]
+            isOneToOne: false
+            referencedRelation: "story_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
