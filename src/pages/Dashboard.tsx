@@ -43,9 +43,16 @@ export default function Dashboard() {
   const userPaid = profile?.plan !== 'free';
   
   // Calculate stats
-  const totalRecordings = recordings.length;
   const totalSessions = sessions.length;
   const totalStories = stories.length;
+  
+  // Calculate total minutes recorded
+  const totalMinutesRecorded = recordings.reduce((acc, recording) => {
+    return acc + (recording.duration_seconds || 0);
+  }, 0) / 60;
+  
+  // Define total minutes available based on plan
+  const totalMinutesAvailable = userPaid ? 999999 : 30; // Unlimited for paid, 30 for free
   
   // Find active session
   const activeSession = sessions.find(s => s.status === 'active' || !s.ended_at);
@@ -196,9 +203,18 @@ export default function Dashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <FileAudio className="h-8 w-8 text-primary/70" />
-              <span className="text-3xl font-bold text-foreground">{totalRecordings}</span>
+              <div className="text-right">
+                <span className="text-3xl font-bold text-foreground">
+                  {Math.round(totalMinutesRecorded)}
+                </span>
+                <span className="text-lg text-muted-foreground">
+                  {userPaid ? '' : ` / ${totalMinutesAvailable}`}
+                </span>
+              </div>
             </div>
-            <p className="text-sm font-medium text-muted-foreground">Recordings</p>
+            <p className="text-sm font-medium text-muted-foreground">
+              Minutes Recorded {userPaid ? '(Unlimited)' : ''}
+            </p>
           </CardContent>
         </Card>
 
