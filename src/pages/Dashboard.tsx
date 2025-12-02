@@ -6,7 +6,7 @@ import {
   Play, 
   ArrowRight,
   Crown,
-  FileAudio,
+  FileText,
   Plus,
   FolderOpen,
   Sparkles,
@@ -37,15 +37,15 @@ export default function Dashboard() {
   const { storyGroups, loading: groupsLoading, createStoryGroup, deleteStoryGroup } = useStoryGroups();
   
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [newGroupTitle, setNewGroupTitle] = useState('');
-  const [newGroupDescription, setNewGroupDescription] = useState('');
-  const [deleteGroupId, setDeleteGroupId] = useState<string | null>(null);
-  const [isAllBooksDialogOpen, setIsAllBooksDialogOpen] = useState(false);
+  const [newBookTitle, setNewBookTitle] = useState('');
+  const [newBookDescription, setNewBookDescription] = useState('');
+  const [deleteBookId, setDeleteBookId] = useState<string | null>(null);
   
   const userPaid = profile?.plan !== 'free';
   
   // Calculate stats
-  const totalSessions = sessions.length;
+  const totalBooks = storyGroups?.length || 0;
+  const totalChapters = sessions.length;
   const totalStories = stories.length;
   
   // Calculate total minutes recorded
@@ -54,42 +54,50 @@ export default function Dashboard() {
   }, 0) / 60;
   
   // Define total minutes available based on plan
-  const totalMinutesAvailable = userPaid ? 999999 : 30; // Unlimited for paid, 30 for free
+  const totalMinutesAvailable = userPaid ? 999999 : 30;
   
-  // Find active session
-  const activeSession = sessions.find(s => s.status === 'active' || !s.ended_at);
+  // Find active chapter (in-progress recording session)
+  const activeChapter = sessions.find(s => s.status === 'active' || !s.ended_at);
 
-  // Get session count per story group
-  const getSessionCount = (groupId: string) => {
-    return sessions.filter(s => s.story_group_id === groupId).length;
+  // Get chapter count per book
+  const getChapterCount = (bookId: string) => {
+    return sessions.filter(s => s.story_group_id === bookId).length;
   };
 
-  // Get story for a group
-  const getGroupStory = (groupId: string) => {
-    return stories.find(s => s.story_group_id === groupId);
+  // Get story for a book
+  const getBookStory = (bookId: string) => {
+    return stories.find(s => s.story_group_id === bookId);
   };
 
-  const handleCreateGroup = async () => {
-    if (!newGroupTitle.trim()) return;
+  // Get book title for a session
+  const getBookTitle = (bookId: string | null) => {
+    if (!bookId) return "Unassigned";
+    const book = storyGroups?.find(g => g.id === bookId);
+    return book?.title || "Unknown Book";
+  };
+
+  const handleCreateBook = async () => {
+    if (!newBookTitle.trim()) return;
     
     try {
-      await createStoryGroup(newGroupTitle.trim(), newGroupDescription.trim() || undefined);
+      const newBook = await createStoryGroup(newBookTitle.trim(), newBookDescription.trim() || undefined);
       setIsCreateDialogOpen(false);
-      setNewGroupTitle('');
-      setNewGroupDescription('');
+      setNewBookTitle('');
+      setNewBookDescription('');
+      navigate(`/books/${newBook.id}`);
     } catch (error) {
-      console.error('Failed to create story group:', error);
+      console.error('Failed to create book:', error);
     }
   };
 
-  const handleDeleteGroup = async () => {
-    if (!deleteGroupId) return;
+  const handleDeleteBook = async () => {
+    if (!deleteBookId) return;
     
     try {
-      await deleteStoryGroup(deleteGroupId);
-      setDeleteGroupId(null);
+      await deleteStoryGroup(deleteBookId);
+      setDeleteBookId(null);
     } catch (error) {
-      console.error('Failed to delete story group:', error);
+      console.error('Failed to delete book:', error);
     }
   };
 
@@ -129,7 +137,7 @@ export default function Dashboard() {
               <DialogHeader>
                 <DialogTitle>Create New Book</DialogTitle>
                 <DialogDescription>
-                  Start a new book project. You can add multiple chapters through recording sessions to build your complete story.
+                  Start a new book project. Add chapters through recording sessions to build your story.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -137,9 +145,9 @@ export default function Dashboard() {
                   <Label htmlFor="title">Book Title</Label>
                   <Input
                     id="title"
-                    placeholder="e.g., My Family Story, My Career Journey, Travel Adventures"
-                    value={newGroupTitle}
-                    onChange={(e) => setNewGroupTitle(e.target.value)}
+                    placeholder="e.g., My Childhood, Family Memories, Career Journey"
+                    value={newBookTitle}
+                    onChange={(e) => setNewBookTitle(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -147,8 +155,8 @@ export default function Dashboard() {
                   <Textarea
                     id="description"
                     placeholder="What will this book be about?"
-                    value={newGroupDescription}
-                    onChange={(e) => setNewGroupDescription(e.target.value)}
+                    value={newBookDescription}
+                    onChange={(e) => setNewBookDescription(e.target.value)}
                     rows={3}
                   />
                 </div>
@@ -157,7 +165,7 @@ export default function Dashboard() {
                 <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleCreateGroup} disabled={!newGroupTitle.trim()}>
+                <Button onClick={handleCreateBook} disabled={!newBookTitle.trim()}>
                   Create Book
                 </Button>
               </DialogFooter>
@@ -191,20 +199,36 @@ export default function Dashboard() {
 
       {/* KPIs */}
       <div className="grid gap-6 md:grid-cols-3 mb-12">
-        <Card className="border-border/40 hover:shadow-md transition-shadow">
+        <Card 
+          className="border-border/40 hover:shadow-md transition-shadow cursor-pointer"
+          onClick={() => navigate('/books')}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <Mic className="h-8 w-8 text-primary/70" />
-              <span className="text-3xl font-bold text-foreground">{totalSessions}</span>
+              <BookOpen className="h-8 w-8 text-primary/70" />
+              <span className="text-3xl font-bold text-foreground">{totalBooks}</span>
             </div>
-            <p className="text-sm font-medium text-muted-foreground">Recording Sessions</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-muted-foreground">Books Created</p>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </div>
           </CardContent>
         </Card>
         
         <Card className="border-border/40 hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <FileAudio className="h-8 w-8 text-primary/70" />
+              <Mic className="h-8 w-8 text-primary/70" />
+              <span className="text-3xl font-bold text-foreground">{totalChapters}</span>
+            </div>
+            <p className="text-sm font-medium text-muted-foreground">Chapters Recorded</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/40 hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <FileText className="h-8 w-8 text-primary/70" />
               <div className="text-right">
                 <span className="text-3xl font-bold text-foreground">
                   {Math.round(totalMinutesRecorded)}
@@ -219,19 +243,6 @@ export default function Dashboard() {
             </p>
           </CardContent>
         </Card>
-
-        <Card className="border-border/40 hover:shadow-md transition-shadow cursor-pointer" onClick={() => setIsAllBooksDialogOpen(true)}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <BookOpen className="h-8 w-8 text-primary/70" />
-              <span className="text-3xl font-bold text-foreground">{storyGroups?.length || 0}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-muted-foreground">Books Created</p>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Books Section */}
@@ -241,6 +252,10 @@ export default function Dashboard() {
             <h2 className="text-2xl font-serif font-bold text-foreground">Your Books</h2>
             <p className="text-muted-foreground">Build and organize your life story books</p>
           </div>
+          <Button variant="outline" onClick={() => navigate('/books')}>
+            View All
+            <ChevronRight className="w-4 h-4 ml-2" />
+          </Button>
         </div>
 
         {groupsLoading ? (
@@ -259,36 +274,40 @@ export default function Dashboard() {
           </div>
         ) : storyGroups && storyGroups.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {storyGroups.map((group) => {
-              const sessionCount = getSessionCount(group.id);
-              const groupStory = getGroupStory(group.id);
+            {storyGroups.slice(0, 6).map((book) => {
+              const chapterCount = getChapterCount(book.id);
+              const bookStory = getBookStory(book.id);
               
               return (
-                <Card key={group.id} className="border-border/40 hover:shadow-md transition-shadow group">
+                <Card 
+                  key={book.id} 
+                  className="border-border/40 hover:shadow-md transition-shadow group cursor-pointer"
+                  onClick={() => navigate(`/books/${book.id}`)}
+                >
                   <CardHeader>
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <FolderOpen className="h-5 w-5 text-primary" />
-                        <Badge variant={groupStory ? "default" : "secondary"}>
-                          {sessionCount} {sessionCount === 1 ? 'chapter' : 'chapters'}
+                        <Badge variant={bookStory ? "default" : "secondary"}>
+                          {chapterCount} {chapterCount === 1 ? 'chapter' : 'chapters'}
                         </Badge>
                       </div>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setDeleteGroupId(group.id);
+                          setDeleteBookId(book.id);
                         }}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                    <CardTitle className="line-clamp-1 text-foreground">{group.title}</CardTitle>
-                    {group.description && (
+                    <CardTitle className="line-clamp-1 text-foreground">{book.title}</CardTitle>
+                    {book.description && (
                       <CardDescription className="line-clamp-2">
-                        {group.description}
+                        {book.description}
                       </CardDescription>
                     )}
                   </CardHeader>
@@ -297,30 +316,39 @@ export default function Dashboard() {
                       size="sm" 
                       className="w-full"
                       variant="outline"
-                      onClick={() => navigate(`/chapters?group=${group.id}`)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/books/${book.id}`);
+                      }}
                     >
-                      View Chapters
+                      Open Book
                       <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
                     
-                    {sessionCount > 0 && !groupStory && (
+                    {chapterCount > 0 && !bookStory && (
                       <Button 
                         size="sm" 
                         className="w-full"
-                        onClick={() => navigate(`/chapters?group=${group.id}`)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/books/${book.id}`);
+                        }}
                       >
                         <Sparkles className="mr-2 h-4 w-4" />
                         Generate Story
                       </Button>
                     )}
                     
-                    {groupStory && (
+                    {bookStory && (
                       <>
                         <Button 
                           size="sm" 
                           className="w-full"
                           variant="outline"
-                          onClick={() => navigate(`/stories/${groupStory.id}`)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/stories/${bookStory.id}`);
+                          }}
                         >
                           <BookOpen className="mr-2 h-4 w-4" />
                           View Story
@@ -328,7 +356,10 @@ export default function Dashboard() {
                         <Button 
                           size="sm" 
                           className="w-full"
-                          onClick={() => navigate(`/print-request?group=${group.id}`)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/print-request?group=${book.id}`);
+                          }}
                         >
                           <Printer className="mr-2 h-4 w-4" />
                           Order Print Copy
@@ -357,21 +388,21 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Continue Active Session */}
-      {activeSession && (
+      {/* Continue Active Chapter */}
+      {activeChapter && (
         <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-foreground">Continue Your Active Session</h3>
+                <h3 className="text-lg font-semibold text-foreground">Continue Your Active Chapter</h3>
                 <p className="text-muted-foreground">
-                  {(activeSession as any).title || "Untitled Session"}
+                  {(activeChapter as any).title || "Untitled Chapter"} • {getBookTitle(activeChapter.story_group_id)}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Started {activeSession.started_at ? new Date(activeSession.started_at).toLocaleDateString() : 'recently'}
+                  Started {activeChapter.started_at ? new Date(activeChapter.started_at).toLocaleDateString() : 'recently'}
                 </p>
               </div>
-              <Button onClick={() => navigate(`/session?id=${activeSession.id}`)}>
+              <Button onClick={() => navigate(`/session?id=${activeChapter.id}`)}>
                 <Play className="w-4 h-4 mr-2" />
                 Continue
               </Button>
@@ -380,115 +411,25 @@ export default function Dashboard() {
         </Card>
       )}
 
-      <AlertDialog open={!!deleteGroupId} onOpenChange={() => setDeleteGroupId(null)}>
+      <AlertDialog open={!!deleteBookId} onOpenChange={() => setDeleteBookId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Delete this book?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this book and all its chapters. This action cannot be undone.
+              This will permanently delete this book and all its chapters, recordings, and stories. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>No</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteGroup}>Yes</AlertDialogAction>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteBook}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Book
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <Dialog open={isAllBooksDialogOpen} onOpenChange={setIsAllBooksDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>All Your Books</DialogTitle>
-            <DialogDescription>
-              View all your books and request print copies
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 mt-4">
-            {storyGroups && storyGroups.length > 0 ? (
-              storyGroups.map((group) => {
-                const sessionCount = getSessionCount(group.id);
-                const groupStory = getGroupStory(group.id);
-                
-                return (
-                  <Card key={group.id} className="border-border/40">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <FolderOpen className="h-5 w-5 text-primary" />
-                            <Badge variant={groupStory ? "default" : "secondary"}>
-                              {sessionCount} {sessionCount === 1 ? 'chapter' : 'chapters'}
-                            </Badge>
-                          </div>
-                          <CardTitle className="text-foreground">{group.title}</CardTitle>
-                          {group.description && (
-                            <CardDescription className="mt-2">
-                              {group.description}
-                            </CardDescription>
-                          )}
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="flex gap-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => {
-                          setIsAllBooksDialogOpen(false);
-                          navigate(`/chapters?group=${group.id}`);
-                        }}
-                      >
-                        View Chapters
-                      </Button>
-                      {groupStory && (
-                        <>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => {
-                              setIsAllBooksDialogOpen(false);
-                              navigate(`/stories/${groupStory.id}`);
-                            }}
-                          >
-                            View Story
-                          </Button>
-                          <Button 
-                            size="sm"
-                            onClick={() => {
-                              setIsAllBooksDialogOpen(false);
-                              navigate(`/print-request?group=${group.id}`);
-                            }}
-                          >
-                            <Printer className="mr-2 h-4 w-4" />
-                            Order Print Copy
-                          </Button>
-                        </>
-                      )}
-                      {!groupStory && sessionCount > 0 && (
-                        <Button 
-                          size="sm" 
-                          onClick={() => {
-                            setIsAllBooksDialogOpen(false);
-                            navigate(`/chapters?group=${group.id}`);
-                          }}
-                        >
-                          <Sparkles className="mr-2 h-4 w-4" />
-                          Generate Story
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No books created yet</p>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
