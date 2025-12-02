@@ -463,10 +463,18 @@ export default function BookDetail() {
                           <Button 
                             variant="outline" 
                             size="sm"
+                            onClick={() => navigate(`/chapters/${chapter.id}`)}
+                          >
+                            <FileText className="w-4 h-4 mr-1" />
+                            View
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
                             onClick={() => navigate(`/session?id=${chapter.id}`)}
                           >
-                            {chapter.status === 'completed' ? 'View' : 'Continue'}
-                            <ChevronRight className="w-4 h-4 ml-1" />
+                            <Edit className="w-4 h-4 mr-1" />
+                            {chapter.status === 'completed' ? 'Edit' : 'Continue'}
                           </Button>
                           <Button 
                             variant="ghost" 
