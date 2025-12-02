@@ -146,15 +146,22 @@ export async function pollForTTS(
 }
 
 /**
- * Generate a single chapter for a session
- * Endpoint: POST /api/ai/chapter/by-session/:sessionId (singular)
+ * Generate a chapter for a session
+ * Endpoint: POST /api/ai/chapters/by-session/:sessionId
  * 
- * Behavior: Generates a single chapter for the entire session, combining all turns.
- * Note: The endpoint is singular and session-based.
+ * Behavior: Generates ONE chapter for the entire session, combining all turns.
+ * The backend expects the sessionId directly.
+ * 
+ * IMPORTANT:
+ * - Always call with sessionId
+ * - Do NOT pass story_group_id
+ * - Do NOT pass chapter_id
  */
-export async function generateChapter(token: string, sessionId: string) {
+export async function generateChapters(token: string, sessionId: string) {
+  console.log('🔄 Calling generateChapters for session:', sessionId);
+  
   const response = await fetchWithRetry(
-    `${BACKEND_BASE}/api/ai/chapter/by-session/${sessionId}`,
+    `${BACKEND_BASE}/api/ai/chapters/by-session/${sessionId}`,
     {
       method: 'POST',
       headers: {
@@ -165,16 +172,17 @@ export async function generateChapter(token: string, sessionId: string) {
   );
 
   if (!response.ok) {
+    const errorText = await response.text();
+    console.error('❌ Chapter generation failed:', response.status, errorText);
     const error = new Error(`Chapter generation failed: ${response.statusText}`) as BackendError;
     error.status = response.status;
     throw error;
   }
 
-  return response.json();
+  const result = await response.json();
+  console.log('✅ Chapter generated successfully:', result);
+  return result;
 }
-
-// Alias for backwards compatibility
-export const generateChapters = generateChapter;
 
 /**
  * Assemble/generate a story for a Story Group
