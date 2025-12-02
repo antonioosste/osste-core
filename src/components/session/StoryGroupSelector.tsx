@@ -51,10 +51,10 @@ export function StoryGroupSelector({ open, onSelect, onClose }: StoryGroupSelect
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FolderOpen className="h-5 w-5" />
-            Choose a Story Project
+            Choose a Book
           </DialogTitle>
           <DialogDescription>
-            Select which story project this recording session belongs to, or create a new one.
+            Select which book this recording session belongs to, or create a new one.
           </DialogDescription>
         </DialogHeader>
 
@@ -95,7 +95,7 @@ export function StoryGroupSelector({ open, onSelect, onClose }: StoryGroupSelect
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <FolderOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No story projects yet. Create your first one to get started!</p>
+                  <p>No books yet. Create your first one to get started!</p>
                 </div>
               )}
 
@@ -105,16 +105,16 @@ export function StoryGroupSelector({ open, onSelect, onClose }: StoryGroupSelect
                 onClick={() => setShowCreateNew(true)}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Create New Story Project
+                Create New Book
               </Button>
             </>
           ) : (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="new-title">Project Title</Label>
+                <Label htmlFor="new-title">Book Title</Label>
                 <Input
                   id="new-title"
-                  placeholder="e.g., Family Story, Career Journey, Travel Adventures"
+                  placeholder="e.g., My Family Story, My Career Journey, Travel Adventures"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   autoFocus
@@ -124,7 +124,7 @@ export function StoryGroupSelector({ open, onSelect, onClose }: StoryGroupSelect
                 <Label htmlFor="new-description">Description (Optional)</Label>
                 <Textarea
                   id="new-description"
-                  placeholder="What will this story be about?"
+                  placeholder="What will this book be about?"
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
                   rows={3}

@@ -71,7 +71,7 @@ export default function Sessions() {
         </Button>
       </div>
 
-      {/* Filter by Story Group */}
+      {/* Filter by Book */}
       {storyGroups && storyGroups.length > 0 && (
         <div className="flex items-center gap-3 mb-6">
           <FolderOpen className="h-5 w-5 text-muted-foreground" />
@@ -80,10 +80,10 @@ export default function Sessions() {
             onValueChange={(value) => setSearchParams(value === 'all' ? {} : { group: value })}
           >
             <SelectTrigger className="w-[280px]">
-              <SelectValue placeholder="Filter by story project" />
+              <SelectValue placeholder="Filter by book" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Story Projects</SelectItem>
+              <SelectItem value="all">All Books</SelectItem>
               {storyGroups.map((group) => (
                 <SelectItem key={group.id} value={group.id}>
                   {group.title}

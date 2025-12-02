@@ -90,7 +90,7 @@ export function useStoryGroups() {
       setStoryGroups(prev => [data, ...prev]);
 
       toast({
-        title: "Story project created",
+        title: "Book created",
         description: `"${title}" is ready for your stories.`,
       });
       return data;
@@ -120,7 +120,7 @@ export function useStoryGroups() {
       );
 
       toast({
-        title: "Story project updated",
+        title: "Book updated",
         description: "Your changes have been saved.",
       });
       return data;
@@ -146,8 +146,8 @@ export function useStoryGroups() {
       setStoryGroups(prev => prev.filter(group => group.id !== id));
 
       toast({
-        title: "Story project deleted",
-        description: "The story group and all its content have been removed.",
+        title: "Book deleted",
+        description: "The book and all its content have been removed.",
       });
     } catch (err) {
       toast({
