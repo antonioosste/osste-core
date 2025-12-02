@@ -137,7 +137,7 @@ export async function pollForTTS(
 
 /**
  * Generate a chapter for a session
- * Endpoint: POST /api/ai/chapters/by-session/:sessionId
+ * Endpoint: POST /api/ai/chapter/by-session/:sessionId
  *
  * Behavior: Generates ONE chapter for the entire session, combining all turns.
  * The backend expects the sessionId directly.
