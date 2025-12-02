@@ -3,18 +3,25 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 
+/**
+ * Story interface - aligned with new backend schema
+ * 
+ * Key change: Stories are linked to story_group_id (Book), not session_id
+ * Each Story Group has ONE Story that aggregates content from all sessions
+ */
 export interface Story {
   id: string;
   story_group_id: string | null;
   title: string | null;
   raw_text: string | null;
   edited_text: string | null;
+  style_instruction: string | null;
   approved: boolean | null;
   order_index: number | null;
   created_at: string | null;
 }
 
-export function useStories() {
+export function useStories(storyGroupId?: string) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [stories, setStories] = useState<Story[]>([]);
@@ -30,10 +37,18 @@ export function useStories() {
 
     try {
       setLoading(true);
-      const { data, error: fetchError } = await supabase
+      
+      let query = supabase
         .from('stories')
         .select('*')
         .order('created_at', { ascending: false });
+
+      // Filter by story_group_id if provided
+      if (storyGroupId) {
+        query = query.eq('story_group_id', storyGroupId);
+      }
+
+      const { data, error: fetchError } = await query;
 
       if (fetchError) throw fetchError;
 
@@ -46,6 +61,9 @@ export function useStories() {
     }
   };
 
+  /**
+   * Get a single story by ID
+   */
   const getStory = async (id: string) => {
     try {
       const { data, error: fetchError } = await supabase
@@ -60,6 +78,32 @@ export function useStories() {
       toast({
         title: "Error loading story",
         description: err instanceof Error ? err.message : "Failed to load story",
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
+  /**
+   * Get story by Story Group ID (Book)
+   * This is the primary way to fetch a story in the new schema
+   * 
+   * @param groupId - The story_group_id (Book ID)
+   */
+  const getStoryByStoryGroupId = async (groupId: string): Promise<Story | null> => {
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('stories')
+        .select('*')
+        .eq('story_group_id', groupId)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+      return data;
+    } catch (err) {
+      toast({
+        title: "Error loading story",
+        description: err instanceof Error ? err.message : "Failed to load story for this book",
         variant: "destructive",
       });
       throw err;
@@ -124,13 +168,14 @@ export function useStories() {
 
   useEffect(() => {
     fetchStories();
-  }, [user]);
+  }, [user, storyGroupId]);
 
   return {
     stories,
     loading,
     error,
     getStory,
+    getStoryByStoryGroupId,
     updateStory,
     deleteStory,
     refetch: fetchStories,

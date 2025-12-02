@@ -31,9 +31,17 @@ async function fetchWithRetry(
   }
 }
 
-// DEPRECATED: Use createTurn instead
-// The uploadRecording endpoint has been removed from the backend
-
+/**
+ * Create a new turn with recording data
+ * Endpoint: POST /api/turns/upload
+ * 
+ * This endpoint handles:
+ * - Recording creation
+ * - Transcription
+ * - Follow-up question generation
+ * 
+ * Response includes: { follow_up: { topic, question, tts_url, suggestions } }
+ */
 export async function createTurn(
   token: string,
   data: {
@@ -79,8 +87,10 @@ export async function createTurn(
   return result;
 }
 
-// OPTIONAL: Use this endpoint only to refresh expired TTS signed URLs (24h expiry)
-// The initial POST /api/turns/upload response already includes the TTS URL
+/**
+ * Refresh expired TTS signed URLs (24h expiry)
+ * Note: The initial POST /api/turns/upload response already includes the TTS URL
+ */
 export async function pollForTTS(
   token: string,
   turnId: string,
@@ -135,12 +145,16 @@ export async function pollForTTS(
   throw new Error('TTS polling timeout - max attempts reached');
 }
 
-// DEPRECATED: Transcription is now handled automatically by createTurn
-// The transcribeRecording endpoint has been removed from the backend
-
-export async function generateChapters(token: string, sessionId: string) {
+/**
+ * Generate a single chapter for a session
+ * Endpoint: POST /api/ai/chapter/by-session/:sessionId (singular)
+ * 
+ * Behavior: Generates a single chapter for the entire session, combining all turns.
+ * Note: The endpoint is singular and session-based.
+ */
+export async function generateChapter(token: string, sessionId: string) {
   const response = await fetchWithRetry(
-    `${BACKEND_BASE}/api/ai/chapters/by-session/${sessionId}`,
+    `${BACKEND_BASE}/api/ai/chapter/by-session/${sessionId}`,
     {
       method: 'POST',
       headers: {
@@ -159,6 +173,23 @@ export async function generateChapters(token: string, sessionId: string) {
   return response.json();
 }
 
+// Alias for backwards compatibility
+export const generateChapters = generateChapter;
+
+/**
+ * Assemble/generate a story for a Story Group
+ * Endpoint: POST /api/ai/story/assemble/:sessionId
+ * 
+ * Behavior: Triggers story generation for the Story Group that the session belongs to.
+ * Logic: Fetches ALL sessions in that story group, collects ALL chapters from those
+ * sessions, and generates a cohesive story.
+ * 
+ * The returned story object is linked to story_group_id, not session_id.
+ * Display the story as the "Master Narrative" for the group.
+ * 
+ * @param sessionId - Any session ID belonging to the story group
+ * @param styleInstruction - Optional style prompt (e.g., "make it more emotional")
+ */
 export async function assembleStory(
   token: string, 
   sessionId: string, 
@@ -187,15 +218,6 @@ export async function assembleStory(
   return response.json();
 }
 
-// NOTE: Follow-up questions are now retrieved from the POST /api/turns/upload response
-// The response includes: { follow_up: { topic, question, tts_url, suggestions } }
-// The tts_url is a signed URL ready for immediate playback - no database queries needed
-// This function is deprecated and should not be used
-export async function getFollowUpQuestions(token: string, sessionId: string) {
-  console.warn('getFollowUpQuestions is deprecated. Follow-up questions come from turn upload response.');
-  throw new Error('This endpoint is no longer available. Follow-up questions are included in the turn upload response.');
-}
-
 // Image management functions
 
 export interface BackendImageResponse {
@@ -203,8 +225,9 @@ export interface BackendImageResponse {
   file_name: string;
   storage_path: string;
   url: string; // Signed or public URL from backend
-  session_id?: string;
+  // NOTE: session_id is no longer stored in DB, but API can still filter by it
   chapter_id?: string;
+  turn_id?: string;
   story_id?: string;
   mime_type: string;
   width?: number;
@@ -215,12 +238,19 @@ export interface BackendImageResponse {
 
 /**
  * List story images with optional filters and pagination
- * Uses the backend GET /api/story/list-images endpoint
+ * Endpoint: GET /api/story/list-images
+ * 
+ * Filter: ?session_id=... is still supported.
+ * Backend Logic: The backend intelligently finds all images linked to the
+ * chapters and turns of that session.
+ * 
+ * IMPORTANT: When uploading images, you MUST provide chapter_id, turn_id, or story_id
+ * to associate the image with content. session_id is only for filtering, not storage.
  */
 export async function listStoryImages(
   token: string,
   params: {
-    sessionId?: string;
+    sessionId?: string;  // For filtering - backend finds images via chapters/turns
     chapterId?: string;
     storyId?: string;
     turnId?: string;
@@ -258,23 +288,8 @@ export async function listStoryImages(
 }
 
 /**
- * DEPRECATED: Use listStoryImages instead
- */
-export async function fetchImagesFromBackend(
-  token: string,
-  params: {
-    sessionId?: string;
-    chapterId?: string;
-    storyId?: string;
-  }
-): Promise<BackendImageResponse[]> {
-  console.warn('fetchImagesFromBackend is deprecated. Use listStoryImages instead.');
-  return listStoryImages(token, params);
-}
-
-/**
  * Delete a story image via backend API
- * Uses the backend DELETE /api/story/delete-image endpoint
+ * Endpoint: DELETE /api/story/delete-image
  */
 export async function deleteImageViaBackend(token: string, imageId: string): Promise<void> {
   const response = await fetchWithRetry(

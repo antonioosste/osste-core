@@ -4,9 +4,20 @@ import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 import type { Tables } from '@/integrations/supabase/types';
 
+/**
+ * Session type from database
+ * 
+ * New Data Hierarchy:
+ * User -> Story Group (Book) -> Session (Chapter Recording) -> Chapter
+ * 
+ * Sessions belong to a Story Group and contain:
+ * - recordings (audio clips)
+ * - turns (conversation)
+ * - chapters (generated content)
+ */
 export type Session = Tables<'sessions'>;
 
-export function useSessions() {
+export function useSessions(storyGroupId?: string) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -22,11 +33,19 @@ export function useSessions() {
 
     try {
       setLoading(true);
-      const { data, error: fetchError } = await supabase
+      
+      let query = supabase
         .from('sessions')
         .select('*')
         .eq('user_id', user.id)
         .order('started_at', { ascending: false });
+
+      // Filter by story_group_id if provided
+      if (storyGroupId) {
+        query = query.eq('story_group_id', storyGroupId);
+      }
+
+      const { data, error: fetchError } = await query;
 
       if (fetchError) throw fetchError;
 
@@ -53,6 +72,30 @@ export function useSessions() {
       toast({
         title: "Error loading session",
         description: err instanceof Error ? err.message : "Failed to load session",
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
+  /**
+   * Get all sessions by Story Group ID (Book)
+   * This is useful for getting all chapter recordings in a book
+   */
+  const getSessionsByStoryGroupId = async (groupId: string): Promise<Session[]> => {
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('story_group_id', groupId)
+        .order('started_at', { ascending: true });
+
+      if (fetchError) throw fetchError;
+      return data || [];
+    } catch (err) {
+      toast({
+        title: "Error loading sessions",
+        description: err instanceof Error ? err.message : "Failed to load sessions for this book",
         variant: "destructive",
       });
       throw err;
@@ -109,8 +152,7 @@ export function useSessions() {
         }
       }
 
-      // Delete story images from storage (no longer linked to session_id directly)
-      // They're linked via chapter_id, turn_id, or story_id
+      // Delete story images from storage (linked via chapter_id, turn_id, or story_id)
       // We need to get chapters for this session first
       const { data: sessionChapters } = await supabase
         .from('chapters')
@@ -152,19 +194,19 @@ export function useSessions() {
         await supabase.from('transcripts').delete().in('recording_id', recordingIds);
       }
 
-      // 3. Delete chapters linked to this session
-      await supabase.from('chapters').delete().eq('session_id', id);
-
-      // 4. Delete story images linked to chapters
+      // 3. Delete story images linked to chapters
       if (sessionChapters && sessionChapters.length > 0) {
         const chapterIds = sessionChapters.map(ch => ch.id);
         await supabase.from('story_images').delete().in('chapter_id', chapterIds);
       }
+
+      // 4. Delete chapters linked to this session
+      await supabase.from('chapters').delete().eq('session_id', id);
       
       // 5. Delete recordings
       await supabase.from('recordings').delete().eq('session_id', id);
 
-      // 7. Finally delete the session
+      // 6. Finally delete the session
       const { error: deleteError } = await supabase
         .from('sessions')
         .delete()
@@ -187,15 +229,17 @@ export function useSessions() {
       throw err;
     }
   };
+
   useEffect(() => {
     fetchSessions();
-  }, [user]);
+  }, [user, storyGroupId]);
 
   return {
     sessions,
     loading,
     error,
     getSession,
+    getSessionsByStoryGroupId,
     updateSession,
     deleteSession,
     refetch: fetchSessions,
