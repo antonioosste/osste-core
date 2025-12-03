@@ -14,7 +14,8 @@ import {
   Loader2,
   ChevronRight,
   Printer,
-  RotateCcw
+  RotateCcw,
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,6 +53,7 @@ export default function BookDetail() {
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [deleteChapterId, setDeleteChapterId] = useState<string | null>(null);
+  const [isDeletingChapter, setIsDeletingChapter] = useState(false);
   const [isGeneratingStory, setIsGeneratingStory] = useState(false);
   const [showStyleDialog, setShowStyleDialog] = useState(false);
   const [styleInstruction, setStyleInstruction] = useState("");
@@ -126,20 +128,14 @@ export default function BookDetail() {
   const handleDeleteChapter = async () => {
     if (!deleteChapterId) return;
     
+    setIsDeletingChapter(true);
     try {
       await deleteSession(deleteChapterId);
       setDeleteChapterId(null);
-      toast({
-        title: "Chapter deleted",
-        description: "The chapter has been removed from this book"
-      });
     } catch (error) {
       console.error('Error deleting chapter:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete chapter",
-        variant: "destructive"
-      });
+    } finally {
+      setIsDeletingChapter(false);
     }
   };
 
@@ -587,28 +583,68 @@ export default function BookDetail() {
         </div>
 
         {/* Delete Chapter Dialog */}
-        <AlertDialog open={!!deleteChapterId} onOpenChange={() => setDeleteChapterId(null)}>
-          <AlertDialogContent>
+        <AlertDialog open={!!deleteChapterId} onOpenChange={(open) => !isDeletingChapter && !open && setDeleteChapterId(null)}>
+          <AlertDialogContent className="max-w-md">
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete Chapter?</AlertDialogTitle>
-              <AlertDialogDescription className="space-y-2">
-                <p className="font-semibold text-destructive">Warning: This action cannot be undone!</p>
-                <p>This will permanently delete:</p>
-                <ul className="list-disc list-inside space-y-1 text-sm">
-                  <li>All audio recordings in this chapter</li>
-                  <li>All transcripts</li>
-                  <li>All conversation history</li>
-                  <li>All uploaded images</li>
-                </ul>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-full bg-destructive/10">
+                  <AlertTriangle className="w-6 h-6 text-destructive" />
+                </div>
+                <AlertDialogTitle className="text-xl">Delete this chapter?</AlertDialogTitle>
+              </div>
+              <AlertDialogDescription asChild>
+                <div className="space-y-4">
+                  <p className="text-destructive font-medium">
+                    This will delete the chapter, its audio recordings, transcript, images, and turns. This cannot be undone.
+                  </p>
+                  
+                  <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
+                    <p className="font-semibold text-foreground mb-2">What will be deleted:</p>
+                    <ul className="space-y-1.5 text-muted-foreground">
+                      <li className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-primary" />
+                        <span>Chapter (generated content)</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Mic className="w-4 h-4 text-primary" />
+                        <span>Audio recordings + files</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-primary" />
+                        <span>Transcripts</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-primary" />
+                        <span>Turns (conversation data)</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-primary" />
+                        <span>Images + image files</span>
+                      </li>
+                    </ul>
+                  </div>
+                  
+                  <p className="text-sm text-muted-foreground">
+                    The book and story will remain intact.
+                  </p>
+                </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogFooter className="mt-4">
+              <AlertDialogCancel disabled={isDeletingChapter}>Cancel</AlertDialogCancel>
               <AlertDialogAction 
-                onClick={handleDeleteChapter} 
+                onClick={handleDeleteChapter}
+                disabled={isDeletingChapter}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                Delete Chapter
+                {isDeletingChapter ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete Chapter'
+                )}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
