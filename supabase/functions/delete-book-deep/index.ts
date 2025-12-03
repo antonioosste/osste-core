@@ -210,90 +210,129 @@ serve(async (req: Request) => {
 
     // ===== BEGIN DELETION (order matters due to FK constraints) =====
 
-    // Delete transcripts (linked to recordings)
+    // ===== BEGIN DELETION (strict order due to FK constraints) =====
+    // Order: transcripts -> story_images -> turns -> chapters -> recordings -> sessions -> story_embeddings -> stories -> story_group
+
+    // 1. Delete transcripts (linked to recordings)
     if (recordingIds.length > 0) {
-      const { count, error } = await supabase
+      console.log(`[delete-book-deep] Deleting transcripts for ${recordingIds.length} recordings`);
+      const { error } = await supabase
         .from('transcripts')
         .delete()
         .in('recording_id', recordingIds);
-      if (error) result.errors.push(`Transcripts: ${error.message}`);
-      else result.deletedCounts.transcripts = count || 0;
+      if (error) {
+        console.error(`[delete-book-deep] Error deleting transcripts:`, error);
+        result.errors.push(`Transcripts: ${error.message}`);
+      }
     }
 
-    // Delete story_images (linked to stories, chapters, turns)
+    // 2. Delete story_images (linked to stories, chapters, turns)
     if (storyIds.length > 0) {
-      await supabase.from('story_images').delete().in('story_id', storyIds);
+      console.log(`[delete-book-deep] Deleting images for ${storyIds.length} stories`);
+      const { error } = await supabase.from('story_images').delete().in('story_id', storyIds);
+      if (error) console.error(`[delete-book-deep] Error deleting story images:`, error);
     }
     if (chapterIds.length > 0) {
-      await supabase.from('story_images').delete().in('chapter_id', chapterIds);
+      console.log(`[delete-book-deep] Deleting images for ${chapterIds.length} chapters`);
+      const { error } = await supabase.from('story_images').delete().in('chapter_id', chapterIds);
+      if (error) console.error(`[delete-book-deep] Error deleting chapter images:`, error);
     }
     if (turnIds.length > 0) {
-      await supabase.from('story_images').delete().in('turn_id', turnIds);
+      console.log(`[delete-book-deep] Deleting images for ${turnIds.length} turns`);
+      const { error } = await supabase.from('story_images').delete().in('turn_id', turnIds);
+      if (error) console.error(`[delete-book-deep] Error deleting turn images:`, error);
     }
 
-    // Delete turns
+    // 3. Delete turns
     if (sessionIds.length > 0) {
-      const { count, error } = await supabase
+      console.log(`[delete-book-deep] Deleting turns for ${sessionIds.length} sessions`);
+      const { error } = await supabase
         .from('turns')
         .delete()
         .in('session_id', sessionIds);
-      if (error) result.errors.push(`Turns: ${error.message}`);
-      else result.deletedCounts.turns = count || 0;
+      if (error) {
+        console.error(`[delete-book-deep] Error deleting turns:`, error);
+        result.errors.push(`Turns: ${error.message}`);
+      }
     }
 
-    // Delete chapters
+    // 4. Delete chapters
     if (sessionIds.length > 0) {
-      const { count, error } = await supabase
+      console.log(`[delete-book-deep] Deleting chapters for ${sessionIds.length} sessions`);
+      const { error } = await supabase
         .from('chapters')
         .delete()
         .in('session_id', sessionIds);
-      if (error) result.errors.push(`Chapters: ${error.message}`);
-      else result.deletedCounts.chapters = count || 0;
+      if (error) {
+        console.error(`[delete-book-deep] Error deleting chapters:`, error);
+        result.errors.push(`Chapters: ${error.message}`);
+      }
     }
 
-    // Delete recordings
+    // 5. Delete recordings
     if (sessionIds.length > 0) {
-      const { count, error } = await supabase
+      console.log(`[delete-book-deep] Deleting recordings for ${sessionIds.length} sessions`);
+      const { error } = await supabase
         .from('recordings')
         .delete()
         .in('session_id', sessionIds);
-      if (error) result.errors.push(`Recordings: ${error.message}`);
-      else result.deletedCounts.recordings = count || 0;
+      if (error) {
+        console.error(`[delete-book-deep] Error deleting recordings:`, error);
+        result.errors.push(`Recordings: ${error.message}`);
+      }
     }
 
-    // Delete sessions
-    {
-      const { count, error } = await supabase
+    // 6. Delete sessions - CRITICAL: Must happen before story_group deletion
+    if (sessionIds.length > 0) {
+      console.log(`[delete-book-deep] Deleting ${sessionIds.length} sessions`);
+      const { error } = await supabase
         .from('sessions')
         .delete()
-        .eq('story_group_id', storyGroupId);
-      if (error) result.errors.push(`Sessions: ${error.message}`);
-      else result.deletedCounts.sessions = count || 0;
+        .in('id', sessionIds);
+      if (error) {
+        console.error(`[delete-book-deep] Error deleting sessions:`, error);
+        result.errors.push(`Sessions: ${error.message}`);
+        // If sessions fail to delete, we cannot delete the story_group
+        throw new Error(`Cannot delete book: sessions deletion failed - ${error.message}`);
+      }
+      result.deletedCounts.sessions = sessionIds.length;
     }
 
-    // Delete story embeddings (if any)
+    // 7. Delete story embeddings (if any)
     if (storyIds.length > 0) {
-      await supabase.from('story_embeddings').delete().in('story_id', storyIds);
+      console.log(`[delete-book-deep] Deleting story embeddings`);
+      const { error } = await supabase.from('story_embeddings').delete().in('story_id', storyIds);
+      if (error) console.error(`[delete-book-deep] Error deleting story embeddings:`, error);
     }
 
-    // Delete stories
+    // 8. Delete stories - CRITICAL: Must happen before story_group deletion
+    console.log(`[delete-book-deep] Deleting stories for story_group ${storyGroupId}`);
     {
-      const { count, error } = await supabase
+      const { error } = await supabase
         .from('stories')
         .delete()
         .eq('story_group_id', storyGroupId);
-      if (error) result.errors.push(`Stories: ${error.message}`);
-      else result.deletedCounts.stories = count || 0;
+      if (error) {
+        console.error(`[delete-book-deep] Error deleting stories:`, error);
+        result.errors.push(`Stories: ${error.message}`);
+      } else {
+        result.deletedCounts.stories = storyIds.length;
+      }
     }
 
-    // Delete story_group
+    // 9. Delete story_group - FINAL step
+    console.log(`[delete-book-deep] Deleting story_group ${storyGroupId}`);
     {
       const { error } = await supabase
         .from('story_groups')
         .delete()
         .eq('id', storyGroupId);
-      if (error) result.errors.push(`StoryGroup: ${error.message}`);
-      else result.deletedCounts.storyGroup = 1;
+      if (error) {
+        console.error(`[delete-book-deep] Error deleting story_group:`, error);
+        result.errors.push(`StoryGroup: ${error.message}`);
+      } else {
+        result.deletedCounts.storyGroup = 1;
+      }
     }
 
     // ===== DELETE STORAGE FILES =====
