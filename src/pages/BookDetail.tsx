@@ -42,7 +42,7 @@ export default function BookDetail() {
   const { toast } = useToast();
   const { session } = useAuth();
   const { getStoryGroup, updateStoryGroup } = useStoryGroups();
-  const { sessions, deleteSession } = useSessions();
+  const { sessions, deleteSession, updateSession } = useSessions();
   const { stories, refetch: refetchStories } = useStories();
   const { chapters } = useChapters();
   
@@ -55,6 +55,8 @@ export default function BookDetail() {
   const [isGeneratingStory, setIsGeneratingStory] = useState(false);
   const [showStyleDialog, setShowStyleDialog] = useState(false);
   const [styleInstruction, setStyleInstruction] = useState("");
+  const [editChapterSessionId, setEditChapterSessionId] = useState<string | null>(null);
+  const [editChapterTitle, setEditChapterTitle] = useState("");
 
   // Get sessions for this book
   const bookSessions = sessions.filter(s => s.story_group_id === bookId);
@@ -139,6 +141,36 @@ export default function BookDetail() {
         variant: "destructive"
       });
     }
+  };
+
+  const handleSaveChapterTitle = async () => {
+    if (!editChapterSessionId || !editChapterTitle.trim()) return;
+    
+    try {
+      await updateSession(editChapterSessionId, { title: editChapterTitle.trim() });
+      setEditChapterSessionId(null);
+      setEditChapterTitle("");
+      toast({
+        title: "Chapter title updated",
+        description: "Your changes have been saved"
+      });
+    } catch (error) {
+      console.error('Error updating chapter title:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update chapter title",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getChapterDisplayTitle = (sessionItem: typeof sessions[0], chapterData: typeof chapters[0] | undefined) => {
+    // Priority: 1. Session title (user edited), 2. Chapter suggested_cover_title, 3. Story anchor (prompt), 4. Chapter title, 5. Fallback
+    if (sessionItem.title) return sessionItem.title;
+    if (chapterData?.suggested_cover_title) return chapterData.suggested_cover_title;
+    if (sessionItem.story_anchor) return sessionItem.story_anchor;
+    if (chapterData?.title) return chapterData.title;
+    return `Recording ${formatDate(sessionItem.started_at)}`;
   };
 
   const handleGenerateStory = async (withStyle: boolean = false) => {
@@ -439,7 +471,8 @@ export default function BookDetail() {
                 .map((sessionItem, index) => {
                   // Get chapter data from the chapters table
                   const chapterData = chaptersBySessionId[sessionItem.id];
-                  const chapterTitle = chapterData?.suggested_cover_title || chapterData?.title || sessionItem.title || `Recording ${formatDate(sessionItem.started_at)}`;
+                  const chapterTitle = getChapterDisplayTitle(sessionItem, chapterData);
+                  const isEditingThis = editChapterSessionId === sessionItem.id;
                   
                   return (
                     <Card key={sessionItem.id} className="border-border/40 hover:shadow-md transition-shadow">
@@ -448,9 +481,44 @@ export default function BookDetail() {
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                               <Badge variant="outline">Chapter {index + 1}</Badge>
-                              <h3 className="text-lg font-semibold text-foreground">
-                                {chapterTitle}
-                              </h3>
+                              {isEditingThis ? (
+                                <div className="flex items-center gap-2 flex-1">
+                                  <Input
+                                    value={editChapterTitle}
+                                    onChange={(e) => setEditChapterTitle(e.target.value)}
+                                    className="max-w-xs h-8"
+                                    placeholder="Chapter title"
+                                    autoFocus
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') handleSaveChapterTitle();
+                                      if (e.key === 'Escape') setEditChapterSessionId(null);
+                                    }}
+                                  />
+                                  <Button size="sm" variant="default" onClick={handleSaveChapterTitle}>
+                                    Save
+                                  </Button>
+                                  <Button size="sm" variant="ghost" onClick={() => setEditChapterSessionId(null)}>
+                                    Cancel
+                                  </Button>
+                                </div>
+                              ) : (
+                                <>
+                                  <h3 className="text-lg font-semibold text-foreground">
+                                    {chapterTitle}
+                                  </h3>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                    onClick={() => {
+                                      setEditChapterSessionId(sessionItem.id);
+                                      setEditChapterTitle(sessionItem.title || chapterTitle);
+                                    }}
+                                  >
+                                    <Edit className="w-3 h-3" />
+                                  </Button>
+                                </>
+                              )}
                               <Badge variant={sessionItem.status === 'completed' ? 'default' : 'secondary'}>
                                 {sessionItem.status === 'completed' ? 'Completed' : 'In Progress'}
                               </Badge>
@@ -479,7 +547,6 @@ export default function BookDetail() {
                               variant="outline" 
                               size="sm"
                               onClick={() => {
-                                // Navigate using chapter ID if available, otherwise show toast
                                 if (chapterData?.id) {
                                   navigate(`/chapters/${chapterData.id}`);
                                 } else {
@@ -495,12 +562,12 @@ export default function BookDetail() {
                               View
                             </Button>
                             <Button 
-                              variant="outline" 
+                              variant="default" 
                               size="sm"
                               onClick={() => navigate(`/session?id=${sessionItem.id}`)}
                             >
-                              <Edit className="w-4 h-4 mr-1" />
-                              {sessionItem.status === 'completed' ? 'Edit' : 'Continue'}
+                              <Mic className="w-4 h-4 mr-1" />
+                              Continue
                             </Button>
                             <Button 
                               variant="ghost" 
