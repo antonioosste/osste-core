@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.create-print-checkout]
 verify_jwt = true
+
+[functions.delete-book-deep]
+verify_jwt = true
+
+[functions.delete-session-deep]
+verify_jwt = true

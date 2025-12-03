@@ -22,8 +22,25 @@ export interface StoryGroup {
   created_at: string | null;
 }
 
+export interface DeleteBookResult {
+  success: boolean;
+  deletedCounts: {
+    storyGroup: number;
+    stories: number;
+    sessions: number;
+    chapters: number;
+    recordings: number;
+    transcripts: number;
+    turns: number;
+    images: number;
+    audioFiles: number;
+    imageFiles: number;
+  };
+  errors: string[];
+}
+
 export function useStoryGroups() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { toast } = useToast();
   const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -145,29 +162,65 @@ export function useStoryGroups() {
     }
   };
 
-  const deleteStoryGroup = async (id: string) => {
-    try {
-      const { error: deleteError } = await supabase
-        .from('story_groups')
-        .delete()
-        .eq('id', id);
-
-      if (deleteError) throw deleteError;
-
-      setStoryGroups(prev => prev.filter(group => group.id !== id));
-
+  /**
+   * Deep delete a book and ALL its related content:
+   * - Stories
+   * - Sessions
+   * - Chapters
+   * - Recordings (+ audio files from storage)
+   * - Transcripts
+   * - Turns
+   * - Images (+ image files from storage)
+   */
+  const deleteBookDeep = async (id: string): Promise<DeleteBookResult> => {
+    if (!session?.access_token) {
       toast({
-        title: "Book deleted",
-        description: "The book and all its content have been removed.",
+        title: "Authentication required",
+        description: "Please log in to delete this book.",
+        variant: "destructive",
       });
+      throw new Error("User not authenticated");
+    }
+
+    try {
+      const response = await supabase.functions.invoke('delete-book-deep', {
+        body: { storyGroupId: id },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to delete book');
+      }
+
+      const result = response.data as DeleteBookResult;
+
+      if (result.success) {
+        setStoryGroups(prev => prev.filter(group => group.id !== id));
+        toast({
+          title: "Book deleted successfully",
+          description: "The book and all its content have been permanently removed.",
+        });
+      } else {
+        toast({
+          title: "Partial deletion",
+          description: `Some items could not be deleted: ${result.errors.join(', ')}`,
+          variant: "destructive",
+        });
+      }
+
+      return result;
     } catch (err) {
       toast({
-        title: "Error deleting story group",
-        description: err instanceof Error ? err.message : "Failed to delete story group",
+        title: "Error deleting book",
+        description: err instanceof Error ? err.message : "Failed to delete book",
         variant: "destructive",
       });
       throw err;
     }
+  };
+
+  // Legacy simple delete (kept for backward compatibility)
+  const deleteStoryGroup = async (id: string) => {
+    return deleteBookDeep(id);
   };
 
   useEffect(() => {
@@ -182,6 +235,7 @@ export function useStoryGroups() {
     createStoryGroup,
     updateStoryGroup,
     deleteStoryGroup,
+    deleteBookDeep,
     refetch: fetchStoryGroups,
   };
 }

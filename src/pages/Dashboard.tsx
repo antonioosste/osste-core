@@ -13,7 +13,9 @@ import {
   ChevronRight,
   Trash2,
   Printer,
-  Pencil
+  Pencil,
+  Loader2,
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +43,7 @@ export default function Dashboard() {
   const [newBookTitle, setNewBookTitle] = useState('');
   const [newBookDescription, setNewBookDescription] = useState('');
   const [deleteBookId, setDeleteBookId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [editBookId, setEditBookId] = useState<string | null>(null);
   const [editBookTitle, setEditBookTitle] = useState('');
   
@@ -96,12 +99,25 @@ export default function Dashboard() {
   const handleDeleteBook = async () => {
     if (!deleteBookId) return;
     
+    setIsDeleting(true);
     try {
       await deleteStoryGroup(deleteBookId);
       setDeleteBookId(null);
     } catch (error) {
       console.error('Failed to delete book:', error);
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  // Get deletion info for a book
+  const getBookDeletionInfo = (bookId: string) => {
+    const chapterCount = getChapterCount(bookId);
+    const bookStory = getBookStory(bookId);
+    return {
+      chapterCount,
+      hasStory: !!bookStory,
+    };
   };
 
   const handleEditBook = async () => {
@@ -474,21 +490,80 @@ export default function Dashboard() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!deleteBookId} onOpenChange={() => setDeleteBookId(null)}>
-        <AlertDialogContent>
+      <AlertDialog open={!!deleteBookId} onOpenChange={(open) => !isDeleting && !open && setDeleteBookId(null)}>
+        <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this book?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this book and all its chapters, recordings, and stories. This action cannot be undone.
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-full bg-destructive/10">
+                <AlertTriangle className="w-6 h-6 text-destructive" />
+              </div>
+              <AlertDialogTitle className="text-xl">Are you sure you want to delete this book?</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p className="text-destructive font-medium">
+                  This action will permanently delete this book and ALL of its contents.
+                </p>
+                
+                <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
+                  <p className="font-semibold text-foreground mb-2">What will be deleted:</p>
+                  <ul className="space-y-1.5 text-muted-foreground">
+                    <li className="flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-primary" />
+                      <span>Book (story group)</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-primary" />
+                      <span>Story (generated narrative)</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Mic className="w-4 h-4 text-primary" />
+                      <span>Sessions (chapter recordings)</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-primary" />
+                      <span>Chapters (generated content)</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Mic className="w-4 h-4 text-primary" />
+                      <span>Recordings + audio files</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-primary" />
+                      <span>Transcripts</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-primary" />
+                      <span>Turns (conversation data)</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-primary" />
+                      <span>Images + image files</span>
+                    </li>
+                  </ul>
+                </div>
+                
+                <p className="text-sm text-muted-foreground">
+                  This action cannot be undone.
+                </p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="mt-4">
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDeleteBook}
+              disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete Book
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Permanently'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
