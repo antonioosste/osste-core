@@ -69,7 +69,7 @@ export default function Session() {
   
   const { toast } = useToast();
   const { user } = useAuth();
-  const { storyGroups, createStoryGroup } = useStoryGroups();
+  const { storyGroups, loading: storyGroupsLoading, createStoryGroup } = useStoryGroups();
   const { sessionId, startSession: startSessionDb, endSession, loadSession } = useSession(existingSessionId);
   const { 
     isRecording, 
@@ -135,7 +135,8 @@ export default function Session() {
   // Get or create target book for this chapter
   useEffect(() => {
     const getOrCreateTargetBook = async () => {
-      if (!user || targetBookId) return;
+      // Wait for story groups to load before making decisions
+      if (!user || targetBookId || storyGroupsLoading) return;
       
       // If bookIdParam was provided, use it directly
       if (bookIdParam) {
@@ -143,27 +144,18 @@ export default function Session() {
         return;
       }
       
-      // Otherwise, find or create a default book
-      const defaultBook = storyGroups.find(g => g.title === 'My Life Story');
-      
-      if (defaultBook) {
-        setTargetBookId(defaultBook.id);
-      } else if (storyGroups.length > 0) {
-        // Use the first book if no default found
+      // Only auto-select/create if user has no books AND came without a bookId
+      // If user has books, don't auto-create - they should select one explicitly
+      if (storyGroups.length > 0) {
+        // Use the first book as default
         setTargetBookId(storyGroups[0].id);
-      } else {
-        // Create a default book
-        try {
-          const newBook = await createStoryGroup('My Life Story', 'Your life story and memories');
-          setTargetBookId(newBook.id);
-        } catch (error) {
-          console.error('Error creating default book:', error);
-        }
       }
+      // NOTE: We no longer auto-create books here.
+      // Users must explicitly create books via "+ New Book" button
     };
 
     getOrCreateTargetBook();
-  }, [user, storyGroups, targetBookId, bookIdParam]);
+  }, [user, storyGroups, storyGroupsLoading, targetBookId, bookIdParam]);
 
   // Start non-guided session automatically
   useEffect(() => {
