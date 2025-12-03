@@ -1,18 +1,14 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { 
   ArrowLeft, 
   Plus, 
   BookOpen, 
   Mic, 
   Sparkles, 
-  Trash2, 
   Edit,
-  Calendar,
-  Clock,
   FileText,
   Loader2,
-  ChevronRight,
   Printer,
   RotateCcw,
   AlertTriangle
@@ -29,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-states/EmptyState";
 import { Header } from "@/components/layout/Header";
+import { ChapterCard } from "@/components/chapters/ChapterCard";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
 import { useSessions } from "@/hooks/useSessions";
 import { useStories } from "@/hooks/useStories";
@@ -57,8 +54,6 @@ export default function BookDetail() {
   const [isGeneratingStory, setIsGeneratingStory] = useState(false);
   const [showStyleDialog, setShowStyleDialog] = useState(false);
   const [styleInstruction, setStyleInstruction] = useState("");
-  const [editChapterSessionId, setEditChapterSessionId] = useState<string | null>(null);
-  const [editChapterTitle, setEditChapterTitle] = useState("");
 
   // Get sessions for this book
   const bookSessions = sessions.filter(s => s.story_group_id === bookId);
@@ -136,27 +131,6 @@ export default function BookDetail() {
       console.error('Error deleting chapter:', error);
     } finally {
       setIsDeletingChapter(false);
-    }
-  };
-
-  const handleSaveChapterTitle = async () => {
-    if (!editChapterSessionId || !editChapterTitle.trim()) return;
-    
-    try {
-      await updateSession(editChapterSessionId, { title: editChapterTitle.trim() });
-      setEditChapterSessionId(null);
-      setEditChapterTitle("");
-      toast({
-        title: "Chapter title updated",
-        description: "Your changes have been saved"
-      });
-    } catch (error) {
-      console.error('Error updating chapter title:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update chapter title",
-        variant: "destructive"
-      });
     }
   };
 
@@ -461,121 +435,34 @@ export default function BookDetail() {
               }}
             />
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {bookSessions
                 .sort((a, b) => new Date(a.started_at || 0).getTime() - new Date(b.started_at || 0).getTime())
                 .map((sessionItem, index) => {
-                  // Get chapter data from the chapters table
                   const chapterData = chaptersBySessionId[sessionItem.id];
                   const chapterTitle = getChapterDisplayTitle(sessionItem, chapterData);
-                  const isEditingThis = editChapterSessionId === sessionItem.id;
                   
                   return (
-                    <Card key={sessionItem.id} className="border-border/40 hover:shadow-md transition-shadow">
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <Badge variant="outline">Chapter {index + 1}</Badge>
-                              {isEditingThis ? (
-                                <div className="flex items-center gap-2 flex-1">
-                                  <Input
-                                    value={editChapterTitle}
-                                    onChange={(e) => setEditChapterTitle(e.target.value)}
-                                    className="max-w-xs h-8"
-                                    placeholder="Chapter title"
-                                    autoFocus
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') handleSaveChapterTitle();
-                                      if (e.key === 'Escape') setEditChapterSessionId(null);
-                                    }}
-                                  />
-                                  <Button size="sm" variant="default" onClick={handleSaveChapterTitle}>
-                                    Save
-                                  </Button>
-                                  <Button size="sm" variant="ghost" onClick={() => setEditChapterSessionId(null)}>
-                                    Cancel
-                                  </Button>
-                                </div>
-                              ) : (
-                                <>
-                                  <h3 className="text-lg font-semibold text-foreground">
-                                    {chapterTitle}
-                                  </h3>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-6 p-0"
-                                    onClick={() => {
-                                      setEditChapterSessionId(sessionItem.id);
-                                      setEditChapterTitle(sessionItem.title || chapterTitle);
-                                    }}
-                                  >
-                                    <Edit className="w-3 h-3" />
-                                  </Button>
-                                </>
-                              )}
-                              <Badge variant={sessionItem.status === 'completed' ? 'default' : 'secondary'}>
-                                {sessionItem.status === 'completed' ? 'Completed' : 'In Progress'}
-                              </Badge>
-                            </div>
-                            
-                            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                              <div className="flex items-center gap-1.5">
-                                <Calendar className="w-4 h-4" />
-                                {formatDate(sessionItem.started_at)}
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <Clock className="w-4 h-4" />
-                                {formatDuration(sessionItem.started_at, sessionItem.ended_at)}
-                              </div>
-                              {sessionItem.mode && (
-                                <div className="flex items-center gap-1.5">
-                                  <Mic className="w-4 h-4" />
-                                  {sessionItem.mode === 'guided' ? 'Guided' : 'Free Recording'}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-2 ml-4">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => {
-                                if (chapterData?.id) {
-                                  navigate(`/chapters/${chapterData.id}`);
-                                } else {
-                                  toast({
-                                    title: "Chapter not generated yet",
-                                    description: "Complete the recording and save to generate the chapter",
-                                    variant: "destructive"
-                                  });
-                                }
-                              }}
-                            >
-                              <FileText className="w-4 h-4 mr-1" />
-                              View
-                            </Button>
-                            <Button 
-                              variant="default" 
-                              size="sm"
-                              onClick={() => navigate(`/session?id=${sessionItem.id}`)}
-                            >
-                              <Mic className="w-4 h-4 mr-1" />
-                              Continue
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => setDeleteChapterId(sessionItem.id)}
-                            >
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <ChapterCard
+                      key={sessionItem.id}
+                      sessionId={sessionItem.id}
+                      chapterId={chapterData?.id}
+                      chapterIndex={index + 1}
+                      title={chapterTitle}
+                      status={sessionItem.status || 'active'}
+                      startedAt={sessionItem.started_at}
+                      endedAt={sessionItem.ended_at}
+                      mode={sessionItem.mode}
+                      hasChapterContent={!!chapterData}
+                      onEdit={async (sessionId, newTitle) => {
+                        await updateSession(sessionId, { title: newTitle });
+                        toast({
+                          title: "Chapter title updated",
+                          description: "Your changes have been saved"
+                        });
+                      }}
+                      onDelete={(sessionId) => setDeleteChapterId(sessionId)}
+                    />
                   );
                 })}
             </div>
