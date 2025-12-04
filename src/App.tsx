@@ -37,6 +37,8 @@ import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
 import PrintRequest from "./pages/PrintRequest";
 import PrintSuccess from "./pages/PrintSuccess";
+import GiftFlow from "./pages/GiftFlow";
+import GiftConfirmation from "./pages/GiftConfirmation";
 
 const queryClient = new QueryClient();
 
@@ -96,6 +98,8 @@ const App = () => (
             <Route path="/help" element={<WaitlistGuard><Help /></WaitlistGuard>} />
             <Route path="/print-request" element={<ProtectedRoute><DashboardLayout><PrintRequest /></DashboardLayout></ProtectedRoute>} />
             <Route path="/print-success" element={<ProtectedRoute><DashboardLayout><PrintSuccess /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/gift" element={<WaitlistGuard><GiftFlow /></WaitlistGuard>} />
+            <Route path="/gift/confirmation" element={<WaitlistGuard><GiftConfirmation /></WaitlistGuard>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

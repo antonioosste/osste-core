@@ -3,9 +3,10 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, ArrowLeft, CreditCard } from "lucide-react";
+import { CheckCircle, ArrowLeft, CreditCard, Gift } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const plans = {
   basic: {
@@ -42,14 +43,24 @@ const plans = {
   }
 };
 
+interface GiftData {
+  recipientEmail: string;
+  recipientName: string;
+  senderEmail: string;
+  senderName: string;
+}
+
 export default function Checkout() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [giftData, setGiftData] = useState<GiftData | null>(null);
   
   const planKey = searchParams.get("plan") as keyof typeof plans;
+  const flow = searchParams.get("flow"); // 'self' or 'gift'
   const selectedPlan = plans[planKey];
+  const isGiftFlow = flow === 'gift';
 
   useEffect(() => {
     if (!selectedPlan) {
@@ -59,8 +70,24 @@ export default function Checkout() {
         variant: "destructive"
       });
       navigate("/pricing");
+      return;
     }
-  }, [selectedPlan, navigate, toast]);
+
+    // Load gift data if this is a gift flow
+    if (isGiftFlow) {
+      const storedGiftData = sessionStorage.getItem('giftData');
+      if (storedGiftData) {
+        setGiftData(JSON.parse(storedGiftData));
+      } else {
+        toast({
+          title: "Missing gift information",
+          description: "Please enter the recipient details first.",
+          variant: "destructive"
+        });
+        navigate("/gift");
+      }
+    }
+  }, [selectedPlan, navigate, toast, isGiftFlow]);
 
   const handleCheckout = async () => {
     if (!selectedPlan) return;
@@ -68,28 +95,52 @@ export default function Checkout() {
     setIsLoading(true);
     
     try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          priceId: selectedPlan.priceId,
-          plan: planKey
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create checkout session");
-      }
-
-      const { url } = await response.json();
+      // For demo purposes, simulate a successful checkout
+      // In production, this would call your Stripe checkout endpoint
       
-      if (url) {
-        // Redirect to Stripe Checkout
-        window.location.href = url;
+      if (isGiftFlow && giftData) {
+        // Create gift invitation record
+        const { data: invitation, error: invitationError } = await supabase
+          .from('gift_invitations')
+          .insert({
+            sender_email: giftData.senderEmail,
+            sender_name: giftData.senderName || null,
+            recipient_email: giftData.recipientEmail,
+            recipient_name: giftData.recipientName || null,
+            status: 'paid',
+          })
+          .select()
+          .single();
+
+        if (invitationError) {
+          throw new Error(`Failed to create gift invitation: ${invitationError.message}`);
+        }
+
+        // Send gift invitation email
+        const { error: emailError } = await supabase.functions.invoke('send-gift-invitation', {
+          body: {
+            giftId: invitation.id,
+            recipientEmail: giftData.recipientEmail,
+            recipientName: giftData.recipientName,
+            senderEmail: giftData.senderEmail,
+            senderName: giftData.senderName,
+          }
+        });
+
+        if (emailError) {
+          console.error('Error sending gift invitation:', emailError);
+          // Don't fail the checkout, just log the error
+        }
+
+        // Navigate to gift confirmation
+        navigate('/gift/confirmation');
       } else {
-        throw new Error("No checkout URL received");
+        // Self flow - redirect to signup to create account
+        toast({
+          title: "Checkout successful!",
+          description: "Create your account to start your story journey.",
+        });
+        navigate('/signup');
       }
     } catch (error) {
       console.error("Checkout error:", error);
@@ -109,7 +160,7 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header isAuthenticated={true} />
+      <Header />
       
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
@@ -117,19 +168,40 @@ export default function Checkout() {
           <div className="flex items-center gap-4 mb-8">
             <Button 
               variant="ghost" 
-              onClick={() => navigate("/pricing")}
+              onClick={() => navigate(isGiftFlow ? "/gift" : "/pricing")}
               className="gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Pricing
+              Back
             </Button>
             <div>
               <h1 className="text-3xl font-bold">Checkout</h1>
               <p className="text-muted-foreground">
-                Complete your purchase to start creating beautiful family stories
+                {isGiftFlow 
+                  ? "Complete your gift purchase" 
+                  : "Complete your purchase to start creating beautiful family stories"}
               </p>
             </div>
           </div>
+
+          {/* Gift Info Banner */}
+          {isGiftFlow && giftData && (
+            <Card className="mb-6 border-primary/30 bg-primary/5">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <Gift className="w-5 h-5 text-primary mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-foreground">
+                      Gift for {giftData.recipientName || giftData.recipientEmail}
+                    </p>
+                    <p className="text-muted-foreground">
+                      A beautiful invitation will be sent to {giftData.recipientEmail}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Plan Summary */}
           <Card className="mb-8">
@@ -181,8 +253,9 @@ export default function Checkout() {
             <CardContent>
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  You'll be redirected to Stripe's secure checkout to complete your payment.
-                  Your subscription will begin immediately after successful payment.
+                  {isGiftFlow 
+                    ? "Complete your purchase and we'll send a beautiful invitation to your gift recipient."
+                    : "You'll be redirected to Stripe's secure checkout to complete your payment. Your subscription will begin immediately after successful payment."}
                 </p>
                 
                 <Button 
@@ -191,8 +264,12 @@ export default function Checkout() {
                   className="w-full gap-2"
                   size="lg"
                 >
-                  <CreditCard className="w-4 h-4" />
-                  {isLoading ? "Processing..." : "Proceed to Payment"}
+                  {isGiftFlow ? <Gift className="w-4 h-4" /> : <CreditCard className="w-4 h-4" />}
+                  {isLoading 
+                    ? "Processing..." 
+                    : isGiftFlow 
+                      ? "Complete Gift Purchase" 
+                      : "Proceed to Payment"}
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground">

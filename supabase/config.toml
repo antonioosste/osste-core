@@ -17,3 +17,6 @@ verify_jwt = true
 
 [functions.delete-session-deep]
 verify_jwt = true
+
+[functions.send-gift-invitation]
+verify_jwt = false
