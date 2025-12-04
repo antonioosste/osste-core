@@ -131,6 +131,43 @@ export default function ChapterDetail() {
           )}
         </div>
 
+        {/* Story Draft Section */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              Story Draft
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              AI-generated story based on your conversation
+            </p>
+          </CardHeader>
+          <CardContent>
+            {chapter.polished_text ? (
+              <div className="prose prose-sm max-w-none dark:prose-invert">
+                <div className="whitespace-pre-wrap text-foreground leading-relaxed">
+                  {chapter.polished_text}
+                </div>
+              </div>
+            ) : chapter.raw_transcript ? (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground italic">
+                  No polished story generated yet. Here's the raw transcript:
+                </p>
+                <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                  <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                    {chapter.raw_transcript}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">
+                No story content available yet. Continue recording to generate your story.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Chapter Details</CardTitle>
