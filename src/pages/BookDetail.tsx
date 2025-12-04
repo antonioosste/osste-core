@@ -33,6 +33,7 @@ import { useChapters } from "@/hooks/useChapters";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { assembleStory } from "@/lib/backend-api";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function BookDetail() {
   const navigate = useNavigate();
@@ -54,6 +55,7 @@ export default function BookDetail() {
   const [isGeneratingStory, setIsGeneratingStory] = useState(false);
   const [showStyleDialog, setShowStyleDialog] = useState(false);
   const [styleInstruction, setStyleInstruction] = useState("");
+  const [recordingsBySession, setRecordingsBySession] = useState<Record<string, { duration_seconds: number }[]>>({});
 
   // Get sessions for this book
   const bookSessions = sessions.filter(s => s.story_group_id === bookId);
@@ -95,6 +97,38 @@ export default function BookDetail() {
 
     loadBook();
   }, [bookId]);
+
+  // Fetch recordings for all sessions in this book
+  useEffect(() => {
+    const fetchRecordings = async () => {
+      if (bookSessions.length === 0) return;
+      
+      const sessionIds = bookSessions.map(s => s.id);
+      const { data, error } = await supabase
+        .from('recordings')
+        .select('session_id, duration_seconds')
+        .in('session_id', sessionIds);
+      
+      if (error) {
+        console.error('Error fetching recordings:', error);
+        return;
+      }
+      
+      // Group recordings by session_id
+      const grouped = (data || []).reduce((acc, rec) => {
+        const sid = rec.session_id;
+        if (sid) {
+          if (!acc[sid]) acc[sid] = [];
+          acc[sid].push({ duration_seconds: rec.duration_seconds || 0 });
+        }
+        return acc;
+      }, {} as Record<string, { duration_seconds: number }[]>);
+      
+      setRecordingsBySession(grouped);
+    };
+    
+    fetchRecordings();
+  }, [bookSessions.length]);
 
   const handleSaveEdit = async () => {
     if (!bookId || !editTitle.trim()) return;
@@ -442,6 +476,14 @@ export default function BookDetail() {
                   const chapterData = chaptersBySessionId[sessionItem.id];
                   const chapterTitle = getChapterDisplayTitle(sessionItem, chapterData);
                   
+                  // Calculate word count from chapter content
+                  const chapterText = chapterData?.polished_text || chapterData?.raw_transcript || '';
+                  const wordCount = chapterText.trim() ? chapterText.trim().split(/\s+/).length : 0;
+                  
+                  // Calculate total recording duration for this session
+                  const sessionRecordings = recordingsBySession[sessionItem.id] || [];
+                  const recordingDurationSeconds = sessionRecordings.reduce((sum, r) => sum + (r.duration_seconds || 0), 0);
+                  
                   return (
                     <ChapterCard
                       key={sessionItem.id}
@@ -454,6 +496,8 @@ export default function BookDetail() {
                       endedAt={sessionItem.ended_at}
                       mode={sessionItem.mode}
                       hasChapterContent={!!chapterData}
+                      wordCount={wordCount}
+                      recordingDurationSeconds={recordingDurationSeconds}
                       onEdit={async (sessionId, newTitle) => {
                         await updateSession(sessionId, { title: newTitle });
                         toast({
