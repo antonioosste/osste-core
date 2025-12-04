@@ -158,7 +158,7 @@ export default function Landing() {
         {/* Testimonials */}
         <HomeTestimonials />
 
-        {/* Sticky Gallery Section */}
+        {/* Gallery Section */}
         <section className="py-16 md:py-20 bg-background">
           <div className="container mx-auto px-4 mb-12">
             <div className="max-w-3xl mx-auto text-center">
@@ -171,36 +171,37 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Wrapper with defined height for sticky to work properly */}
-          <div className="relative px-4">
-            <div className="grid grid-cols-12 gap-2">
-              {/* Left column - scrolls normally */}
-              <div className="col-span-12 md:col-span-4 space-y-2">
-                <figure><img src="https://images.unsplash.com/photo-1718838541476-d04e71caa347?w=1200&auto=format&fit=crop" alt="Family story moment" className="w-full h-72 md:h-96 object-cover rounded-md" /></figure>
-                <figure><img src="https://images.unsplash.com/photo-1715432362539-6ab2ab480db2?w=1200&auto=format&fit=crop" alt="Memory preservation" className="w-full h-72 md:h-96 object-cover rounded-md" /></figure>
-                <figure><img src="https://images.unsplash.com/photo-1718601980986-0ce75101d52d?w=1200&auto=format&fit=crop" alt="Storytelling session" className="w-full h-72 md:h-96 object-cover rounded-md" /></figure>
-                <figure><img src="https://images.unsplash.com/photo-1685904042960-66242a0ac352?w=1200&auto=format&fit=crop" alt="Family gathering" className="w-full h-72 md:h-96 object-cover rounded-md" /></figure>
-                <figure><img src="https://images.unsplash.com/photo-1719411182379-ffd97c1f7ebf?w=1200&auto=format&fit=crop" alt="Cherished memories" className="w-full h-72 md:h-96 object-cover rounded-md" /></figure>
-              </div>
-
-              {/* Sticky middle column - stays in view while scrolling */}
-              <div className="hidden md:block col-span-4">
-                <div className="sticky top-4 space-y-2">
-                  <figure><img src="https://images.unsplash.com/photo-1718969604981-de826f44ce15?w=1600&auto=format&fit=crop" alt="Recording stories" className="w-full h-[calc(33vh-1rem)] object-cover rounded-md" /></figure>
-                  <figure><img src="https://images.unsplash.com/photo-1476180814856-a36609db0493?w=1600&auto=format&fit=crop" alt="Family book creation" className="w-full h-[calc(33vh-1rem)] object-cover rounded-md" /></figure>
-                  <figure><img src="https://images.unsplash.com/photo-1595407660626-db35dcd16609?w=1600&auto=format&fit=crop" alt="Legacy preservation" className="w-full h-[calc(33vh-1rem)] object-cover rounded-md" /></figure>
-                </div>
-              </div>
-
-              {/* Right column - scrolls normally */}
-              <div className="col-span-12 md:col-span-4 space-y-2">
-                <figure><img src="https://images.unsplash.com/photo-1719547907790-f661a88302c2?w=1200&auto=format&fit=crop" alt="Generations together" className="w-full h-72 md:h-96 object-cover rounded-md" /></figure>
-                <figure><img src="https://images.unsplash.com/photo-1599054799131-4b09c73a63cf?w=1200&auto=format&fit=crop" alt="Shared stories" className="w-full h-72 md:h-96 object-cover rounded-md" /></figure>
-                <figure><img src="https://images.unsplash.com/photo-1719963532023-01b573d1d584?w=1200&auto=format&fit=crop" alt="Recording moments" className="w-full h-72 md:h-96 object-cover rounded-md" /></figure>
-                <figure><img src="https://images.unsplash.com/photo-1714328101501-3594de6cb80f?w=1200&auto=format&fit=crop" alt="Family heritage" className="w-full h-72 md:h-96 object-cover rounded-md" /></figure>
-                <figure><img src="https://images.unsplash.com/photo-1719554873571-0fd6bf322bb1?w=1200&auto=format&fit=crop" alt="Lasting legacy" className="w-full h-72 md:h-96 object-cover rounded-md" /></figure>
-              </div>
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 px-4 max-w-7xl mx-auto">
+            <figure className="col-span-1 row-span-2">
+              <img src="https://images.unsplash.com/photo-1718838541476-d04e71caa347?w=800&auto=format&fit=crop" alt="Family story moment" className="w-full h-full object-cover rounded-lg" />
+            </figure>
+            <figure>
+              <img src="https://images.unsplash.com/photo-1715432362539-6ab2ab480db2?w=800&auto=format&fit=crop" alt="Memory preservation" className="w-full h-48 md:h-56 object-cover rounded-lg" />
+            </figure>
+            <figure>
+              <img src="https://images.unsplash.com/photo-1718601980986-0ce75101d52d?w=800&auto=format&fit=crop" alt="Storytelling session" className="w-full h-48 md:h-56 object-cover rounded-lg" />
+            </figure>
+            <figure className="row-span-2">
+              <img src="https://images.unsplash.com/photo-1476180814856-a36609db0493?w=800&auto=format&fit=crop" alt="Family book creation" className="w-full h-full object-cover rounded-lg" />
+            </figure>
+            <figure>
+              <img src="https://images.unsplash.com/photo-1685904042960-66242a0ac352?w=800&auto=format&fit=crop" alt="Family gathering" className="w-full h-48 md:h-56 object-cover rounded-lg" />
+            </figure>
+            <figure>
+              <img src="https://images.unsplash.com/photo-1595407660626-db35dcd16609?w=800&auto=format&fit=crop" alt="Legacy preservation" className="w-full h-48 md:h-56 object-cover rounded-lg" />
+            </figure>
+            <figure>
+              <img src="https://images.unsplash.com/photo-1719547907790-f661a88302c2?w=800&auto=format&fit=crop" alt="Generations together" className="w-full h-48 md:h-56 object-cover rounded-lg" />
+            </figure>
+            <figure>
+              <img src="https://images.unsplash.com/photo-1599054799131-4b09c73a63cf?w=800&auto=format&fit=crop" alt="Shared stories" className="w-full h-48 md:h-56 object-cover rounded-lg" />
+            </figure>
+            <figure>
+              <img src="https://images.unsplash.com/photo-1719963532023-01b573d1d584?w=800&auto=format&fit=crop" alt="Recording moments" className="w-full h-48 md:h-56 object-cover rounded-lg" />
+            </figure>
+            <figure>
+              <img src="https://images.unsplash.com/photo-1714328101501-3594de6cb80f?w=800&auto=format&fit=crop" alt="Family heritage" className="w-full h-48 md:h-56 object-cover rounded-lg" />
+            </figure>
           </div>
         </section>
 
