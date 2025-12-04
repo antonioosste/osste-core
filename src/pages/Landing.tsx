@@ -7,6 +7,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { HomeTestimonials } from "@/components/sections/HomeTestimonials";
 import { LandingHeroTitle } from "@/components/sections/LandingHeroTitle";
+import { OnboardingDecision } from "@/components/onboarding/OnboardingDecision";
 
 const valueProps = [
   {
@@ -61,6 +62,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+        {/* Onboarding Decision Section */}
+        <OnboardingDecision />
 
         {/* Value Cards */}
         <section className="py-16 md:py-20 bg-muted/30">

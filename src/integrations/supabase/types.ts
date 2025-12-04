@@ -67,6 +67,54 @@ export type Database = {
           },
         ]
       }
+      gift_invitations: {
+        Row: {
+          created_at: string
+          id: string
+          invitation_sent_at: string | null
+          recipient_email: string
+          recipient_name: string | null
+          redeemed_at: string | null
+          redeemed_by: string | null
+          sender_email: string
+          sender_name: string | null
+          status: string
+          stripe_payment_intent: string | null
+          stripe_session_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invitation_sent_at?: string | null
+          recipient_email: string
+          recipient_name?: string | null
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          sender_email: string
+          sender_name?: string | null
+          status?: string
+          stripe_payment_intent?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invitation_sent_at?: string | null
+          recipient_email?: string
+          recipient_name?: string | null
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          sender_email?: string
+          sender_name?: string | null
+          status?: string
+          stripe_payment_intent?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pages: {
         Row: {
           body_markdown: string | null
