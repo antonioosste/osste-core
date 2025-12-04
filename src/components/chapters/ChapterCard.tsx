@@ -25,6 +25,8 @@ interface ChapterCardProps {
   endedAt: string | null;
   mode: string | null;
   hasChapterContent: boolean;
+  wordCount: number;
+  recordingDurationSeconds: number;
   onEdit: (sessionId: string, newTitle: string) => Promise<void>;
   onDelete: (sessionId: string) => void;
 }
@@ -39,6 +41,8 @@ export function ChapterCard({
   endedAt,
   mode,
   hasChapterContent,
+  wordCount,
+  recordingDurationSeconds,
   onEdit,
   onDelete,
 }: ChapterCardProps) {
@@ -70,6 +74,25 @@ export function ChapterCard({
   const getModeLabel = (mode: string | null) => {
     if (!mode) return null;
     return mode === 'guided' ? 'Guided' : 'Free Recording';
+  };
+
+  const formatRecordingDuration = (seconds: number) => {
+    if (seconds <= 0) return "0 sec";
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${mins}m ${secs}s`;
+    }
+    if (mins > 0) {
+      return `${mins} min ${secs} sec`;
+    }
+    return `${secs} sec`;
+  };
+
+  const formatWordCount = (count: number) => {
+    return count.toLocaleString();
   };
 
   const handleSave = async () => {
@@ -164,6 +187,11 @@ export function ChapterCard({
               </Button>
             </div>
           )}
+          
+          {/* Word count & Recording duration */}
+          <p className="text-xs text-muted-foreground mt-1">
+            {formatWordCount(wordCount)} words • {formatRecordingDuration(recordingDurationSeconds)} of recordings
+          </p>
         </div>
 
         {/* Metadata Row */}
