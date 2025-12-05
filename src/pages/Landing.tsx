@@ -176,25 +176,31 @@ export default function Landing() {
               <img src="https://images.unsplash.com/photo-1718838541476-d04e71caa347?w=800&auto=format&fit=crop" alt="Family story moment" className="w-full h-full object-cover rounded-lg" />
             </figure>
             <figure>
-              <img src="/images/gallery/photo-album.jpg" alt="Photo album with memories" className="w-full h-48 md:h-56 object-cover rounded-lg" />
+              <img src="https://images.unsplash.com/photo-1715432362539-6ab2ab480db2?w=800&auto=format&fit=crop" alt="Memory preservation" className="w-full h-48 md:h-56 object-cover rounded-lg" />
             </figure>
             <figure>
-              <img src="/images/gallery/vintage-album.jpg" alt="Hands holding vintage photo album" className="w-full h-48 md:h-56 object-cover rounded-lg" />
+              <img src="https://images.unsplash.com/photo-1718601980986-0ce75101d52d?w=800&auto=format&fit=crop" alt="Storytelling session" className="w-full h-48 md:h-56 object-cover rounded-lg" />
+            </figure>
+            <figure className="row-span-2">
+              <img src="https://images.unsplash.com/photo-1476180814856-a36609db0493?w=800&auto=format&fit=crop" alt="Family book creation" className="w-full h-full object-cover rounded-lg" />
             </figure>
             <figure>
-              <img src="/images/gallery/boy-with-dog.jpg" alt="Boy walking with dog" className="w-full h-48 md:h-56 object-cover rounded-lg" />
+              <img src="https://images.unsplash.com/photo-1685904042960-66242a0ac352?w=800&auto=format&fit=crop" alt="Family gathering" className="w-full h-48 md:h-56 object-cover rounded-lg" />
             </figure>
             <figure>
-              <img src="/images/gallery/sharing-memories.jpg" alt="Couple sharing old photographs" className="w-full h-48 md:h-56 object-cover rounded-lg" />
+              <img src="https://images.unsplash.com/photo-1595407660626-db35dcd16609?w=800&auto=format&fit=crop" alt="Legacy preservation" className="w-full h-48 md:h-56 object-cover rounded-lg" />
             </figure>
             <figure>
-              <img src="/images/gallery/photo-box.jpg" alt="Box of vintage photographs" className="w-full h-48 md:h-56 object-cover rounded-lg" />
+              <img src="https://images.unsplash.com/photo-1719547907790-f661a88302c2?w=800&auto=format&fit=crop" alt="Generations together" className="w-full h-48 md:h-56 object-cover rounded-lg" />
             </figure>
             <figure>
-              <img src="/images/gallery/family-field.jpg" alt="Family walking in a field at sunset" className="w-full h-48 md:h-56 object-cover rounded-lg" />
+              <img src="https://images.unsplash.com/photo-1599054799131-4b09c73a63cf?w=800&auto=format&fit=crop" alt="Shared stories" className="w-full h-48 md:h-56 object-cover rounded-lg" />
             </figure>
             <figure>
-              <img src="/images/gallery/family-joy.jpg" alt="Joyful family moment in a field" className="w-full h-48 md:h-56 object-cover rounded-lg" />
+              <img src="https://images.unsplash.com/photo-1719963532023-01b573d1d584?w=800&auto=format&fit=crop" alt="Recording moments" className="w-full h-48 md:h-56 object-cover rounded-lg" />
+            </figure>
+            <figure>
+              <img src="/images/gallery/family-photos.jpg" alt="Vintage family photographs" className="w-full h-48 md:h-56 object-cover rounded-lg" />
             </figure>
           </div>
         </section>
