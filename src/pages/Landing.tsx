@@ -200,7 +200,7 @@ export default function Landing() {
               <img src="https://images.unsplash.com/photo-1719963532023-01b573d1d584?w=800&auto=format&fit=crop" alt="Recording moments" className="w-full h-48 md:h-56 object-cover rounded-lg" />
             </figure>
             <figure>
-              <img src="https://images.unsplash.com/photo-1714328101501-3594de6cb80f?w=800&auto=format&fit=crop" alt="Family heritage" className="w-full h-48 md:h-56 object-cover rounded-lg" />
+              <img src="/images/gallery/family-photos.jpg" alt="Vintage family photographs" className="w-full h-48 md:h-56 object-cover rounded-lg" />
             </figure>
           </div>
         </section>
