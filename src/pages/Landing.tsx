@@ -176,15 +176,6 @@ export default function Landing() {
               <img src="https://images.unsplash.com/photo-1718838541476-d04e71caa347?w=800&auto=format&fit=crop" alt="Family story moment" className="w-full h-full object-cover rounded-lg" />
             </figure>
             <figure>
-              <img src="https://images.unsplash.com/photo-1715432362539-6ab2ab480db2?w=800&auto=format&fit=crop" alt="Memory preservation" className="w-full h-48 md:h-56 object-cover rounded-lg" />
-            </figure>
-            <figure>
-              <img src="https://images.unsplash.com/photo-1718601980986-0ce75101d52d?w=800&auto=format&fit=crop" alt="Storytelling session" className="w-full h-48 md:h-56 object-cover rounded-lg" />
-            </figure>
-            <figure className="row-span-2">
-              <img src="/images/gallery/vintage-watch.jpg" alt="Vintage pocket watch with family photo" className="w-full h-full object-cover rounded-lg" />
-            </figure>
-            <figure>
               <img src="/images/gallery/photo-album.jpg" alt="Photo album with memories" className="w-full h-48 md:h-56 object-cover rounded-lg" />
             </figure>
             <figure>
