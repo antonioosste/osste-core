@@ -106,7 +106,8 @@ export default function StoryDetail() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [editedContent, setEditedContent] = useState("");
   const [regenerateDialog, setRegenerateDialog] = useState(false);
-  
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedTitle, setEditedTitle] = useState("");
   const [styleInstruction, setStyleInstruction] = useState("");
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [sessionIdForImages, setSessionIdForImages] = useState<string | undefined>();
@@ -165,6 +166,37 @@ export default function StoryDetail() {
     } catch (error) {
       console.error('Error saving edit:', error);
     }
+  };
+
+  const handleSaveTitle = async () => {
+    if (!id || !editedTitle.trim()) return;
+    
+    try {
+      await updateStory(id, { title: editedTitle.trim() });
+      setIsEditingTitle(false);
+      if (story) {
+        setStory({ ...story, title: editedTitle.trim() });
+      }
+      toast({
+        title: "Title updated",
+        description: "Story title has been saved."
+      });
+    } catch (error) {
+      console.error('Error saving title:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update title.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const startEditingTitle = () => {
+    const currentTitle = story?.title && !story.title.startsWith("Story for Group") 
+      ? story.title 
+      : "";
+    setEditedTitle(currentTitle);
+    setIsEditingTitle(true);
   };
 
   const handleApprove = async () => {
@@ -303,11 +335,41 @@ export default function StoryDetail() {
         <div className="mb-8" ref={contentRef}>
           <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
-              <h1 className="text-3xl font-bold text-foreground mb-2">
-                {story.title && !story.title.startsWith("Story for Group") 
-                  ? story.title 
-                  : "Untitled Story"}
-              </h1>
+              {isEditingTitle ? (
+                <div className="flex items-center gap-2 mb-2">
+                  <Input
+                    value={editedTitle}
+                    onChange={(e) => setEditedTitle(e.target.value)}
+                    placeholder="Enter story title..."
+                    className="text-2xl font-bold h-12"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveTitle();
+                      if (e.key === 'Escape') setIsEditingTitle(false);
+                    }}
+                  />
+                  <Button size="sm" onClick={handleSaveTitle}>Save</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setIsEditingTitle(false)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 mb-2 group">
+                  <h1 className="text-3xl font-bold text-foreground">
+                    {story.title && !story.title.startsWith("Story for Group") 
+                      ? story.title 
+                      : "Untitled Story"}
+                  </h1>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={startEditingTitle}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
               <p className="text-muted-foreground mb-4">
                 {displayContent.substring(0, 150)}...
               </p>
