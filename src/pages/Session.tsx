@@ -1261,7 +1261,7 @@ export default function Session() {
 
               {sessionId && (
                 <details className="group">
-                  {/* <summary className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors list-none">
+                  <summary className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors list-none">
                     <span className="flex items-center gap-2">
                       Add Photos
                       {uploadedImages.length > 0 && (
@@ -1271,7 +1271,7 @@ export default function Session() {
                       )}
                       <span className="text-xs group-open:rotate-180 transition-transform">▼</span>
                     </span>
-                  </summary> */}
+                  </summary>
                   <div className="absolute z-10 mt-2 w-[calc(100vw-2rem)] max-w-2xl right-0">
                     <StoryImageUploader
                       sessionId={sessionId}
