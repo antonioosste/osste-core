@@ -24,6 +24,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
 import { useStories } from "@/hooks/useStories";
+import { useStoryGroups } from "@/hooks/useStoryGroups";
 import { StoryImageUploader, UploadedImage } from "@/components/ui/story-image-uploader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -100,6 +101,7 @@ export default function StoryDetail() {
   const { id } = useParams();
   const { toast } = useToast();
   const { getStory, updateStory } = useStories();
+  const { storyGroups } = useStoryGroups();
   const [story, setStory] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -112,6 +114,21 @@ export default function StoryDetail() {
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [sessionIdForImages, setSessionIdForImages] = useState<string | undefined>();
   const contentRef = useRef<HTMLDivElement>(null);
+  
+  // Helper to get book title
+  const getBookTitle = () => {
+    if (!story?.story_group_id) return null;
+    const book = storyGroups?.find(g => g.id === story.story_group_id);
+    return book?.title || null;
+  };
+
+  // Get display title with book name fallback
+  const getDisplayTitle = () => {
+    if (story?.title && !story.title.startsWith("Story for Group")) {
+      return story.title;
+    }
+    return getBookTitle() || "Untitled Story";
+  };
   
   // Use hook for synchronized image management
   const { images: uploadedImages, deleteImage, refetch: refetchImages } = useStoryImages({ 
@@ -356,9 +373,7 @@ export default function StoryDetail() {
               ) : (
                 <div className="flex items-center gap-2 mb-2 group">
                   <h1 className="text-3xl font-bold text-foreground">
-                    {story.title && !story.title.startsWith("Story for Group") 
-                      ? story.title 
-                      : "Untitled Story"}
+                    {getDisplayTitle()}
                   </h1>
                   <Button 
                     variant="ghost" 
