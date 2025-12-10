@@ -21,29 +21,40 @@ export function OssteWaitlist() {
     if (!email) return;
     setIsSubmitting(true);
     setMessage(null);
-    const {
-      error
-    } = await supabase.from("waitlist_signups").insert({
-      email
-    });
-    if (error) {
-      if (error.code === "23505") {
-        setMessage({
-          type: "error",
-          text: "This email is already on our waitlist!"
-        });
-      } else {
-        setMessage({
-          type: "error",
-          text: "Something went wrong. Try again."
-        });
+    try {
+      const { error } = await supabase.from("waitlist_signups").insert({ email });
+      
+      if (error) {
+        if (error.code === "23505") {
+          setMessage({
+            type: "error",
+            text: "This email is already on our waitlist!"
+          });
+        } else {
+          setMessage({
+            type: "error",
+            text: "Something went wrong. Try again."
+          });
+        }
+        setIsSubmitting(false);
+        return;
       }
-    } else {
+
+      // Send welcome email via edge function
+      await supabase.functions.invoke("send-waitlist-email", {
+        body: { email }
+      });
+
       setMessage({
         type: "success",
         text: "You're on the list! We'll email you when OSSTE opens early access."
       });
       setEmail("");
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: "Something went wrong. Try again."
+      });
     }
     setIsSubmitting(false);
   };
