@@ -23,7 +23,7 @@ export default function Stories() {
   // Map database stories to UI format
   const mappedStories = dbStories.map(story => ({
     id: story.id,
-    title: story.title || "Untitled Story",
+    title: story.title && !story.title.startsWith("Story for Group") ? story.title : "Untitled Story",
     summary: story.edited_text?.substring(0, 150) || story.raw_text?.substring(0, 150) || "No content yet",
     status: (story.approved ? "approved" : story.edited_text ? "polished" : "draft") as StoryStatus,
     updatedDate: story.created_at || new Date().toISOString(),
