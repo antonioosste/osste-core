@@ -11,9 +11,6 @@ import {
   CheckCircle,
   RotateCcw,
   FileText,
-  Calendar,
-  MapPin,
-  User,
   X,
   Image as ImageIcon,
   Trash2
@@ -23,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+
 import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
 import { useStories } from "@/hooks/useStories";
@@ -109,7 +106,7 @@ export default function StoryDetail() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [editedContent, setEditedContent] = useState("");
   const [regenerateDialog, setRegenerateDialog] = useState(false);
-  const [factsDrawerOpen, setFactsDrawerOpen] = useState(false);
+  
   const [styleInstruction, setStyleInstruction] = useState("");
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [sessionIdForImages, setSessionIdForImages] = useState<string | undefined>();
@@ -335,65 +332,6 @@ export default function StoryDetail() {
                 <RotateCcw className={`w-4 h-4 ${isRegenerating ? 'animate-spin' : ''}`} />
                 {isRegenerating ? "Regenerating..." : "Regenerate"}
               </Button>
-              <Sheet open={factsDrawerOpen} onOpenChange={setFactsDrawerOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="outline" className="gap-2">
-                    <FileText className="w-4 h-4" />
-                    Facts Check
-                  </Button>
-                </SheetTrigger>
-                <SheetContent className="bg-background border-l">
-                  <SheetHeader>
-                    <SheetTitle>Story Facts & Entities</SheetTitle>
-                    <SheetDescription>
-                      Key people, places, and dates mentioned in this story
-                    </SheetDescription>
-                  </SheetHeader>
-                  <div className="mt-6 space-y-6">
-                    <div>
-                      <h4 className="flex items-center gap-2 font-medium mb-3">
-                        <User className="w-4 h-4" />
-                        People
-                      </h4>
-                      <div className="space-y-2">
-                        {sampleStory.entities.people.map((person, i) => (
-                          <div key={i} className="p-2 bg-muted rounded-md text-sm">
-                            {person}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h4 className="flex items-center gap-2 font-medium mb-3">
-                        <MapPin className="w-4 h-4" />
-                        Places
-                      </h4>
-                      <div className="space-y-2">
-                        {sampleStory.entities.places.map((place, i) => (
-                          <div key={i} className="p-2 bg-muted rounded-md text-sm">
-                            {place}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h4 className="flex items-center gap-2 font-medium mb-3">
-                        <Calendar className="w-4 h-4" />
-                        Dates & Times
-                      </h4>
-                      <div className="space-y-2">
-                        {sampleStory.entities.dates.map((date, i) => (
-                          <div key={i} className="p-2 bg-muted rounded-md text-sm">
-                            {date}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
             </div>
           </div>
         </div>
