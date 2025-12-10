@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { 
-  Mic, 
-  MicOff, 
-  Square, 
+import {
+  Mic,
+  MicOff,
+  Square,
   Save,
   X,
   WifiOff,
@@ -11,12 +11,19 @@ import {
   Loader2,
   Volume2,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Header } from "@/components/layout/Header";
 import { QuestionSwitcher } from "@/components/ui/question-switcher";
 import { StoryImageUploader, UploadedImage } from "@/components/ui/story-image-uploader";
@@ -63,36 +70,36 @@ interface GuidedPrompt {
 export default function Session() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const existingSessionId = searchParams.get('id');
-  const bookIdParam = searchParams.get('bookId'); // Book ID to add chapter to
-  const modeParam = searchParams.get('mode') as 'guided' | 'non-guided' | null;
-  
+  const existingSessionId = searchParams.get("id");
+  const bookIdParam = searchParams.get("bookId"); // Book ID to add chapter to
+  const modeParam = searchParams.get("mode") as "guided" | "non-guided" | null;
+
   const { toast } = useToast();
   const { user } = useAuth();
   const { storyGroups, loading: storyGroupsLoading, createStoryGroup } = useStoryGroups();
   const { sessionId, startSession: startSessionDb, endSession, loadSession } = useSession(existingSessionId);
-  const { 
-    isRecording, 
-    isProcessing, 
-    startRecording: startAudioRecording, 
-    stopRecording, 
+  const {
+    isRecording,
+    isProcessing,
+    startRecording: startAudioRecording,
+    stopRecording,
     uploadAndProcess,
-    cancelRecording 
+    cancelRecording,
   } = useAudioRecorder(sessionId);
   const { turns, loading: turnsLoading, refetch: refetchTurns } = useTurns(sessionId || undefined);
-  
+
   // Book (story group) state - use bookIdParam if provided
   const [targetBookId, setTargetBookId] = useState<string | null>(bookIdParam);
-  
+
   // Core session state
   const [status, setStatus] = useState<SessionStatus>("idle");
   const [sessionTime, setSessionTime] = useState(0);
   const [currentPrompt, setCurrentPrompt] = useState("");
   const [isLoadingSession, setIsLoadingSession] = useState(!!existingSessionId);
-  
-  // Session mode and question bank state  
+
+  // Session mode and question bank state
   const [showGuidedSetup, setShowGuidedSetup] = useState(!existingSessionId && !modeParam);
-  const [sessionMode, setSessionMode] = useState<'guided' | 'non-guided'>(modeParam || 'non-guided');
+  const [sessionMode, setSessionMode] = useState<"guided" | "non-guided">(modeParam || "non-guided");
   const [guidedPrompts, setGuidedPrompts] = useState<GuidedPrompt[]>([]);
   const [currentGuidedPromptIndex, setCurrentGuidedPromptIndex] = useState(0);
   const [showCategorySelector, setShowCategorySelector] = useState(false);
@@ -104,28 +111,32 @@ export default function Session() {
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const [currentQuestionTtsUrl, setCurrentQuestionTtsUrl] = useState<string | null>(null);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
-  
+
   // Permission and error states
   const [micPermission, setMicPermission] = useState<PermissionState>("prompt");
   const [hasNetworkError, setHasNetworkError] = useState(false);
-  
+
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
   const [isGeneratingChapters, setIsGeneratingChapters] = useState(false);
-  
+
   // Conversation state
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationOpen, setConversationOpen] = useState(true);
-  
+
   // Waveform animation
   const [waveformData, setWaveformData] = useState<number[]>(new Array(20).fill(0));
   const intervalRef = useRef<NodeJS.Timeout>();
-  
+
   // Conversation scroll reference
   const conversationEndRef = useRef<HTMLDivElement>(null);
-  
+
   // Image uploads state - use the new hook for real-time sync
-  const { images: uploadedImages, deleteImage: deleteImageFromDb, refetch: refetchImages } = useStoryImages({ 
-    sessionId: sessionId || undefined 
+  const {
+    images: uploadedImages,
+    deleteImage: deleteImageFromDb,
+    refetch: refetchImages,
+  } = useStoryImages({
+    sessionId: sessionId || undefined,
   });
 
   // TTS audio playback
@@ -137,13 +148,13 @@ export default function Session() {
     const getOrCreateTargetBook = async () => {
       // Wait for story groups to load before making decisions
       if (!user || targetBookId || storyGroupsLoading) return;
-      
+
       // If bookIdParam was provided, use it directly
       if (bookIdParam) {
         setTargetBookId(bookIdParam);
         return;
       }
-      
+
       // Only auto-select/create if user has no books AND came without a bookId
       // If user has books, don't auto-create - they should select one explicitly
       if (storyGroups.length > 0) {
@@ -160,20 +171,20 @@ export default function Session() {
   // Start non-guided session automatically
   useEffect(() => {
     const startNonGuidedSession = async () => {
-      if (modeParam === 'non-guided' && !existingSessionId && !sessionId && targetBookId) {
+      if (modeParam === "non-guided" && !existingSessionId && !sessionId && targetBookId) {
         try {
           await startSessionDb({
             story_group_id: targetBookId,
-            persona: 'friendly',
+            persona: "friendly",
             themes: [],
-            language: 'en',
-            mode: 'non-guided'
+            language: "en",
+            mode: "non-guided",
           });
-          
+
           // Set initial prompt for non-guided
           setCurrentPrompt("Tell me a story from your life that's meaningful to you.");
         } catch (error) {
-          console.error('Error starting chapter:', error);
+          console.error("Error starting chapter:", error);
         }
       }
     };
@@ -186,70 +197,68 @@ export default function Session() {
     const loadExistingSession = async () => {
       if (existingSessionId && turns.length > 0) {
         setIsLoadingSession(true);
-        console.log('📥 Loading existing session:', existingSessionId, 'with', turns.length, 'turns');
-        
+        console.log("📥 Loading existing session:", existingSessionId, "with", turns.length, "turns");
+
         // Fetch session data to get mode
         const { data: sessionData } = await supabase
-          .from('sessions')
-          .select('mode, themes')
-          .eq('id', existingSessionId)
+          .from("sessions")
+          .select("mode, themes")
+          .eq("id", existingSessionId)
           .single();
-        
+
         if (sessionData) {
-          const mode = sessionData.mode as 'guided' | 'non-guided' | null;
-          const loadedMode = mode === 'non-guided' ? 'non-guided' : 'guided';
+          const mode = sessionData.mode as "guided" | "non-guided" | null;
+          const loadedMode = mode === "non-guided" ? "non-guided" : "guided";
           setSessionMode(loadedMode);
           setShowGuidedSetup(false);
-          
+
           let category: QuestionCategory | undefined;
           if (sessionData.themes && sessionData.themes.length > 0) {
             category = sessionData.themes[0] as QuestionCategory;
             setSelectedCategory(category);
           }
           setShowCategorySelector(false);
-          
+
           // Load questions for guided mode only
-          if (loadedMode === 'guided') {
+          if (loadedMode === "guided") {
             await loadQuestions(loadedMode, category);
           }
         }
-        
+
         // Sort turns by turn_index to ensure proper ordering
         const sortedTurns = [...turns].sort((a, b) => {
           const indexA = a.turn_index || 0;
           const indexB = b.turn_index || 0;
           return indexA - indexB;
         });
-        
-        console.log('📋 Loading', sortedTurns.length, 'turns in order');
-        
+
+        console.log("📋 Loading", sortedTurns.length, "turns in order");
+
         // Load turns into messages - NO welcome message for existing sessions
         const loadedMessages: Message[] = [];
 
         for (const turn of sortedTurns) {
-          console.log('📝 Loading turn', turn.turn_index, ':', {
+          console.log("📝 Loading turn", turn.turn_index, ":", {
             prompt: turn.prompt_text?.substring(0, 50),
             answer: turn.answer_text?.substring(0, 50),
-            stt: turn.stt_text?.substring(0, 50)
+            stt: turn.stt_text?.substring(0, 50),
           });
-          
+
           // Add AI prompt first if it exists
           if (turn.prompt_text) {
-            const suggestions = turn.follow_up_suggestions 
-              ? (Array.isArray(turn.follow_up_suggestions) 
-                  ? turn.follow_up_suggestions as string[]
-                  : [])
+            const suggestions = turn.follow_up_suggestions
+              ? Array.isArray(turn.follow_up_suggestions)
+                ? (turn.follow_up_suggestions as string[])
+                : []
               : undefined;
-            
+
             // Get TTS URL if available
             let ttsUrl: string | null = null;
             if (turn.tts_audio_path) {
-              const { data } = await supabase.storage
-                .from('recordings')
-                .createSignedUrl(turn.tts_audio_path, 86400); // 24 hours
+              const { data } = await supabase.storage.from("recordings").createSignedUrl(turn.tts_audio_path, 86400); // 24 hours
               ttsUrl = data?.signedUrl || null;
             }
-            
+
             loadedMessages.push({
               id: `ai-${turn.id}`,
               type: "ai",
@@ -258,7 +267,7 @@ export default function Session() {
               ttsUrl: ttsUrl,
               recordingId: turn.recording_id || undefined,
               suggestions: suggestions,
-              turnId: turn.id
+              turnId: turn.id,
             });
           }
 
@@ -275,19 +284,19 @@ export default function Session() {
           }
         }
 
-        console.log('✅ Loaded', loadedMessages.length, 'messages total');
+        console.log("✅ Loaded", loadedMessages.length, "messages total");
         setMessages(loadedMessages);
-        
+
         // Set the last AI prompt as current and load its suggestions
-        const lastAiMessage = [...loadedMessages].reverse().find(m => m.type === 'ai');
+        const lastAiMessage = [...loadedMessages].reverse().find((m) => m.type === "ai");
         if (lastAiMessage) {
           setCurrentPrompt(lastAiMessage.content);
-          
+
           // Set TTS URL for current question
           if (lastAiMessage.ttsUrl) {
             setCurrentQuestionTtsUrl(lastAiMessage.ttsUrl);
           }
-          
+
           // If the last AI message has suggestions, load them
           if (lastAiMessage.suggestions) {
             setSuggestedQuestions(lastAiMessage.suggestions);
@@ -298,7 +307,7 @@ export default function Session() {
           title: "Session loaded",
           description: `Loaded ${sortedTurns.length} conversation turns`,
         });
-        
+
         setIsLoadingSession(false);
       } else if (existingSessionId && !turnsLoading && turns.length === 0) {
         // Session exists but has no turns yet - show category selector
@@ -315,7 +324,7 @@ export default function Session() {
     let interval: NodeJS.Timeout;
     if (isRecording) {
       interval = setInterval(() => {
-        setSessionTime(prev => prev + 1);
+        setSessionTime((prev) => prev + 1);
       }, 1000);
     }
     return () => clearInterval(interval);
@@ -325,9 +334,7 @@ export default function Session() {
   useEffect(() => {
     if (status === "listening") {
       intervalRef.current = setInterval(() => {
-        setWaveformData(prev => 
-          prev.map(() => Math.random() * 100)
-        );
+        setWaveformData((prev) => prev.map(() => Math.random() * 100));
       }, 100);
     } else {
       clearInterval(intervalRef.current);
@@ -338,7 +345,7 @@ export default function Session() {
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    conversationEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    conversationEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   // Mock prompts rotation
@@ -347,7 +354,7 @@ export default function Session() {
     "What was your hometown like when you were growing up?",
     "Can you describe your parents and what they were like?",
     "What was school like for you? Do you have any favorite teachers or subjects?",
-    "Tell me about your first job or career. How did you get started?"
+    "Tell me about your first job or career. How did you get started?",
   ];
 
   const requestMicPermission = async () => {
@@ -356,10 +363,10 @@ export default function Session() {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       setMicPermission("granted");
       setShowPermissionDialog(false);
-      stream.getTracks().forEach(track => track.stop()); // Stop the test stream
+      stream.getTracks().forEach((track) => track.stop()); // Stop the test stream
       toast({
         title: "Microphone access granted",
-        description: "You can now start recording your story."
+        description: "You can now start recording your story.",
       });
     } catch (error) {
       setMicPermission("denied");
@@ -373,7 +380,7 @@ export default function Session() {
 
   const handleGuidedSetupComplete = async (starterQuestion: string) => {
     setShowGuidedSetup(false);
-    setSessionMode('non-guided'); // Use non-guided flow after guidance
+    setSessionMode("non-guided"); // Use non-guided flow after guidance
 
     if (!targetBookId) {
       toast({
@@ -388,33 +395,33 @@ export default function Session() {
     try {
       await startSessionDb({
         story_group_id: targetBookId,
-        persona: 'friendly',
+        persona: "friendly",
         themes: [],
-        language: 'en',
-        mode: 'non-guided'
+        language: "en",
+        mode: "non-guided",
       });
-      
+
       // Set the starter question from backend
       setCurrentPrompt(starterQuestion);
-      
+
       toast({
         title: "Session started",
         description: "You can now start recording your response",
       });
     } catch (error) {
-      console.error('Error starting session:', error);
+      console.error("Error starting session:", error);
       toast({
         title: "Failed to start session",
         description: "Please try again",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
 
   const handleGuidedSetupSkip = async () => {
     setShowGuidedSetup(false);
-    setSessionMode('non-guided');
-    
+    setSessionMode("non-guided");
+
     if (!targetBookId) {
       toast({
         title: "Error",
@@ -428,30 +435,30 @@ export default function Session() {
     try {
       await startSessionDb({
         story_group_id: targetBookId,
-        persona: 'friendly',
+        persona: "friendly",
         themes: [],
-        language: 'en',
-        mode: 'non-guided'
+        language: "en",
+        mode: "non-guided",
       });
-      
+
       setCurrentPrompt("Tell me a story from your life that's meaningful to you.");
-      
+
       toast({
         title: "Free recording mode",
         description: "Record your story without guidance",
       });
     } catch (error) {
-      console.error('Error starting non-guided session:', error);
+      console.error("Error starting non-guided session:", error);
       toast({
         title: "Failed to start session",
         description: "Please try again",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
 
   const handleCategorySelect = async (category: QuestionCategory | "surprise", depthLevel: number) => {
-    setSessionMode('guided');
+    setSessionMode("guided");
     setSelectedDepth(depthLevel);
     setShowCategorySelector(false);
 
@@ -472,43 +479,43 @@ export default function Session() {
     try {
       await startSessionDb({
         story_group_id: targetBookId,
-        persona: 'friendly',
+        persona: "friendly",
         themes: finalCategory ? [finalCategory] : [],
-        language: 'en',
-        mode: 'guided',
-        category: finalCategory
+        language: "en",
+        mode: "guided",
+        category: finalCategory,
       });
-      
+
       // Load questions
-      await loadQuestions('guided', finalCategory, depthLevel);
+      await loadQuestions("guided", finalCategory, depthLevel);
     } catch (error) {
-      console.error('Error starting session:', error);
+      console.error("Error starting session:", error);
     }
   };
 
-  const loadQuestions = async (mode: 'guided' | 'non-guided', category?: QuestionCategory, depthLevel?: number) => {
+  const loadQuestions = async (mode: "guided" | "non-guided", category?: QuestionCategory, depthLevel?: number) => {
     setIsLoadingQuestions(true);
     try {
-      if (mode === 'guided') {
+      if (mode === "guided") {
         let questions: QuestionRow[];
-        
+
         if (category) {
           // Fetch questions for specific category
           questions = await getQuestionsByCategory({
             category,
-            depthLevelMax: depthLevel || selectedDepth
+            depthLevelMax: depthLevel || selectedDepth,
           });
         } else {
           // Random question for "surprise me"
           const randomQ = await getRandomQuestion({
-            depthLevelMax: depthLevel || selectedDepth
+            depthLevelMax: depthLevel || selectedDepth,
           });
           questions = randomQ ? [randomQ] : [];
         }
-        
+
         setQuestionBank(questions);
         setCurrentQuestionIndex(0);
-        
+
         // Set first question as current
         if (questions.length > 0) {
           setCurrentQuestionData(questions[0]);
@@ -516,11 +523,11 @@ export default function Session() {
         }
       }
     } catch (error) {
-      console.error('Error loading questions:', error);
+      console.error("Error loading questions:", error);
       toast({
         title: "Failed to load questions",
         description: error instanceof Error ? error.message : "Could not load questions",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoadingQuestions(false);
@@ -543,14 +550,14 @@ export default function Session() {
     try {
       const randomQ = await getRandomQuestion({
         category: selectedCategory,
-        depthLevelMax: selectedDepth
+        depthLevelMax: selectedDepth,
       });
       if (randomQ) {
         setCurrentQuestionData(randomQ);
         setCurrentPrompt(randomQ.question_text);
       }
     } catch (error) {
-      console.error('Error loading random question:', error);
+      console.error("Error loading random question:", error);
     }
   };
 
@@ -582,13 +589,13 @@ export default function Session() {
       try {
         await startSessionDb({
           story_group_id: targetBookId,
-          persona: 'friendly',
+          persona: "friendly",
           themes: selectedCategory ? [selectedCategory] : [],
-          language: 'en',
-          mode: sessionMode
+          language: "en",
+          mode: sessionMode,
         });
       } catch (error) {
-        console.error('Error starting session:', error);
+        console.error("Error starting session:", error);
         return;
       }
     }
@@ -597,7 +604,7 @@ export default function Session() {
       await startAudioRecording();
       setStatus("listening");
     } catch (error) {
-      console.error('Failed to start recording:', error);
+      console.error("Failed to start recording:", error);
       setStatus("error");
     }
   };
@@ -605,62 +612,67 @@ export default function Session() {
   const handleStopRecording = async () => {
     try {
       setStatus("thinking");
-      
+
       // Stop recording and get blob
       const recording = await stopRecording();
-      
+
       // Add user message placeholder (recordingPath set after upload completes)
       const userMsgId = Date.now().toString();
-      setMessages(prev => [...prev, {
-        id: userMsgId,
-        type: "user",
-        content: "Processing your response...",
-        timestamp: new Date(),
-        isPartial: true
-      }]);
-      
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: userMsgId,
+          type: "user",
+          content: "Processing your response...",
+          timestamp: new Date(),
+          isPartial: true,
+        },
+      ]);
+
       // Upload and process (triggers transcription + AI response + TTS)
       const result = await uploadAndProcess(recording, currentPrompt);
-      console.log('📋 Turn created:', result);
-      
+      console.log("📋 Turn created:", result);
+
       // Refetch turns to update conversation history
       await refetchTurns();
-      
+
       // Extract data from backend response
       const transcriptionText = result.transcript?.text || result.turn?.answer_text;
-      
+
       // New unified API structure
       const mainQuestion = result.follow_up?.question; // Main question (synthesized to TTS)
       const alternativeQuestions = result.follow_up?.suggestions || []; // Alternative questions
       const ttsUrl = result.follow_up?.tts_url; // Available immediately in response
       const topic = result.follow_up?.topic || null;
       const turnId = result.turn?.id;
-      
-      console.log('🎵 TTS URL from response:', ttsUrl);
-      console.log('📋 Main question:', mainQuestion);
-      console.log('📋 Alternative questions:', alternativeQuestions);
-      console.log('🏷️ Topic:', topic);
-      
+
+      console.log("🎵 TTS URL from response:", ttsUrl);
+      console.log("📋 Main question:", mainQuestion);
+      console.log("📋 Alternative questions:", alternativeQuestions);
+      console.log("🏷️ Topic:", topic);
+
       if (transcriptionText) {
         // Update user message with transcription and attach actual storage path
-        setMessages(prev => prev.map(msg => 
-          msg.id === userMsgId 
-            ? { ...msg, content: transcriptionText, isPartial: false, recordingPath: result.storage_path }
-            : msg
-        ));
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === userMsgId
+              ? { ...msg, content: transcriptionText, isPartial: false, recordingPath: result.storage_path }
+              : msg,
+          ),
+        );
       } else {
         // Even without transcription, attach storage path and finalize message
-        setMessages(prev => prev.map(msg => 
-          msg.id === userMsgId 
-            ? { ...msg, isPartial: false, recordingPath: result.storage_path }
-            : msg
-        ));
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === userMsgId ? { ...msg, isPartial: false, recordingPath: result.storage_path } : msg,
+          ),
+        );
       }
-      
+
       // Add AI message with main question
       if (mainQuestion) {
         const aiMessageId = `ai-${Date.now()}`;
-        
+
         setMessages((prev) => [
           ...prev,
           {
@@ -672,58 +684,56 @@ export default function Session() {
             turnId: turnId,
             recordingId: result.recording_id,
             suggestions: alternativeQuestions.length > 0 ? alternativeQuestions : undefined,
-            topic: topic
+            topic: topic,
           },
         ]);
 
         // Update prompt with main question
         setCurrentPrompt(mainQuestion);
         setCurrentQuestionTtsUrl(ttsUrl || null);
-        
+
         // Store alternative questions in QuestionSwitcher for manual selection
         setSuggestedQuestions(alternativeQuestions);
-        
+
         // Auto-play TTS audio (available immediately in response)
         if (ttsUrl) {
-          console.log('🔊 Auto-playing TTS audio from follow_up.tts_url');
+          console.log("🔊 Auto-playing TTS audio from follow_up.tts_url");
           setTimeout(() => {
-            playAudio(aiMessageId, ttsUrl).catch(error => {
-              console.error('❌ TTS auto-play failed:', error);
+            playAudio(aiMessageId, ttsUrl).catch((error) => {
+              console.error("❌ TTS auto-play failed:", error);
               toast({
                 title: "Auto-play failed",
                 description: "Click the audio icon to play the response.",
-                variant: "default"
+                variant: "default",
               });
             });
           }, 100);
         }
       }
-      
+
       setStatus("idle");
-      
+
       toast({
         title: "Turn completed",
-        description: "Your response has been processed successfully."
+        description: "Your response has been processed successfully.",
       });
-
     } catch (error) {
-      console.error('❌ Failed to process recording:', error);
+      console.error("❌ Failed to process recording:", error);
       setStatus("error");
       setHasNetworkError(true);
-      
+
       toast({
         title: "Processing failed",
         description: error instanceof Error ? error.message : "Failed to process your recording",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
 
-
   const playAudio = async (messageId: string, ttsUrl: string) => {
     try {
-      console.log('🎵 Playing audio for message:', messageId, 'URL:', ttsUrl);
-      
+      console.log("🎵 Playing audio for message:", messageId, "URL:", ttsUrl);
+
       // Stop any currently playing audio
       if (audioRef.current) {
         audioRef.current.pause();
@@ -731,12 +741,12 @@ export default function Session() {
       }
 
       setPlayingAudioId(messageId);
-      
+
       const audio = new Audio(ttsUrl);
       audioRef.current = audio;
 
       audio.onended = () => {
-        console.log('✅ Audio playback ended');
+        console.log("✅ Audio playback ended");
         setPlayingAudioId(null);
         audioRef.current = null;
       };
@@ -748,16 +758,16 @@ export default function Session() {
         toast({
           title: "Playback failed",
           description: "Failed to play audio response.",
-          variant: "destructive"
+          variant: "destructive",
         });
       };
 
       // Play with error handling
       try {
         await audio.play();
-        console.log('✅ Audio playback started successfully');
+        console.log("✅ Audio playback started successfully");
       } catch (playError) {
-        console.error('❌ Audio play() failed:', playError);
+        console.error("❌ Audio play() failed:", playError);
         throw playError;
       }
     } catch (err) {
@@ -778,23 +788,21 @@ export default function Session() {
 
       setPlayingAudioId(messageId);
 
-      console.log('🎵 Attempting to play recording:', recordingPath);
+      console.log("🎵 Attempting to play recording:", recordingPath);
 
       // Get signed URL from Supabase Storage (valid for 1 hour)
-      const { data, error } = await supabase.storage
-        .from('recordings')
-        .createSignedUrl(recordingPath, 3600);
+      const { data, error } = await supabase.storage.from("recordings").createSignedUrl(recordingPath, 3600);
 
       if (error) {
-        console.error('❌ Error creating signed URL:', error);
+        console.error("❌ Error creating signed URL:", error);
         throw error;
       }
 
       if (!data?.signedUrl) {
-        throw new Error('No signed URL returned');
+        throw new Error("No signed URL returned");
       }
 
-      console.log('✅ Signed URL created:', data.signedUrl);
+      console.log("✅ Signed URL created:", data.signedUrl);
 
       const audio = new Audio(data.signedUrl);
       audioRef.current = audio;
@@ -811,7 +819,7 @@ export default function Session() {
         toast({
           title: "Playback failed",
           description: "Failed to play recording.",
-          variant: "destructive"
+          variant: "destructive",
         });
       };
 
@@ -823,22 +831,21 @@ export default function Session() {
       toast({
         title: "Playback failed",
         description: "Failed to load recording.",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
-
 
   const cancelAndExit = () => {
     if (isRecording) {
       cancelRecording();
     }
-    
+
     toast({
       title: "Chapter cancelled",
-      description: "Exiting without saving."
+      description: "Exiting without saving.",
     });
-    
+
     // Navigate back to book if bookId was provided, otherwise dashboard
     navigate(bookIdParam ? `/books/${bookIdParam}` : "/dashboard");
   };
@@ -847,46 +854,46 @@ export default function Session() {
     if (isRecording) {
       cancelRecording();
     }
-    
+
     if (sessionId) {
       try {
         // End the chapter first
         await endSession(sessionId);
-        
+
         // Generate chapter content
         setIsGeneratingChapters(true);
-        
+
         try {
           const session = await supabase.auth.getSession();
           const token = session.data.session?.access_token;
-          
+
           if (!token) {
-            throw new Error('No authentication token available');
+            throw new Error("No authentication token available");
           }
-          
-          console.log('🔄 Generating chapter content for:', sessionId);
+
+          console.log("🔄 Generating chapter content for:", sessionId);
           await generateChapters(token, sessionId);
-          
+
           toast({
             title: "Chapter saved",
-            description: "Your chapter has been saved successfully."
+            description: "Your chapter has been saved successfully.",
           });
         } catch (chapterError) {
-          console.error('Error generating chapter:', chapterError);
+          console.error("Error generating chapter:", chapterError);
           toast({
             title: "Chapter saved",
             description: "Chapter saved, but content generation failed. You can retry later.",
-            variant: "default"
+            variant: "default",
           });
         } finally {
           setIsGeneratingChapters(false);
         }
       } catch (error) {
-        console.error('Error saving chapter:', error);
+        console.error("Error saving chapter:", error);
         toast({
           title: "Save failed",
           description: "Failed to save chapter, but your recordings are stored.",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     }
@@ -899,14 +906,14 @@ export default function Session() {
     setStatus("idle");
     toast({
       title: "Reconnecting...",
-      description: "Attempting to restore connection."
+      description: "Attempting to restore connection.",
     });
   };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   const getStatusBadge = () => {
@@ -924,9 +931,9 @@ export default function Session() {
       thinking: { variant: "secondary" as const, text: "Thinking" },
       speaking: { variant: "default" as const, text: "Speaking" },
       paused: { variant: "outline" as const, text: "Paused" },
-      error: { variant: "destructive" as const, text: "Error" }
+      error: { variant: "destructive" as const, text: "Error" },
     };
-    
+
     const config = statusConfig[status];
     return (
       <Badge variant={config.variant} className="animate-pulse">
@@ -951,19 +958,16 @@ export default function Session() {
           </div>
         </div>
       )}
-      
+
       {/* Guided Setup */}
       {showGuidedSetup && (
         <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="w-full py-8">
-            <GuidedSetup
-              onComplete={handleGuidedSetupComplete}
-              onSkip={handleGuidedSetupSkip}
-            />
+            <GuidedSetup onComplete={handleGuidedSetupComplete} onSkip={handleGuidedSetupSkip} />
           </div>
         </div>
       )}
-      
+
       {/* Category Selector (Legacy - kept for existing sessions) */}
       {showCategorySelector && (
         <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center p-4">
@@ -972,11 +976,10 @@ export default function Session() {
           </div>
         </div>
       )}
-      
+
       {/* Main Session Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="max-w-4xl mx-auto w-full flex flex-col h-full px-4">
-          
           {/* Minimalistic Header */}
           <div className="flex items-center justify-between py-4 border-b border-border/50 flex-shrink-0">
             <div className="flex items-center gap-4">
@@ -985,26 +988,17 @@ export default function Session() {
               <span className="text-sm text-muted-foreground tabular-nums">{formatTime(sessionTime)}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={cancelAndExit}
-                disabled={isGeneratingChapters}
-              >
+              <Button variant="ghost" size="sm" onClick={cancelAndExit} disabled={isGeneratingChapters}>
                 Cancel
               </Button>
-              <Button
-                size="sm"
-                onClick={saveAndExit}
-                disabled={isGeneratingChapters}
-              >
+              <Button size="sm" onClick={saveAndExit} disabled={isGeneratingChapters}>
                 {isGeneratingChapters ? (
                   <>
                     <Loader2 className="w-3 h-3 mr-2 animate-spin" />
                     Saving
                   </>
                 ) : (
-                  'Save & Exit'
+                  "Save & Exit"
                 )}
               </Button>
             </div>
@@ -1021,7 +1015,9 @@ export default function Session() {
                     <h3 className="font-medium text-sm text-foreground">Connection Lost</h3>
                     <p className="text-xs text-muted-foreground">Unable to connect to the server.</p>
                   </div>
-                  <Button onClick={retryConnection} size="sm" variant="outline">Retry</Button>
+                  <Button onClick={retryConnection} size="sm" variant="outline">
+                    Retry
+                  </Button>
                 </div>
               </div>
             )}
@@ -1032,7 +1028,7 @@ export default function Session() {
                 size="lg"
                 variant={isRecording ? "destructive" : "default"}
                 className={`w-32 h-32 rounded-full shadow-lg hover:shadow-xl transition-all ${
-                  isRecording ? 'animate-pulse' : 'hover:scale-105'
+                  isRecording ? "animate-pulse" : "hover:scale-105"
                 }`}
                 onClick={isRecording ? handleStopRecording : startRecording}
                 disabled={micPermission === "denied" || hasNetworkError || isProcessing}
@@ -1061,9 +1057,7 @@ export default function Session() {
                   Current Question
                 </p>
                 <div className="flex items-center justify-center gap-3 w-full">
-                  <p className="text-base text-foreground leading-relaxed flex-1 font-medium">
-                    {currentPrompt}
-                  </p>
+                  <p className="text-base text-foreground leading-relaxed flex-1 font-medium">{currentPrompt}</p>
                   {currentQuestionTtsUrl && (
                     <Button
                       size="sm"
@@ -1071,12 +1065,12 @@ export default function Session() {
                       className="h-8 w-8 p-0 flex-shrink-0"
                       onClick={() => {
                         if (currentQuestionTtsUrl) {
-                          playAudio('current-question', currentQuestionTtsUrl);
+                          playAudio("current-question", currentQuestionTtsUrl);
                         }
                       }}
-                      disabled={playingAudioId === 'current-question'}
+                      disabled={playingAudioId === "current-question"}
                     >
-                      {playingAudioId === 'current-question' ? (
+                      {playingAudioId === "current-question" ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <Volume2 className="h-4 w-4" />
@@ -1110,7 +1104,7 @@ export default function Session() {
                   setStatus("idle");
                   toast({
                     title: "Recording cancelled",
-                    description: "Your recording has been discarded."
+                    description: "Your recording has been discarded.",
                   });
                 }}
                 className="text-destructive hover:text-destructive hover:bg-destructive/10 mb-4"
@@ -1125,12 +1119,18 @@ export default function Session() {
               <div className="w-full max-w-2xl animate-fade-in mb-4">
                 <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-card via-card to-muted/20 shadow-xl backdrop-blur-sm">
                   <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-accent/5 pointer-events-none" />
-                  
+
                   <div className="relative p-6 flex items-center justify-center gap-4">
                     <div className="flex space-x-2">
                       <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" />
-                      <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
-                      <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
+                      <div
+                        className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce"
+                        style={{ animationDelay: "0.1s" }}
+                      />
+                      <div
+                        className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce"
+                        style={{ animationDelay: "0.2s" }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -1138,67 +1138,69 @@ export default function Session() {
             )}
 
             {/* AI-Inspired Follow-up Suggestions - Only show in non-guided mode */}
-            {sessionMode === 'non-guided' && messages.length > 0 && messages[messages.length - 1]?.suggestions && !isRecording && status !== "thinking" && (
-              <div className="w-full max-w-2xl animate-fade-in mb-4">
-                <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-card via-card to-muted/20 shadow-xl backdrop-blur-sm">
-                  {/* Subtle gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-accent/5 pointer-events-none" />
-                  
-                  <div className="relative p-6">
-                    {/* Header with AI indicator */}
-                    <div className="flex items-center gap-3 mb-5">
-                      <div className="relative">
-                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                        <div className="absolute inset-0 w-2 h-2 rounded-full bg-primary animate-ping" />
+            {sessionMode === "non-guided" &&
+              messages.length > 0 &&
+              messages[messages.length - 1]?.suggestions &&
+              !isRecording &&
+              status !== "thinking" && (
+                <div className="w-full max-w-2xl animate-fade-in mb-4">
+                  <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-card via-card to-muted/20 shadow-xl backdrop-blur-sm">
+                    {/* Subtle gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+
+                    <div className="relative p-6">
+                      {/* Header with AI indicator */}
+                      <div className="flex items-center gap-3 mb-5">
+                        <div className="relative">
+                          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                          <div className="absolute inset-0 w-2 h-2 rounded-full bg-primary animate-ping" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
+                            Suggested Next Steps
+                          </h3>
+                          <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                            AI-generated follow-up questions
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
-                          Suggested Next Steps
-                        </h3>
-                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                          AI-generated follow-up questions
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {/* Suggestions List */}
-                    <div className="space-y-2">
-                      {messages[messages.length - 1].suggestions!.map((suggestion, index) => (
-                        <button
-                          key={index}
-                          onClick={() => {
-                            setCurrentPrompt(suggestion);
-                            toast({
-                              title: "Question selected",
-                              description: "Ready to record your answer"
-                            });
-                          }}
-                          className="group w-full text-left p-4 rounded-xl border border-border/30 bg-background/50 hover:bg-accent/10 hover:border-accent/40 transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold mt-0.5 group-hover:bg-primary/20 transition-colors">
-                              {index + 1}
-                            </div>
-                            <p className="flex-1 text-sm text-foreground leading-relaxed font-medium">
-                              {suggestion}
-                            </p>
-                            <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
-                                <span className="text-primary text-xs">→</span>
+
+                      {/* Suggestions List */}
+                      <div className="space-y-2">
+                        {messages[messages.length - 1].suggestions!.map((suggestion, index) => (
+                          <button
+                            key={index}
+                            onClick={() => {
+                              setCurrentPrompt(suggestion);
+                              toast({
+                                title: "Question selected",
+                                description: "Ready to record your answer",
+                              });
+                            }}
+                            className="group w-full text-left p-4 rounded-xl border border-border/30 bg-background/50 hover:bg-accent/10 hover:border-accent/40 transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold mt-0.5 group-hover:bg-primary/20 transition-colors">
+                                {index + 1}
+                              </div>
+                              <p className="flex-1 text-sm text-foreground leading-relaxed font-medium">{suggestion}</p>
+                              <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
+                                  <span className="text-primary text-xs">→</span>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </button>
-                      ))}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Additional Options - Mode-specific Navigation */}
             <div className="flex items-center justify-center gap-4 text-xs">
-              {sessionMode === 'guided' && guidedPrompts.length > 0 && (
+              {sessionMode === "guided" && guidedPrompts.length > 0 && (
                 <>
                   <Button
                     variant="ghost"
@@ -1224,7 +1226,7 @@ export default function Session() {
                   >
                     Next Question ({currentGuidedPromptIndex + 1}/{guidedPrompts.length})
                   </Button>
-                  
+
                   <Button
                     variant="ghost"
                     size="sm"
@@ -1238,8 +1240,8 @@ export default function Session() {
                   </Button>
                 </>
               )}
-              
-              {sessionMode === 'guided' && questionBank.length > 0 && guidedPrompts.length === 0 && (
+
+              {sessionMode === "guided" && questionBank.length > 0 && guidedPrompts.length === 0 && (
                 <>
                   <Button
                     variant="ghost"
@@ -1250,13 +1252,8 @@ export default function Session() {
                   >
                     Next Question
                   </Button>
-                  
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={changeTopic}
-                    className="text-xs"
-                  >
+
+                  <Button variant="ghost" size="sm" onClick={changeTopic} className="text-xs">
                     Change Topic
                   </Button>
                 </>
@@ -1264,7 +1261,7 @@ export default function Session() {
 
               {sessionId && (
                 <details className="group">
-                  <summary className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors list-none">
+                  {/* <summary className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors list-none">
                     <span className="flex items-center gap-2">
                       Add Photos
                       {uploadedImages.length > 0 && (
@@ -1274,7 +1271,7 @@ export default function Session() {
                       )}
                       <span className="text-xs group-open:rotate-180 transition-transform">▼</span>
                     </span>
-                  </summary>
+                  </summary> */}
                   <div className="absolute z-10 mt-2 w-[calc(100vw-2rem)] max-w-2xl right-0">
                     <StoryImageUploader
                       sessionId={sessionId}
@@ -1289,7 +1286,7 @@ export default function Session() {
                         });
                       }}
                     />
-                    
+
                     {uploadedImages.length > 0 && (
                       <Card className="mt-4">
                         <CardHeader>
@@ -1298,12 +1295,11 @@ export default function Session() {
                         <CardContent>
                           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                             {uploadedImages.map((img) => (
-                              <div key={img.id} className="relative rounded-lg border border-border overflow-hidden group">
-                                <img 
-                                  src={img.url} 
-                                  alt={img.file_name}
-                                  className="w-full aspect-square object-cover"
-                                />
+                              <div
+                                key={img.id}
+                                className="relative rounded-lg border border-border overflow-hidden group"
+                              >
+                                <img src={img.url} alt={img.file_name} className="w-full aspect-square object-cover" />
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                   <p className="text-white text-[10px] px-2 text-center line-clamp-2 flex-1">
                                     {img.file_name}
@@ -1338,60 +1334,58 @@ export default function Session() {
           </div>
 
           {/* Conversation History - Collapsible Section */}
-          <Collapsible
-            open={conversationOpen}
-            onOpenChange={setConversationOpen}
-            className="flex-shrink-0"
-          >
+          <Collapsible open={conversationOpen} onOpenChange={setConversationOpen} className="flex-shrink-0">
             <div className="relative overflow-hidden group">
               {/* Gradient background */}
               <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
+
               <div className="relative flex items-center justify-between py-4 px-2 border-b border-border/40 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
                   {/* Chat icon with subtle animation */}
                   <div className="p-1.5 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors duration-200">
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="16" 
-                      height="16" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2" 
-                      strokeLinecap="round" 
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
                       strokeLinejoin="round"
                       className="text-primary"
                     >
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                     </svg>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-semibold text-foreground">Conversation History</h3>
                     {/* Message count badge */}
-                    {messages.filter(m => !m.isPartial).length > 0 && (
+                    {messages.filter((m) => !m.isPartial).length > 0 && (
                       <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold text-primary-foreground bg-primary rounded-full animate-scale-in">
-                        {messages.filter(m => !m.isPartial).length}
+                        {messages.filter((m) => !m.isPartial).length}
                       </span>
                     )}
                   </div>
                 </div>
-                
+
                 <CollapsibleTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="h-8 w-8 p-0 hover:bg-primary/10 transition-all duration-200 group/button"
                   >
-                    <div className={`transition-transform duration-300 ${conversationOpen ? 'rotate-180' : 'rotate-0'}`}>
+                    <div
+                      className={`transition-transform duration-300 ${conversationOpen ? "rotate-180" : "rotate-0"}`}
+                    >
                       <ChevronDown className="h-4 w-4 group-hover/button:text-primary transition-colors" />
                     </div>
                   </Button>
                 </CollapsibleTrigger>
               </div>
             </div>
-            
+
             <CollapsibleContent>
               <div className="overflow-y-auto py-4 max-h-[25vh] conversation-history-scroll">
                 <div className="space-y-6">
@@ -1401,50 +1395,53 @@ export default function Session() {
                     </div>
                   ) : (
                     <>
-                  {messages.filter(m => !m.isPartial).map((message) => (
-                    <div key={message.id} className="space-y-2">
-                      {/* Message */}
-                      <div className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
-                        <div className={`flex items-start gap-3 max-w-[80%] ${message.type === "user" ? "flex-row-reverse" : ""}`}>
-                          <div
-                            className={`rounded-2xl px-4 py-3 ${
-                              message.type === "user"
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted/50 text-foreground border border-border/50"
-                            }`}
-                          >
-                            <p className="text-sm leading-relaxed">{message.content}</p>
-                            
-                            {/* Topic badge for AI messages */}
-                            {message.type === "ai" && message.topic && (
-                              <div className="mt-2">
-                                <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
-                                  {message.topic}
-                                </Badge>
+                      {messages
+                        .filter((m) => !m.isPartial)
+                        .map((message) => (
+                          <div key={message.id} className="space-y-2">
+                            {/* Message */}
+                            <div className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
+                              <div
+                                className={`flex items-start gap-3 max-w-[80%] ${message.type === "user" ? "flex-row-reverse" : ""}`}
+                              >
+                                <div
+                                  className={`rounded-2xl px-4 py-3 ${
+                                    message.type === "user"
+                                      ? "bg-primary text-primary-foreground"
+                                      : "bg-muted/50 text-foreground border border-border/50"
+                                  }`}
+                                >
+                                  <p className="text-sm leading-relaxed">{message.content}</p>
+
+                                  {/* Topic badge for AI messages */}
+                                  {message.type === "ai" && message.topic && (
+                                    <div className="mt-2">
+                                      <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
+                                        {message.topic}
+                                      </Badge>
+                                    </div>
+                                  )}
+
+                                  <div className="text-xs opacity-60 mt-2">
+                                    {message.timestamp.toLocaleTimeString([], {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </div>
+                                </div>
                               </div>
-                            )}
-                            
-                            <div className="text-xs opacity-60 mt-2">
-                              {message.timestamp.toLocaleTimeString([], { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
                             </div>
                           </div>
-                          
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )}
-              <div ref={conversationEndRef} />
-            </div>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
-    </div>
-  </div>
+                        ))}
+                    </>
+                  )}
+                  <div ref={conversationEndRef} />
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
+      </div>
 
       {/* Microphone Permission Dialog */}
       <Dialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
@@ -1455,16 +1452,15 @@ export default function Session() {
               Microphone Permission Required
             </DialogTitle>
             <DialogDescription>
-              To record your stories, we need access to your microphone. Please grant permission when prompted by your browser.
+              To record your stories, we need access to your microphone. Please grant permission when prompted by your
+              browser.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowPermissionDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={requestMicPermission}>
-              Request Permission
-            </Button>
+            <Button onClick={requestMicPermission}>Request Permission</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
