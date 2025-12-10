@@ -1,14 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Calendar, 
-  Clock, 
-  Mic, 
-  Trash2, 
-  Edit, 
-  Eye,
-  Play
-} from "lucide-react";
+import { Calendar, Clock, Mic, Trash2, Edit, Eye, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -51,15 +43,15 @@ export function ChapterCard({
   const [editTitle, setEditTitle] = useState(title);
   const [isSaving, setIsSaving] = useState(false);
 
-  const isCompleted = status === 'completed';
+  const isCompleted = status === "completed";
   const canView = isCompleted && hasChapterContent && chapterId;
 
   const formatDate = (date: string | null) => {
     if (!date) return "N/A";
-    return new Date(date).toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
@@ -73,7 +65,7 @@ export function ChapterCard({
 
   const getModeLabel = (mode: string | null) => {
     if (!mode) return null;
-    return mode === 'guided' ? 'Guided' : 'Free Recording';
+    return mode === "guided" ? "Guided" : "Free Recording";
   };
 
   const formatRecordingDuration = (seconds: number) => {
@@ -81,7 +73,7 @@ export function ChapterCard({
     const hours = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
-    
+
     if (hours > 0) {
       return `${hours}h ${mins}m ${secs}s`;
     }
@@ -107,8 +99,8 @@ export function ChapterCard({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleSave();
-    if (e.key === 'Escape') {
+    if (e.key === "Enter") handleSave();
+    if (e.key === "Escape") {
       setEditTitle(title);
       setIsEditing(false);
     }
@@ -119,22 +111,17 @@ export function ChapterCard({
       <CardContent className="p-5">
         {/* Top Row: Chapter Badge + Status */}
         <div className="flex items-center justify-between mb-3">
-          <Badge 
-            variant="outline" 
-            className="font-medium text-xs px-2.5 py-0.5 bg-muted/50"
-          >
+          <Badge variant="outline" className="font-medium text-xs px-2.5 py-0.5 bg-muted/50">
             Chapter {chapterIndex}
           </Badge>
-          <Badge 
-            variant={isCompleted ? 'default' : 'secondary'}
+          <Badge
+            variant={isCompleted ? "default" : "secondary"}
             className={cn(
               "text-xs font-medium",
-              isCompleted 
-                ? "bg-primary/10 text-primary border-primary/20" 
-                : "bg-muted text-muted-foreground"
+              isCompleted ? "bg-primary/10 text-primary border-primary/20" : "bg-muted text-muted-foreground",
             )}
           >
-            {isCompleted ? 'Completed' : 'Active'}
+            {isCompleted ? "Completed" : "Active"}
           </Badge>
         </div>
 
@@ -151,17 +138,12 @@ export function ChapterCard({
                 onKeyDown={handleKeyDown}
                 disabled={isSaving}
               />
-              <Button 
-                size="sm" 
-                onClick={handleSave}
-                disabled={isSaving || !editTitle.trim()}
-                className="h-9"
-              >
+              <Button size="sm" onClick={handleSave} disabled={isSaving || !editTitle.trim()} className="h-9">
                 Save
               </Button>
-              <Button 
-                size="sm" 
-                variant="ghost" 
+              <Button
+                size="sm"
+                variant="ghost"
                 onClick={() => {
                   setEditTitle(title);
                   setIsEditing(false);
@@ -174,9 +156,7 @@ export function ChapterCard({
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold text-foreground leading-tight line-clamp-1">
-                {title}
-              </h3>
+              <h3 className="text-lg font-semibold text-foreground leading-tight line-clamp-1">{title}</h3>
               <Button
                 variant="ghost"
                 size="sm"
@@ -187,7 +167,7 @@ export function ChapterCard({
               </Button>
             </div>
           )}
-          
+
           {/* Word count & Recording duration */}
           <p className="text-xs text-muted-foreground mt-1">
             {formatWordCount(wordCount)} words • {formatRecordingDuration(recordingDurationSeconds)} of recordings
@@ -200,7 +180,7 @@ export function ChapterCard({
           <span>{formatDate(startedAt)}</span>
           <span className="mx-1.5 text-border">•</span>
           <Clock className="w-3.5 h-3.5" />
-          <span>{formatDuration(startedAt, endedAt)}</span>
+
           {mode && (
             <>
               <span className="mx-1.5 text-border">•</span>
@@ -214,19 +194,15 @@ export function ChapterCard({
         <div className="flex items-center gap-2 pt-3 border-t border-border/50">
           {/* Continue Button - always show unless completed */}
           {!isCompleted && (
-            <Button 
-              size="sm"
-              onClick={() => navigate(`/session?id=${sessionId}`)}
-              className="h-8"
-            >
+            <Button size="sm" onClick={() => navigate(`/session?id=${sessionId}`)} className="h-8">
               <Play className="w-3.5 h-3.5 mr-1.5" />
               Continue
             </Button>
           )}
-          
+
           {/* View Button - only show if completed AND has chapter content */}
           {canView && (
-            <Button 
+            <Button
               variant={isCompleted ? "default" : "outline"}
               size="sm"
               onClick={() => navigate(`/chapters/${chapterId}`)}
@@ -239,12 +215,7 @@ export function ChapterCard({
 
           {/* If completed but wants to continue editing */}
           {isCompleted && (
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={() => navigate(`/session?id=${sessionId}`)}
-              className="h-8"
-            >
+            <Button variant="outline" size="sm" onClick={() => navigate(`/session?id=${sessionId}`)} className="h-8">
               <Play className="w-3.5 h-3.5 mr-1.5" />
               Continue
             </Button>
@@ -254,8 +225,8 @@ export function ChapterCard({
           <div className="flex-1" />
 
           {/* Delete Button */}
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="sm"
             onClick={() => onDelete(sessionId)}
             className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
