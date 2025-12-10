@@ -19,7 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfile } from "@/hooks/useProfile";
 
 const mainNavItems = [
-  { title: "Dashboard", url: "/dashboard", icon: Home },
+  { title: "Library", url: "/dashboard", icon: Home },
   { title: "My Books", url: "/books", icon: BookOpen },
   { title: "My Stories", url: "/stories", icon: FileText },
 ];
