@@ -179,11 +179,9 @@ export function ChapterCard({
           <Calendar className="w-3.5 h-3.5" />
           <span>{formatDate(startedAt)}</span>
           <span className="mx-1.5 text-border">•</span>
-          <Clock className="w-3.5 h-3.5" />
 
           {mode && (
             <>
-              <span className="mx-1.5 text-border">•</span>
               <Mic className="w-3.5 h-3.5" />
               <span>{getModeLabel(mode)}</span>
             </>
