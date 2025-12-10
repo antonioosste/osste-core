@@ -10,6 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { EmptyState } from "@/components/empty-states/EmptyState";
 import { StoryCardSkeleton } from "@/components/loaders/StoryCardSkeleton";
 import { useStories } from "@/hooks/useStories";
+import { useStoryGroups } from "@/hooks/useStoryGroups";
 
 type StoryStatus = "draft" | "polished" | "approved";
 
@@ -19,16 +20,31 @@ export default function Stories() {
   const [statusFilter, setStatusFilter] = useState<"all" | StoryStatus>("all");
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; storyId?: string }>({ open: false });
   const { stories: dbStories, loading: isLoading, updateStory, deleteStory: deleteStoryDb } = useStories();
+  const { storyGroups } = useStoryGroups();
+
+  // Helper to get book title by story_group_id
+  const getBookTitle = (storyGroupId: string | null) => {
+    if (!storyGroupId) return null;
+    const book = storyGroups?.find(g => g.id === storyGroupId);
+    return book?.title || null;
+  };
 
   // Map database stories to UI format
-  const mappedStories = dbStories.map(story => ({
-    id: story.id,
-    title: story.title && !story.title.startsWith("Story for Group") ? story.title : "Untitled Story",
-    summary: story.edited_text?.substring(0, 150) || story.raw_text?.substring(0, 150) || "No content yet",
-    status: (story.approved ? "approved" : story.edited_text ? "polished" : "draft") as StoryStatus,
-    updatedDate: story.created_at || new Date().toISOString(),
-    wordCount: (story.edited_text || story.raw_text || "").split(' ').length,
-  }));
+  const mappedStories = dbStories.map(story => {
+    // Use story title if valid, otherwise fall back to book name
+    const hasValidTitle = story.title && !story.title.startsWith("Story for Group");
+    const bookTitle = getBookTitle(story.story_group_id);
+    const displayTitle = hasValidTitle ? story.title : (bookTitle || "Untitled Story");
+    
+    return {
+      id: story.id,
+      title: displayTitle,
+      summary: story.edited_text?.substring(0, 150) || story.raw_text?.substring(0, 150) || "No content yet",
+      status: (story.approved ? "approved" : story.edited_text ? "polished" : "draft") as StoryStatus,
+      updatedDate: story.created_at || new Date().toISOString(),
+      wordCount: (story.edited_text || story.raw_text || "").split(' ').length,
+    };
+  });
 
   const filteredStories = mappedStories.filter(story => {
     const matchesSearch = story.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
