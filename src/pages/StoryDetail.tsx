@@ -302,9 +302,11 @@ export default function StoryDetail() {
         {/* Story Header */}
         <div className="mb-8" ref={contentRef}>
           <div className="flex items-start justify-between mb-4">
-            <div className="flex-1">
+          <div className="flex-1">
               <h1 className="text-3xl font-bold text-foreground mb-2">
-                {story.title || "Untitled Story"}
+                {story.title && !story.title.startsWith("Story for Group") 
+                  ? story.title 
+                  : "Untitled Story"}
               </h1>
               <p className="text-muted-foreground mb-4">
                 {displayContent.substring(0, 150)}...
