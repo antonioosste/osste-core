@@ -103,6 +103,7 @@ export function useStoryGroups() {
     }
 
     try {
+      // Create the story group (book)
       const { data, error: insertError } = await supabase
         .from('story_groups')
         .insert({
@@ -114,6 +115,19 @@ export function useStoryGroups() {
         .single();
 
       if (insertError) throw insertError;
+
+      // Also create a story with the same title
+      const { error: storyError } = await supabase
+        .from('stories')
+        .insert({
+          story_group_id: data.id,
+          title: title,
+        });
+
+      if (storyError) {
+        console.error('Error creating story for book:', storyError);
+        // Don't fail the whole operation, just log the error
+      }
 
       setStoryGroups(prev => [data, ...prev]);
 
@@ -142,6 +156,19 @@ export function useStoryGroups() {
         .single();
 
       if (updateError) throw updateError;
+
+      // If title is being updated, also update the associated story title
+      if (updates.title) {
+        const { error: storyUpdateError } = await supabase
+          .from('stories')
+          .update({ title: updates.title })
+          .eq('story_group_id', id);
+
+        if (storyUpdateError) {
+          console.error('Error updating story title:', storyUpdateError);
+          // Don't fail the whole operation, just log the error
+        }
+      }
 
       setStoryGroups(prev =>
         prev.map(group => group.id === id ? data : group)
