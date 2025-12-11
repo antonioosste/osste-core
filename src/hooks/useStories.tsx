@@ -6,7 +6,12 @@ import { useToast } from './use-toast';
 /**
  * Story interface - aligned with new backend schema
  * 
- * Key change: Stories are linked to story_group_id (Book), not session_id
+ * TITLE HIERARCHY:
+ * - BOOK (story_groups.title): Master title for the book container
+ * - STORY (stories.title): Story-specific title, NULL by default
+ *   - When displaying: use story.title if set, else fall back to book.title
+ * - CHAPTER (sessions.title / chapters.suggested_cover_title): Chapter-level titles
+ * 
  * Each Story Group has ONE Story that aggregates content from all sessions
  */
 export interface Story {

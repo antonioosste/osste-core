@@ -7,7 +7,14 @@ import type { Tables } from '@/integrations/supabase/types';
 /**
  * Session type from database
  * 
- * New Data Hierarchy:
+ * TITLE HIERARCHY for chapters/sessions:
+ * - Session.title: User-editable title (highest priority when displaying)
+ * - Chapter.suggested_cover_title: AI-suggested title
+ * - Session.story_anchor: The prompt/question used to start the recording
+ * - Chapter.title: AI-generated chapter title
+ * - Fallback: "Recording {date}"
+ * 
+ * Data Hierarchy:
  * User -> Story Group (Book) -> Session (Chapter Recording) -> Chapter
  * 
  * Sessions belong to a Story Group and contain:

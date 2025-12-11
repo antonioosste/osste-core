@@ -6,8 +6,15 @@ import { useToast } from './use-toast';
 /**
  * Chapter interface - aligned with new backend schema
  * 
- * Key change: Chapters are linked to session_id (not recording_id)
- * Each Session (Chapter Recording) can have one generated Chapter
+ * TITLE HIERARCHY for displaying chapter titles:
+ * 1. Session.title (user-edited, highest priority)
+ * 2. Chapter.suggested_cover_title (AI-suggested cover title)
+ * 3. Session.story_anchor (the prompt/question used)
+ * 4. Chapter.title (AI-generated chapter title)
+ * 5. Fallback: "Recording {date}" or "Untitled Chapter"
+ * 
+ * Key: Chapters are linked to session_id (not recording_id)
+ * Each Session can have one generated Chapter
  */
 export interface Chapter {
   id: string;

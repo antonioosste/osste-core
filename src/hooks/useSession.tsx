@@ -6,7 +6,14 @@ import { useToast } from './use-toast';
 /**
  * SessionParams for creating a new session (Chapter Recording)
  * 
- * New Data Hierarchy:
+ * TITLE HIERARCHY for chapters:
+ * - Session.title: User-editable title (highest priority when displaying)
+ * - Chapter.suggested_cover_title: AI-suggested title
+ * - Session.story_anchor: The prompt/question used to start the recording
+ * - Chapter.title: AI-generated chapter title
+ * - Fallback: "Recording {date}"
+ * 
+ * Data Hierarchy:
  * User -> Story Group (Book) -> Session (Chapter Recording) -> Chapter
  * 
  * IMPORTANT: story_group_id is REQUIRED when creating a session.

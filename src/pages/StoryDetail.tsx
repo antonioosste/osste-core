@@ -122,12 +122,9 @@ export default function StoryDetail() {
     return book?.title || null;
   };
 
-  // Get display title with book name fallback
+  // Get display title: story.title (if set) -> book.title (fallback) -> "Untitled Story"
   const getDisplayTitle = () => {
-    if (story?.title && !story.title.startsWith("Story for Group")) {
-      return story.title;
-    }
-    return getBookTitle() || "Untitled Story";
+    return story?.title || getBookTitle() || "Untitled Story";
   };
   
   // Use hook for synchronized image management - fetch all images from the story group
@@ -206,10 +203,8 @@ export default function StoryDetail() {
   };
 
   const startEditingTitle = () => {
-    const currentTitle = story?.title && !story.title.startsWith("Story for Group") 
-      ? story.title 
-      : "";
-    setEditedTitle(currentTitle);
+    // Use current story title if set, otherwise empty for new custom title
+    setEditedTitle(story?.title || "");
     setIsEditingTitle(true);
   };
 
