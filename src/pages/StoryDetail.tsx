@@ -112,7 +112,6 @@ export default function StoryDetail() {
   const [editedTitle, setEditedTitle] = useState("");
   const [styleInstruction, setStyleInstruction] = useState("");
   const [isRegenerating, setIsRegenerating] = useState(false);
-  const [sessionIdForImages, setSessionIdForImages] = useState<string | undefined>();
   const contentRef = useRef<HTMLDivElement>(null);
   
   // Helper to get book title
@@ -130,10 +129,10 @@ export default function StoryDetail() {
     return getBookTitle() || "Untitled Story";
   };
   
-  // Use hook for synchronized image management
+  // Use hook for synchronized image management - fetch all images from the story group
   const { images: uploadedImages, deleteImage, refetch: refetchImages } = useStoryImages({ 
-    sessionId: sessionIdForImages,
-    storyId: id 
+    storyId: id,
+    storyGroupId: story?.story_group_id,
   });
 
   useEffect(() => {
@@ -146,9 +145,6 @@ export default function StoryDetail() {
         if (data) {
           setStory(data);
           setEditedContent(data.edited_text || data.raw_text || "");
-          // Story no longer has session_id, it has story_group_id
-          // Images should be linked to story_id directly
-          setSessionIdForImages(undefined);
         }
       } catch (error) {
         console.error('Error loading story:', error);
@@ -161,10 +157,10 @@ export default function StoryDetail() {
   }, [id]);
   
   useEffect(() => {
-    if (sessionIdForImages) {
+    if (story?.story_group_id) {
       refetchImages();
     }
-  }, [sessionIdForImages]);
+  }, [story?.story_group_id]);
 
   const handlePlayAudio = () => {
     setIsPlaying(!isPlaying);
@@ -490,20 +486,17 @@ export default function StoryDetail() {
             </p>
           </CardHeader>
           <CardContent>
-            {sessionIdForImages && (
-              <StoryImageUploader 
-                sessionId={sessionIdForImages}
-                storyId={id}
-                usage="embedded"
-                maxFiles={10}
-                maxSizeMB={8}
-                onUploadSuccess={handleImageUploadSuccess}
-              />
-            )}
+            <StoryImageUploader 
+              storyId={id}
+              usage="embedded"
+              maxFiles={10}
+              maxSizeMB={8}
+              onUploadSuccess={handleImageUploadSuccess}
+            />
             
             {uploadedImages.length > 0 && (
               <div className="mt-4">
-                <h4 className="text-sm font-medium mb-2">Session Images ({uploadedImages.length})</h4>
+                <h4 className="text-sm font-medium mb-2">Story Images ({uploadedImages.length})</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {uploadedImages.map((img) => (
                     <div key={img.id} className="relative rounded-lg border border-border overflow-hidden group">

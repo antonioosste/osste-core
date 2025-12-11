@@ -28,15 +28,16 @@ interface UseStoryImagesParams {
   chapterId?: string;
   storyId?: string;
   turnId?: string;
+  storyGroupId?: string; // New: fetch all images for all sessions in this story group
 }
 
-export function useStoryImages({ sessionId, chapterId, storyId, turnId }: UseStoryImagesParams) {
+export function useStoryImages({ sessionId, chapterId, storyId, turnId, storyGroupId }: UseStoryImagesParams) {
   const [images, setImages] = useState<StoryImage[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const fetchImages = async () => {
-    if (!sessionId && !chapterId && !storyId && !turnId) return;
+    if (!sessionId && !chapterId && !storyId && !turnId && !storyGroupId) return;
     
     setLoading(true);
     try {
@@ -47,29 +48,79 @@ export function useStoryImages({ sessionId, chapterId, storyId, turnId }: UseSto
         throw new Error("Authentication required");
       }
 
-      // Fetch from backend API which returns images with proper signed URLs
-      const backendImages = await listStoryImages(session.access_token, {
-        sessionId,
-        chapterId,
-        storyId,
-        turnId,
-      });
+      let allImages: StoryImage[] = [];
 
-      // Map backend response to StoryImage format
-      const mappedImages: StoryImage[] = backendImages.map((img) => ({
-        id: img.id,
-        storage_path: img.storage_path,
-        file_name: img.file_name,
-        mime_type: img.mime_type,
-        url: img.url, // Use URL directly from backend - DO NOT construct manually
-        chapter_id: img.chapter_id || null,
-        turn_id: img.turn_id || null,
-        story_id: img.story_id || null,
-        caption: img.caption || null,
-        alt_text: img.alt_text || null,
-      }));
+      // If storyGroupId is provided, fetch images for all sessions in the group
+      if (storyGroupId) {
+        // Get all sessions in this story group
+        const { data: sessions, error: sessionsError } = await supabase
+          .from('sessions')
+          .select('id')
+          .eq('story_group_id', storyGroupId);
 
-      setImages(mappedImages);
+        if (sessionsError) {
+          throw sessionsError;
+        }
+
+        // Fetch images for each session
+        const imagePromises = (sessions || []).map(async (sess) => {
+          const backendImages = await listStoryImages(session.access_token, {
+            sessionId: sess.id,
+          });
+          return backendImages;
+        });
+
+        const sessionImageArrays = await Promise.all(imagePromises);
+        const sessionImages = sessionImageArrays.flat();
+
+        // Also fetch images directly linked to the story
+        if (storyId) {
+          const storyImages = await listStoryImages(session.access_token, {
+            storyId,
+          });
+          sessionImages.push(...storyImages);
+        }
+
+        // Deduplicate by id
+        const uniqueMap = new Map<string, BackendImageResponse>();
+        sessionImages.forEach(img => uniqueMap.set(img.id, img));
+        
+        allImages = Array.from(uniqueMap.values()).map((img) => ({
+          id: img.id,
+          storage_path: img.storage_path,
+          file_name: img.file_name,
+          mime_type: img.mime_type,
+          url: img.url,
+          chapter_id: img.chapter_id || null,
+          turn_id: img.turn_id || null,
+          story_id: img.story_id || null,
+          caption: img.caption || null,
+          alt_text: img.alt_text || null,
+        }));
+      } else {
+        // Original behavior for single session/chapter/story/turn
+        const backendImages = await listStoryImages(session.access_token, {
+          sessionId,
+          chapterId,
+          storyId,
+          turnId,
+        });
+
+        allImages = backendImages.map((img) => ({
+          id: img.id,
+          storage_path: img.storage_path,
+          file_name: img.file_name,
+          mime_type: img.mime_type,
+          url: img.url,
+          chapter_id: img.chapter_id || null,
+          turn_id: img.turn_id || null,
+          story_id: img.story_id || null,
+          caption: img.caption || null,
+          alt_text: img.alt_text || null,
+        }));
+      }
+
+      setImages(allImages);
     } catch (error) {
       console.error('Error fetching images:', error);
       toast({
@@ -116,7 +167,7 @@ export function useStoryImages({ sessionId, chapterId, storyId, turnId }: UseSto
 
   useEffect(() => {
     fetchImages();
-  }, [sessionId, chapterId, storyId, turnId]);
+  }, [sessionId, chapterId, storyId, turnId, storyGroupId]);
 
   return {
     images,
