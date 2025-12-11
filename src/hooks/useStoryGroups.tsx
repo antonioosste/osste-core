@@ -6,13 +6,14 @@ import { useToast } from './use-toast';
 /**
  * StoryGroup interface (aka "Book" in the UI)
  * 
- * New Data Hierarchy:
- * User -> Story Group (Book) -> Story
- *                            -> Sessions (Chapters) -> Chapter content
+ * TITLE HIERARCHY:
+ * - BOOK (story_groups.title): Master title - stored here
+ * - STORY (stories.title): Story-specific title, NULL by default (displays book title as fallback)
+ * - CHAPTER (sessions.title / chapters.suggested_cover_title): Chapter-level titles
  * 
- * Story Groups are containers for:
- * - One Story (the final narrative)
- * - Multiple Sessions (chapter recordings)
+ * Data Hierarchy:
+ * User -> Story Group (Book) -> Story (one per book)
+ *                            -> Sessions (chapter recordings) -> Chapter content
  */
 export interface StoryGroup {
   id: string;
@@ -116,12 +117,12 @@ export function useStoryGroups() {
 
       if (insertError) throw insertError;
 
-      // Also create a story with the same title
+      // Create an associated story with NULL title (will inherit book title when displayed)
       const { error: storyError } = await supabase
         .from('stories')
         .insert({
           story_group_id: data.id,
-          title: title,
+          title: null, // Story title is null - displays book title as fallback
         });
 
       if (storyError) {
@@ -157,18 +158,8 @@ export function useStoryGroups() {
 
       if (updateError) throw updateError;
 
-      // If title is being updated, also update the associated story title
-      if (updates.title) {
-        const { error: storyUpdateError } = await supabase
-          .from('stories')
-          .update({ title: updates.title })
-          .eq('story_group_id', id);
-
-        if (storyUpdateError) {
-          console.error('Error updating story title:', storyUpdateError);
-          // Don't fail the whole operation, just log the error
-        }
-      }
+      // NOTE: We do NOT update story.title when book title changes
+      // Story title is independent - when null, it displays book title as fallback
 
       setStoryGroups(prev =>
         prev.map(group => group.id === id ? data : group)

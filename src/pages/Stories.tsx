@@ -30,11 +30,10 @@ export default function Stories() {
   };
 
   // Map database stories to UI format
+  // Title hierarchy: story.title (if set) -> book.title (fallback) -> "Untitled Story"
   const mappedStories = dbStories.map(story => {
-    // Use story title if valid, otherwise fall back to book name
-    const hasValidTitle = story.title && !story.title.startsWith("Story for Group");
     const bookTitle = getBookTitle(story.story_group_id);
-    const displayTitle = hasValidTitle ? story.title : (bookTitle || "Untitled Story");
+    const displayTitle = story.title || bookTitle || "Untitled Story";
     
     return {
       id: story.id,
