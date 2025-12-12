@@ -40,9 +40,13 @@ export function OssteWaitlist() {
         return;
       }
 
-      // Send welcome email via edge function
-      await supabase.functions.invoke("send-waitlist-email", {
-        body: { email }
+      // Send welcome email via unified email edge function
+      await supabase.functions.invoke("send-email", {
+        body: { 
+          type: 'welcome',
+          email,
+          source: 'waitlist'
+        }
       });
 
       setMessage({

@@ -6,12 +6,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { sendPaymentSuccessEmail } from "@/lib/emails";
 
 export default function CheckoutSuccess() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
+    // Send payment success email (non-blocking)
+    if (user?.email) {
+      sendPaymentSuccessEmail({
+        email: user.email,
+        firstName: user.user_metadata?.name || undefined,
+        amount: 0, // Amount would come from Stripe webhook in production
+        currency: 'usd',
+        planName: 'OSSTE Plan',
+      });
+    }
+
     // Show success message
     toast({
       title: "Welcome to your new plan!",
@@ -24,7 +38,7 @@ export default function CheckoutSuccess() {
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [navigate, toast]);
+  }, [navigate, toast, user]);
 
   return (
     <div className="min-h-screen bg-background">
