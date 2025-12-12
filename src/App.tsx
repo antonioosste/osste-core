@@ -39,6 +39,7 @@ import PrintRequest from "./pages/PrintRequest";
 import PrintSuccess from "./pages/PrintSuccess";
 import GiftFlow from "./pages/GiftFlow";
 import GiftConfirmation from "./pages/GiftConfirmation";
+import TestEmail from "./pages/TestEmail";
 
 const queryClient = new QueryClient();
 
@@ -100,6 +101,7 @@ const App = () => (
             <Route path="/print-success" element={<ProtectedRoute><DashboardLayout><PrintSuccess /></DashboardLayout></ProtectedRoute>} />
             <Route path="/gift" element={<WaitlistGuard><GiftFlow /></WaitlistGuard>} />
             <Route path="/gift/confirmation" element={<WaitlistGuard><GiftConfirmation /></WaitlistGuard>} />
+            <Route path="/test-email" element={<ProtectedRoute><TestEmail /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

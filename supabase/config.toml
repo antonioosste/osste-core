@@ -1,5 +1,8 @@
 project_id = "hptflpqaskbuzivynjvb"
 
+[functions.send-email]
+verify_jwt = false
+
 [functions.send-waitlist-email]
 verify_jwt = false
 

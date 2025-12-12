@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
+import { sendRecordingStartedEmail, sendRecordingFinishedEmail } from '@/lib/emails';
 
 /**
  * SessionParams for creating a new session (Chapter Recording)
@@ -86,6 +87,16 @@ export function useSession(initialSessionId?: string | null) {
       if (insertError) throw insertError;
 
       setSessionId(data.id);
+      
+      // Send recording started email (non-blocking)
+      if (user.email) {
+        sendRecordingStartedEmail({
+          email: user.email,
+          firstName: user.user_metadata?.name || undefined,
+          sessionId: data.id,
+        });
+      }
+      
       toast({
         title: "Chapter recording started",
         description: "Your recording session is now active.",
@@ -117,6 +128,15 @@ export function useSession(initialSessionId?: string | null) {
         .eq('id', targetId);
 
       if (updateError) throw updateError;
+
+      // Send recording finished email (non-blocking)
+      if (user?.email) {
+        sendRecordingFinishedEmail({
+          email: user.email,
+          firstName: user.user_metadata?.name || undefined,
+          sessionId: targetId,
+        });
+      }
 
       setSessionId(null);
       toast({
