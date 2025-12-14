@@ -68,8 +68,11 @@ export default function BookDetail() {
     return acc;
   }, {} as Record<string, typeof chapters[0]>);
   
-  // Get story for this book
-  const bookStory = stories.find(s => s.story_group_id === bookId);
+  // Get story for this book - check if it has actual content
+  const bookStoryRecord = stories.find(s => s.story_group_id === bookId);
+  const bookStory = bookStoryRecord && (bookStoryRecord.raw_text || bookStoryRecord.edited_text) 
+    ? bookStoryRecord 
+    : null;
 
   useEffect(() => {
     const loadBook = async () => {

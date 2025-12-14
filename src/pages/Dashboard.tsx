@@ -70,9 +70,10 @@ export default function Dashboard() {
     return sessions.filter(s => s.story_group_id === bookId).length;
   };
 
-  // Get story for a book
+  // Get story for a book - only return if it has actual content
   const getBookStory = (bookId: string) => {
-    return stories.find(s => s.story_group_id === bookId);
+    const story = stories.find(s => s.story_group_id === bookId);
+    return story && (story.raw_text || story.edited_text) ? story : null;
   };
 
   // Get book title for a session
