@@ -17,6 +17,7 @@ import { useStories } from "@/hooks/useStories";
 import { useState } from "react";
 import { useStoryImages } from "@/hooks/useStoryImages";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { GeneratingOverlay } from "@/components/loaders/GeneratingOverlay";
 
 export default function Chapters() {
   const navigate = useNavigate();
@@ -133,7 +134,15 @@ export default function Chapters() {
   };
 
   return (
-    <div className="container mx-auto px-6 py-8 max-w-5xl">
+    <>
+      {/* Story Generation Overlay */}
+      <GeneratingOverlay 
+        isVisible={assemblingSessionId !== null} 
+        type="story" 
+        title={selectedGroup?.title}
+      />
+      
+      <div className="container mx-auto px-6 py-8 max-w-5xl">
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
           <div>
@@ -432,6 +441,7 @@ export default function Chapters() {
           })}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
