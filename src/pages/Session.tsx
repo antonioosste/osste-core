@@ -29,6 +29,7 @@ import { QuestionSwitcher } from "@/components/ui/question-switcher";
 import { CategorySelector } from "@/components/session/CategorySelector";
 import { GuidedSetup } from "@/components/session/GuidedSetup";
 import { ConversationSkeleton } from "@/components/loaders/ConversationSkeleton";
+import { GeneratingOverlay } from "@/components/loaders/GeneratingOverlay";
 import { getQuestionsByCategory, getRandomQuestion } from "@/lib/questions";
 import type { QuestionRow, QuestionCategory } from "@/types/questions";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -950,7 +951,12 @@ export default function Session() {
         </div>
       )}
 
-      {/* Guided Setup */}
+      {/* Chapter Generation Overlay */}
+      <GeneratingOverlay 
+        isVisible={isGeneratingChapters} 
+        type="chapter" 
+        title={currentQuestionData?.question_text || "Your recording"}
+      />
       {showGuidedSetup && (
         <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="w-full py-8">

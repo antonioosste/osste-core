@@ -26,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-states/EmptyState";
 import { Header } from "@/components/layout/Header";
 import { ChapterCard } from "@/components/chapters/ChapterCard";
+import { GeneratingOverlay } from "@/components/loaders/GeneratingOverlay";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
 import { useSessions } from "@/hooks/useSessions";
 import { useStories } from "@/hooks/useStories";
@@ -293,6 +294,12 @@ export default function BookDetail() {
     <div className="min-h-screen bg-background">
       <Header isAuthenticated={true} />
       
+      {/* Story Generation Overlay */}
+      <GeneratingOverlay 
+        isVisible={isGeneratingStory} 
+        type="story" 
+        title={book?.title}
+      />
       <div className="container mx-auto px-6 py-8 max-w-5xl">
         {/* Back Navigation */}
         <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-6">
