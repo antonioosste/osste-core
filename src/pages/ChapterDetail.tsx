@@ -72,6 +72,9 @@ export default function ChapterDetail() {
       title: "Chapter saved",
       description: "Your changes have been saved successfully.",
     });
+    
+    // Navigate back to the book page after saving
+    navigate(session?.story_group_id ? `/books/${session.story_group_id}` : '/books');
   };
 
   const handleImageUploadSuccess = () => {
