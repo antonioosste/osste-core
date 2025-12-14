@@ -48,11 +48,11 @@ export function AppSidebar() {
     <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
       <SidebarHeader className="border-b border-border/40 p-4">
         {!collapsed && (
-          <Link to="/dashboard" className="flex items-center space-x-2">
+          <Link to="/dashboard" className="flex items-center">
             <img 
-              src="/brand/osste-logo-transparent.png" 
+              src="/logo-v3.png?v=5" 
               alt="OSSTE" 
-              className="h-8 w-auto"
+              className="h-12 w-auto"
             />
           </Link>
         )}
