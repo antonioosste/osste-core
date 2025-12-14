@@ -123,9 +123,14 @@ export default function StoryDetail() {
   };
 
   // Get display title: story.title (if set) -> book.title (fallback) -> "Untitled Story"
+  // Per spec: Show placeholder "Untitled Story" when no title exists
   const getDisplayTitle = () => {
     return story?.title || getBookTitle() || "Untitled Story";
   };
+
+  // Check if this is an AI-suggested title (no user edits yet)
+  // A title is "suggested" if it exists but came from AI, not user
+  const isSuggestedTitle = story?.title && !getBookTitle();
   
   // Use hook for synchronized image management - fetch all images from the story group
   const { images: uploadedImages, deleteImage, refetch: refetchImages } = useStoryImages({ 
@@ -260,7 +265,14 @@ export default function StoryDetail() {
       const updatedStory = await getStory(id!);
       
       if (updatedStory) {
-        setStory(updatedStory);
+        // Per spec: On regeneration, only update title if story previously had no title
+        // If title already exists (user-edited or previous AI suggestion), preserve it
+        const preservedTitle = story?.title;
+        
+        setStory({ 
+          ...updatedStory, 
+          title: preservedTitle || updatedStory.title 
+        });
         setEditedContent(updatedStory.edited_text || updatedStory.raw_text || "");
         
         // Scroll to top of content
@@ -367,6 +379,18 @@ export default function StoryDetail() {
                   <h1 className="text-3xl font-bold text-foreground">
                     {getDisplayTitle()}
                   </h1>
+                  {/* Show "Suggested" badge for AI-generated titles */}
+                  {story?.title && !getBookTitle() && (
+                    <Badge variant="outline" className="text-xs text-muted-foreground">
+                      AI Suggested
+                    </Badge>
+                  )}
+                  {/* Show placeholder indicator for untitled stories */}
+                  {!story?.title && !getBookTitle() && (
+                    <Badge variant="secondary" className="text-xs">
+                      Click to add title
+                    </Badge>
+                  )}
                   <Button 
                     variant="ghost" 
                     size="sm" 
