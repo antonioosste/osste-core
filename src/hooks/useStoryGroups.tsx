@@ -117,12 +117,14 @@ export function useStoryGroups() {
 
       if (insertError) throw insertError;
 
-      // Create an associated story with NULL title (will inherit book title when displayed)
+      // Create an associated story with NO title - AI will suggest one during assembly
+      // Per spec: Do NOT save any value in stories.title at creation time
       const { error: storyError } = await supabase
         .from('stories')
         .insert({
           story_group_id: data.id,
-          title: null, // Story title is null - displays book title as fallback
+          // title intentionally omitted - will be null
+          // AI generates suggested title during first story assembly
         });
 
       if (storyError) {

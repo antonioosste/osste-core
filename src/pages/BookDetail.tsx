@@ -205,13 +205,27 @@ export default function BookDetail() {
       // Use the first session's ID (the API assembles by story_group)
       const firstSessionId = bookSessions[0].id;
       
-      await assembleStory(
+      const result = await assembleStory(
         session.access_token,
         firstSessionId,
         withStyle ? styleInstruction.trim() : null
       );
 
       await refetchStories();
+
+      // If backend returned a suggested title and story has no title yet, save it
+      // Per spec: Only save generated title if story previously had no title
+      if (result?.story?.title && bookStoryRecord && !bookStoryRecord.title) {
+        try {
+          await supabase
+            .from('stories')
+            .update({ title: result.story.title })
+            .eq('id', bookStoryRecord.id);
+          await refetchStories();
+        } catch (titleError) {
+          console.warn('Could not save suggested title:', titleError);
+        }
+      }
 
       toast({
         title: "Story generated!",
