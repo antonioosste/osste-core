@@ -835,8 +835,9 @@ export default function Session() {
       description: "Exiting without saving.",
     });
 
-    // Navigate back to book if bookId was provided, otherwise dashboard
-    navigate(bookIdParam ? `/books/${bookIdParam}` : "/dashboard");
+    // Navigate back to the associated book if we know its ID, otherwise dashboard
+    const redirectBookId = bookIdParam || targetBookId;
+    navigate(redirectBookId ? `/books/${redirectBookId}` : "/dashboard");
   };
 
   const saveAndExit = async () => {
@@ -886,8 +887,9 @@ export default function Session() {
         });
       }
     }
-    // Navigate back to book if bookId was provided, otherwise dashboard
-    navigate(bookIdParam ? `/books/${bookIdParam}` : "/dashboard");
+    // Navigate back to the associated book if we know its ID, otherwise dashboard
+    const redirectBookId = bookIdParam || targetBookId;
+    navigate(redirectBookId ? `/books/${redirectBookId}` : "/dashboard");
   };
 
   const retryConnection = () => {
