@@ -94,6 +94,10 @@ export default function Chapters() {
       return;
     }
     
+    // Get the story_group_id from the session for proper redirection
+    const sessionData = sessions.find(s => s.id === sessionId);
+    const storyGroupId = sessionData?.story_group_id;
+    
     setAssemblingSessionId(sessionId);
     try {
       toast({
@@ -109,7 +113,13 @@ export default function Chapters() {
       });
 
       refetchStories();
-      navigate('/stories');
+      
+      // Redirect to the specific book page if we have a story_group_id, otherwise to stories
+      if (storyGroupId) {
+        navigate(`/books/${storyGroupId}`);
+      } else {
+        navigate('/stories');
+      }
     } catch (error) {
       console.error('Error assembling story:', error);
       toast({
