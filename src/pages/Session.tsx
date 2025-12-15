@@ -300,9 +300,28 @@ export default function Session() {
 
         setIsLoadingSession(false);
       } else if (existingSessionId && !turnsLoading && turns.length === 0) {
-        // Session exists but has no turns yet - show category selector
+        // Session exists but has no turns - this is an orphaned session
+        // Delete it and redirect back instead of showing CategorySelector
         setIsLoadingSession(false);
-        setShowCategorySelector(true);
+        
+        try {
+          await supabase
+            .from('sessions')
+            .delete()
+            .eq('id', existingSessionId);
+          
+          console.log("🗑️ Deleted orphaned session:", existingSessionId);
+          
+          toast({
+            title: "Empty session cleaned up",
+            description: "Redirecting...",
+          });
+        } catch (error) {
+          console.error("Error deleting orphaned session:", error);
+        }
+        
+        // Navigate back to book or dashboard
+        navigate(bookIdParam ? `/books/${bookIdParam}` : "/dashboard");
       }
     };
 
@@ -826,9 +845,39 @@ export default function Session() {
     }
   };
 
-  const cancelAndExit = () => {
+  const cancelAndExit = async () => {
     if (isRecording) {
       cancelRecording();
+    }
+
+    // Clean up the session in the database
+    if (sessionId) {
+      try {
+        // Check if session has any turns
+        const { data: sessionTurns } = await supabase
+          .from('turns')
+          .select('id')
+          .eq('session_id', sessionId)
+          .limit(1);
+        
+        if (!sessionTurns || sessionTurns.length === 0) {
+          // No turns recorded - delete the empty session entirely
+          await supabase
+            .from('sessions')
+            .delete()
+            .eq('id', sessionId);
+          console.log("🗑️ Deleted empty session:", sessionId);
+        } else {
+          // Has turns but cancelled - mark as cancelled
+          await supabase
+            .from('sessions')
+            .update({ status: 'cancelled', ended_at: new Date().toISOString() })
+            .eq('id', sessionId);
+          console.log("❌ Marked session as cancelled:", sessionId);
+        }
+      } catch (error) {
+        console.error('Error cleaning up session:', error);
+      }
     }
 
     toast({
