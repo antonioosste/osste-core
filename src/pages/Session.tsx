@@ -94,6 +94,8 @@ export default function Session() {
   const [sessionTime, setSessionTime] = useState(0);
   const [currentPrompt, setCurrentPrompt] = useState("");
   const [isLoadingSession, setIsLoadingSession] = useState(!!existingSessionId);
+  // Track if this is a session we created in this page visit (vs loading existing)
+  const [isNewlyCreatedSession, setIsNewlyCreatedSession] = useState(false);
 
   // Session mode and question bank state
   const [showGuidedSetup, setShowGuidedSetup] = useState(!existingSessionId && !modeParam);
@@ -409,6 +411,7 @@ export default function Session() {
         language: "en",
         mode: "non-guided",
       });
+      setIsNewlyCreatedSession(true);
 
       // Set the starter question from backend
       setCurrentPrompt(starterQuestion);
@@ -449,6 +452,7 @@ export default function Session() {
         language: "en",
         mode: "non-guided",
       });
+      setIsNewlyCreatedSession(true);
 
       setCurrentPrompt("Tell me a story from your life that's meaningful to you.");
 
@@ -494,6 +498,7 @@ export default function Session() {
         mode: "guided",
         category: finalCategory,
       });
+      setIsNewlyCreatedSession(true);
 
       // Load questions
       await loadQuestions("guided", finalCategory, depthLevel);
@@ -850,8 +855,9 @@ export default function Session() {
       cancelRecording();
     }
 
-    // Clean up the session in the database
-    if (sessionId) {
+    // Only clean up sessions that we created in this page visit
+    // Do NOT modify existing sessions the user was just viewing/continuing
+    if (sessionId && isNewlyCreatedSession) {
       try {
         // Check if session has any turns
         const { data: sessionTurns } = await supabase
@@ -866,14 +872,14 @@ export default function Session() {
             .from('sessions')
             .delete()
             .eq('id', sessionId);
-          console.log("🗑️ Deleted empty session:", sessionId);
+          console.log("🗑️ Deleted empty new session:", sessionId);
         } else {
-          // Has turns but cancelled - mark as cancelled
+          // New session has turns but cancelled - mark as cancelled
           await supabase
             .from('sessions')
             .update({ status: 'cancelled', ended_at: new Date().toISOString() })
             .eq('id', sessionId);
-          console.log("❌ Marked session as cancelled:", sessionId);
+          console.log("❌ Marked new session as cancelled:", sessionId);
         }
       } catch (error) {
         console.error('Error cleaning up session:', error);
@@ -881,8 +887,8 @@ export default function Session() {
     }
 
     toast({
-      title: "Chapter cancelled",
-      description: "Exiting without saving.",
+      title: "Exited",
+      description: "No changes were made.",
     });
 
     // Navigate back to the associated book if we know its ID, otherwise dashboard
