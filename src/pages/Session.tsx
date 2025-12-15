@@ -191,10 +191,10 @@ export default function Session() {
         setIsLoadingSession(true);
         console.log("📥 Loading existing session:", existingSessionId, "with", turns.length, "turns");
 
-        // Fetch session data to get mode
+        // Fetch session data to get mode and story_group_id (for correct redirect)
         const { data: sessionData } = await supabase
           .from("sessions")
-          .select("mode, themes")
+          .select("mode, themes, story_group_id")
           .eq("id", existingSessionId)
           .single();
 
@@ -203,6 +203,11 @@ export default function Session() {
           const loadedMode = mode === "non-guided" ? "non-guided" : "guided";
           setSessionMode(loadedMode);
           setShowGuidedSetup(false);
+
+          // Set targetBookId from session's story_group_id for proper redirect
+          if (sessionData.story_group_id && !targetBookId) {
+            setTargetBookId(sessionData.story_group_id);
+          }
 
           let category: QuestionCategory | undefined;
           if (sessionData.themes && sessionData.themes.length > 0) {
