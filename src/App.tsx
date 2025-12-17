@@ -82,7 +82,7 @@ const App = () => (
             <Route path="/stories" element={<ProtectedRoute><DashboardLayout><Stories /></DashboardLayout></ProtectedRoute>} />
             <Route path="/stories/:id" element={<ProtectedRoute><StoryDetail /></ProtectedRoute>} />
             <Route path="/chapters/:id" element={<ProtectedRoute><ChapterDetail /></ProtectedRoute>} />
-            <Route path="/book/preview" element={<ProtectedRoute><BookPreview /></ProtectedRoute>} />
+            <Route path="/book/preview/:storyId" element={<ProtectedRoute><BookPreview /></ProtectedRoute>} />
             <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
             <Route path="/checkout/success" element={<ProtectedRoute><CheckoutSuccess /></ProtectedRoute>} />
             <Route path="/checkout/cancel" element={<ProtectedRoute><CheckoutCancel /></ProtectedRoute>} />

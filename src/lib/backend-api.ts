@@ -297,3 +297,74 @@ export async function deleteImageViaBackend(token: string, imageId: string): Pro
 
   await response.json();
 }
+
+/**
+ * Request PDF generation for a story
+ * Endpoint: POST /api/books/{storyId}/pdf
+ *
+ * Triggers backend PDF generation and returns download URL
+ */
+export async function generateBookPDF(
+  token: string,
+  storyId: string
+): Promise<{ pdfUrl: string; jobId?: string }> {
+  console.log("📄 Requesting PDF generation for story:", storyId);
+
+  const response = await fetchWithRetry(`${BACKEND_BASE}/api/books/${storyId}/pdf`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("❌ PDF generation failed:", response.status, errorText);
+    const error = new Error(`PDF generation failed: ${response.statusText}`) as BackendError;
+    error.status = response.status;
+    throw error;
+  }
+
+  const result = await response.json();
+  console.log("✅ PDF generation response:", result);
+  return result;
+}
+
+/**
+ * Fetch a single story by ID
+ * Endpoint: GET /api/stories/{storyId}
+ */
+export async function getStoryById(
+  token: string,
+  storyId: string
+): Promise<{
+  id: string;
+  title: string;
+  raw_text: string | null;
+  edited_text: string | null;
+  approved: boolean;
+  story_group_id: string | null;
+  style_instruction: string | null;
+  created_at: string | null;
+  order_index: number | null;
+}> {
+  console.log("📖 Fetching story:", storyId);
+
+  const response = await fetchWithRetry(`${BACKEND_BASE}/api/stories/${storyId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const error = new Error(`Failed to fetch story: ${response.statusText}`) as BackendError;
+    error.status = response.status;
+    throw error;
+  }
+
+  const result = await response.json();
+  console.log("✅ Story fetched:", result);
+  return result;
+}

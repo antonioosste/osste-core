@@ -241,3 +241,46 @@ All colors MUST be HSL.
   }
 }
 
+/* ---------- Interactive Book Animations ---------- */
+@layer utilities {
+  .perspective-2000 {
+    perspective: 2000px;
+  }
+
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  @keyframes flip-right {
+    0% {
+      transform: rotateY(0deg);
+    }
+    100% {
+      transform: rotateY(-180deg);
+    }
+  }
+
+  @keyframes flip-left {
+    0% {
+      transform: rotateY(0deg);
+    }
+    100% {
+      transform: rotateY(180deg);
+    }
+  }
+
+  .animate-flip-right {
+    animation: flip-right 0.6s ease-in-out forwards;
+    transform-origin: left center;
+  }
+
+  .animate-flip-left {
+    animation: flip-left 0.6s ease-in-out forwards;
+    transform-origin: right center;
+  }
+
+  .duration-600 {
+    transition-duration: 600ms;
+  }
+}
+
