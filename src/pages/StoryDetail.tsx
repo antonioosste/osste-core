@@ -227,10 +227,10 @@ export default function StoryDetail() {
   };
 
   const handleRegenerate = async () => {
-    if (!story?.session_id) {
+    if (!story?.story_group_id) {
       toast({
         title: "Error",
-        description: "Unable to regenerate story - session not found.",
+        description: "Unable to regenerate story - book not found.",
         variant: "destructive"
       });
       return;
@@ -240,11 +240,23 @@ export default function StoryDetail() {
     setRegenerateDialog(false);
 
     try {
-      // Get current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      // Get current auth session
+      const { data: { session: authSession }, error: sessionError } = await supabase.auth.getSession();
       
-      if (sessionError || !session) {
+      if (sessionError || !authSession) {
         throw new Error("Authentication required");
+      }
+
+      // Fetch a session from this story's book (story_group_id)
+      const { data: sessionData, error: fetchError } = await supabase
+        .from('sessions')
+        .select('id')
+        .eq('story_group_id', story.story_group_id)
+        .limit(1)
+        .single();
+
+      if (fetchError || !sessionData) {
+        throw new Error("No chapters found for this book. Add recordings first.");
       }
 
       toast({
@@ -256,8 +268,8 @@ export default function StoryDetail() {
 
       // Call backend API with optional style instruction
       const result = await assembleStory(
-        session.access_token,
-        story.session_id,
+        authSession.access_token,
+        sessionData.id,
         styleInstruction.trim() || null
       );
 
