@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +29,7 @@ interface InteractiveBookProps {
   onClose?: () => void;
 }
 
-const WORDS_PER_PAGE = 200;
+const WORDS_PER_PAGE = 180;
 
 function splitContentIntoPages(content: string, wordsPerPage: number): string[] {
   const words = content.split(/\s+/);
@@ -42,10 +42,17 @@ function splitContentIntoPages(content: string, wordsPerPage: number): string[] 
   return pages.length > 0 ? pages : [""];
 }
 
+// Random rotation for polaroid effect
+function getRandomRotation(seed: number): number {
+  return ((seed * 9301 + 49297) % 233280) / 233280 * 6 - 3;
+}
+
 export function InteractiveBook({ title, subtitle, author, chapters, onClose }: InteractiveBookProps) {
   const [currentSpread, setCurrentSpread] = useState(0);
   const [isFlipping, setIsFlipping] = useState(false);
   const [flipDirection, setFlipDirection] = useState<"next" | "prev" | null>(null);
+  const bookRef = useRef<HTMLDivElement>(null);
+  const dragStartX = useRef<number | null>(null);
 
   // Generate all pages from story data
   const pages = useMemo(() => {
@@ -61,8 +68,8 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
     // Table of Contents
     allPages.push({ 
       type: "toc", 
-      title: "Table of Contents",
-      content: chapters.map((ch, i) => `Chapter ${i + 1}: ${ch.title}`).join("\n"),
+      title: "Contents",
+      content: chapters.map((ch, i) => `${i + 1}. ${ch.title}`).join("\n"),
       pageNumber: pageNum++
     });
 
@@ -78,21 +85,24 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
 
       // Content pages
       const contentPages = splitContentIntoPages(chapter.content || "", WORDS_PER_PAGE);
-      contentPages.forEach((content) => {
+      contentPages.forEach((content, contentIndex) => {
         allPages.push({
           type: "content",
           content,
-          pageNumber: pageNum++
+          pageNumber: pageNum++,
+          // Mark first content page for drop cap
+          chapterNumber: contentIndex === 0 ? chapterIndex + 1 : undefined
         });
       });
 
       // Chapter images
-      chapter.images?.forEach((img) => {
+      chapter.images?.forEach((img, imgIndex) => {
         allPages.push({
           type: "image",
           imageUrl: img.url,
           imageCaption: img.caption,
-          pageNumber: pageNum++
+          pageNumber: pageNum++,
+          chapterNumber: imgIndex // Used for rotation seed
         });
       });
     });
@@ -114,7 +124,7 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
         setCurrentSpread(prev => prev + 1);
         setIsFlipping(false);
         setFlipDirection(null);
-      }, 600);
+      }, 800);
     }
   };
 
@@ -126,8 +136,21 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
         setCurrentSpread(prev => prev - 1);
         setIsFlipping(false);
         setFlipDirection(null);
-      }, 600);
+      }, 800);
     }
+  };
+
+  // Swipe/drag handling
+  const handleDragStart = (clientX: number) => {
+    dragStartX.current = clientX;
+  };
+
+  const handleDragEnd = (clientX: number) => {
+    if (dragStartX.current === null) return;
+    const delta = clientX - dragStartX.current;
+    if (delta < -50) goToNextSpread();
+    if (delta > 50) goToPrevSpread();
+    dragStartX.current = null;
   };
 
   const leftPageIndex = currentSpread * 2;
@@ -137,56 +160,62 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
 
   const renderPage = (page: BookPage | undefined, side: "left" | "right") => {
     if (!page) {
-      return <div className="w-full h-full bg-amber-50" />;
+      return <div className="w-full h-full book-page-paper" />;
     }
 
-    const baseStyles = "w-full h-full flex flex-col p-6 md:p-10 overflow-hidden";
-    const textStyles = "font-serif text-foreground";
+    const baseStyles = "w-full h-full flex flex-col overflow-hidden relative";
+    const pageContent = "px-8 py-6 md:px-10 md:py-8";
 
     switch (page.type) {
       case "cover":
         return (
-          <div className={cn(baseStyles, "bg-gradient-to-br from-amber-900 to-amber-950 justify-center items-center text-center")}>
-            <div className="space-y-6">
-              <h1 className="text-2xl md:text-4xl font-bold text-amber-100 leading-tight">
+          <div className={cn(baseStyles, "book-cover justify-center items-center text-center")}>
+            <div className="space-y-6 px-8">
+              <div className="book-cover-ornament">✦</div>
+              <h1 className="font-cinzel text-2xl md:text-4xl font-semibold text-[#c5a059] leading-tight tracking-wide">
                 {page.title}
               </h1>
               {page.subtitle && (
-                <p className="text-lg md:text-xl text-amber-200/80 italic">
+                <p className="font-cormorant text-lg md:text-xl text-[#c5a059]/70 italic">
                   {page.subtitle}
                 </p>
               )}
-              <div className="w-16 h-0.5 bg-amber-400/50 mx-auto" />
+              <div className="w-24 h-px bg-[#c5a059]/40 mx-auto" />
               {page.author && (
-                <p className="text-base md:text-lg text-amber-200">
+                <p className="font-cinzel text-sm md:text-base text-[#c5a059]/80 tracking-widest uppercase">
                   {page.author}
                 </p>
               )}
+              <div className="book-cover-ornament">✦</div>
             </div>
           </div>
         );
 
       case "title":
         return (
-          <div className={cn(baseStyles, "bg-amber-50 justify-center items-center text-center")}>
+          <div className={cn(baseStyles, "book-page-paper justify-center items-center text-center", pageContent)}>
             <div className="space-y-8">
-              <h1 className={cn(textStyles, "text-2xl md:text-3xl font-bold leading-tight")}>
+              <div className="text-[#c5a059]/60 text-2xl">✦</div>
+              <h1 className="font-cinzel text-2xl md:text-3xl font-medium text-[#2c3e50] leading-tight">
                 {page.title}
               </h1>
               {page.subtitle && (
-                <p className={cn(textStyles, "text-lg md:text-xl italic text-muted-foreground")}>
+                <p className="font-cormorant text-lg md:text-xl italic text-[#2c3e50]/60">
                   {page.subtitle}
                 </p>
               )}
-              <div className="w-20 h-px bg-foreground/30 mx-auto" />
+              <div className="w-20 h-px bg-[#2c3e50]/20 mx-auto" />
               {page.author && (
-                <p className={cn(textStyles, "text-base md:text-lg")}>
-                  {page.author}
+                <p className="font-reenie text-xl md:text-2xl text-[#2c3e50]/70">
+                  by {page.author}
                 </p>
               )}
             </div>
             {page.pageNumber && (
-              <span className="absolute bottom-4 text-xs text-muted-foreground">
+              <span className={cn(
+                "absolute bottom-4 font-cinzel text-xs text-[#2c3e50]/40",
+                side === "left" ? "left-8" : "right-8"
+              )}>
                 {page.pageNumber}
               </span>
             )}
@@ -195,20 +224,23 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
 
       case "toc":
         return (
-          <div className={cn(baseStyles, "bg-amber-50")}>
-            <h2 className={cn(textStyles, "text-xl md:text-2xl font-bold mb-6 text-center")}>
+          <div className={cn(baseStyles, "book-page-paper", pageContent)}>
+            <h2 className="font-cinzel text-xl md:text-2xl font-medium text-[#2c3e50] mb-8 text-center tracking-wide">
               {page.title}
             </h2>
-            <div className="space-y-3 flex-1">
+            <div className="text-center text-[#c5a059]/60 mb-6">✦</div>
+            <div className="space-y-4 flex-1">
               {page.content?.split("\n").map((line, i) => (
-                <div key={i} className={cn(textStyles, "text-sm md:text-base flex justify-between")}>
+                <div key={i} className="font-cormorant text-base md:text-lg text-[#2c3e50]/80 flex items-center justify-between border-b border-dotted border-[#2c3e50]/10 pb-2">
                   <span>{line}</span>
-                  <span className="text-muted-foreground">•</span>
                 </div>
               ))}
             </div>
             {page.pageNumber && (
-              <span className="text-xs text-muted-foreground text-center">
+              <span className={cn(
+                "absolute bottom-4 font-cinzel text-xs text-[#2c3e50]/40",
+                side === "left" ? "left-8" : "right-8"
+              )}>
                 {page.pageNumber}
               </span>
             )}
@@ -217,18 +249,22 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
 
       case "chapter-start":
         return (
-          <div className={cn(baseStyles, "bg-amber-50 justify-center items-center text-center")}>
-            <div className="space-y-4">
-              <span className={cn(textStyles, "text-sm md:text-base text-muted-foreground uppercase tracking-widest")}>
+          <div className={cn(baseStyles, "book-page-paper justify-center items-center text-center", pageContent)}>
+            <div className="space-y-6">
+              <span className="font-cinzel text-sm md:text-base text-[#c5a059] uppercase tracking-[0.3em]">
                 Chapter {page.chapterNumber}
               </span>
-              <h2 className={cn(textStyles, "text-xl md:text-2xl font-bold")}>
+              <div className="text-[#c5a059]/50 text-xl">✦ ✦ ✦</div>
+              <h2 className="font-cinzel text-xl md:text-2xl font-medium text-[#2c3e50]">
                 {page.title}
               </h2>
-              <div className="w-12 h-px bg-foreground/30 mx-auto" />
+              <div className="w-16 h-px bg-[#2c3e50]/20 mx-auto" />
             </div>
             {page.pageNumber && (
-              <span className="absolute bottom-4 text-xs text-muted-foreground">
+              <span className={cn(
+                "absolute bottom-4 font-cinzel text-xs text-[#2c3e50]/40",
+                side === "left" ? "left-8" : "right-8"
+              )}>
                 {page.pageNumber}
               </span>
             )}
@@ -236,19 +272,29 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
         );
 
       case "content":
+        const isFirstPageOfChapter = page.chapterNumber !== undefined;
         return (
-          <div className={cn(baseStyles, "bg-amber-50")}>
-            <div className={cn(textStyles, "text-sm md:text-base leading-relaxed flex-1 overflow-hidden")}>
+          <div className={cn(baseStyles, "book-page-paper", pageContent)}>
+            <div className="font-cormorant text-base md:text-lg leading-[1.8] flex-1 overflow-hidden text-[#2c3e50]">
               {page.content?.split("\n\n").map((paragraph, i) => (
-                <p key={i} className="mb-4 indent-6 text-justify">
-                  {paragraph}
+                <p key={i} className="mb-5 text-justify hyphens-auto">
+                  {isFirstPageOfChapter && i === 0 ? (
+                    <>
+                      <span className="font-cinzel text-4xl md:text-5xl float-left mr-2 mt-1 leading-none text-[#c5a059]">
+                        {paragraph.charAt(0)}
+                      </span>
+                      {paragraph.slice(1)}
+                    </>
+                  ) : (
+                    paragraph
+                  )}
                 </p>
               ))}
             </div>
             {page.pageNumber && (
               <span className={cn(
-                "text-xs text-muted-foreground",
-                side === "left" ? "text-left" : "text-right"
+                "absolute bottom-4 font-cinzel text-xs text-[#2c3e50]/40",
+                side === "left" ? "left-8" : "right-8"
               )}>
                 {page.pageNumber}
               </span>
@@ -257,22 +303,29 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
         );
 
       case "image":
+        const rotation = getRandomRotation(page.chapterNumber || 0);
         return (
-          <div className={cn(baseStyles, "bg-amber-50 justify-center items-center")}>
-            <div className="w-full max-h-[80%] flex flex-col items-center">
+          <div className={cn(baseStyles, "book-page-paper justify-center items-center", pageContent)}>
+            <div 
+              className="polaroid-frame"
+              style={{ transform: `rotate(${rotation}deg)` }}
+            >
               <img
                 src={page.imageUrl}
-                alt={page.imageCaption || "Story image"}
-                className="max-w-full max-h-full object-contain rounded shadow-md"
+                alt={page.imageCaption || "Story memory"}
+                className="w-full aspect-[4/3] object-cover"
               />
               {page.imageCaption && (
-                <p className={cn(textStyles, "text-xs md:text-sm italic text-muted-foreground mt-3 text-center")}>
+                <p className="font-reenie text-lg md:text-xl text-[#2c3e50]/80 text-center mt-3 px-2">
                   {page.imageCaption}
                 </p>
               )}
             </div>
             {page.pageNumber && (
-              <span className="absolute bottom-4 text-xs text-muted-foreground">
+              <span className={cn(
+                "absolute bottom-4 font-cinzel text-xs text-[#2c3e50]/40",
+                side === "left" ? "left-8" : "right-8"
+              )}>
                 {page.pageNumber}
               </span>
             )}
@@ -281,53 +334,71 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
 
       case "back-cover":
         return (
-          <div className={cn(baseStyles, "bg-gradient-to-br from-amber-900 to-amber-950 justify-center items-center")}>
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-amber-400/20 flex items-center justify-center mx-auto">
-                <span className="text-2xl">📖</span>
-              </div>
-              <p className="text-amber-200/60 text-sm">The End</p>
+          <div className={cn(baseStyles, "book-cover justify-center items-center")}>
+            <div className="text-center space-y-6">
+              <div className="text-[#c5a059]/40 text-2xl">✦ ✦ ✦</div>
+              <p className="font-reenie text-2xl md:text-3xl text-[#c5a059]/70">The End</p>
+              <div className="text-[#c5a059]/40 text-2xl">✦</div>
             </div>
           </div>
         );
 
       default:
-        return <div className="w-full h-full bg-amber-50" />;
+        return <div className="w-full h-full book-page-paper" />;
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4">
+    <div 
+      className="fixed inset-0 z-50 book-ambient-bg flex flex-col items-center justify-center p-4"
+      onMouseDown={(e) => handleDragStart(e.clientX)}
+      onMouseUp={(e) => handleDragEnd(e.clientX)}
+      onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+      onTouchEnd={(e) => handleDragEnd(e.changedTouches[0].clientX)}
+    >
       {/* Close button */}
       {onClose && (
         <Button
           variant="ghost"
           size="sm"
           onClick={onClose}
-          className="absolute top-4 right-4 text-white hover:bg-white/20"
+          className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/10 font-cinzel text-sm gap-2"
         >
-          Close Book
+          <X className="h-4 w-4" />
+          Close
         </Button>
       )}
 
+      {/* SVG Filter for paper texture */}
+      <svg className="absolute w-0 h-0">
+        <filter id="paper-texture">
+          <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise" />
+          <feDiffuseLighting in="noise" lightingColor="#fdfbf7" surfaceScale="2">
+            <feDistantLight azimuth="45" elevation="60" />
+          </feDiffuseLighting>
+        </filter>
+      </svg>
+
       {/* Book container */}
       <div 
-        className="relative w-full max-w-5xl aspect-[2/1.4] perspective-[2000px]"
+        ref={bookRef}
+        className="relative w-full max-w-5xl aspect-[2/1.4] select-none"
         style={{ perspective: "2000px" }}
       >
         {/* Book spine shadow */}
-        <div className="absolute left-1/2 top-0 bottom-0 w-4 -translate-x-1/2 bg-gradient-to-r from-black/30 via-black/10 to-black/30 z-10" />
+        <div className="absolute left-1/2 top-0 bottom-0 w-6 -translate-x-1/2 bg-gradient-to-r from-black/40 via-black/5 to-black/40 z-20 pointer-events-none" />
 
         {/* Left page */}
         <div 
           className={cn(
-            "absolute left-0 top-0 w-1/2 h-full bg-amber-50 shadow-xl overflow-hidden",
-            "origin-right transition-transform duration-600",
-            isFlipping && flipDirection === "prev" && "animate-flip-left"
+            "absolute left-0 top-0 w-1/2 h-full overflow-hidden rounded-l-sm",
+            "origin-right",
+            isFlipping && flipDirection === "prev" && "book-flip-left"
           )}
           style={{
             transformStyle: "preserve-3d",
-            boxShadow: "inset -10px 0 30px rgba(0,0,0,0.1)",
+            boxShadow: "inset -15px 0 40px rgba(0,0,0,0.15), -2px 0 8px rgba(0,0,0,0.1)",
+            transition: "transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1)"
           }}
         >
           <div className="relative w-full h-full">
@@ -338,13 +409,14 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
         {/* Right page */}
         <div 
           className={cn(
-            "absolute right-0 top-0 w-1/2 h-full bg-amber-50 shadow-xl overflow-hidden",
-            "origin-left transition-transform duration-600",
-            isFlipping && flipDirection === "next" && "animate-flip-right"
+            "absolute right-0 top-0 w-1/2 h-full overflow-hidden rounded-r-sm",
+            "origin-left",
+            isFlipping && flipDirection === "next" && "book-flip-right"
           )}
           style={{
             transformStyle: "preserve-3d",
-            boxShadow: "inset 10px 0 30px rgba(0,0,0,0.1)",
+            boxShadow: "inset 15px 0 40px rgba(0,0,0,0.15), 2px 0 8px rgba(0,0,0,0.1)",
+            transition: "transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1)"
           }}
         >
           <div className="relative w-full h-full">
@@ -354,35 +426,35 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
       </div>
 
       {/* Navigation */}
-      <div className="flex items-center gap-6 mt-6">
+      <div className="flex items-center gap-8 mt-8">
         <Button
-          variant="outline"
+          variant="ghost"
           size="icon"
           onClick={goToPrevSpread}
           disabled={currentSpread === 0 || isFlipping}
-          className="bg-white/10 border-white/20 text-white hover:bg-white/20 disabled:opacity-30"
+          className="w-12 h-12 rounded-full bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white disabled:opacity-20 transition-all"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-6 w-6" />
         </Button>
         
-        <span className="text-white/80 text-sm min-w-[100px] text-center">
-          {currentSpread + 1} / {totalSpreads}
+        <span className="font-cinzel text-white/60 text-sm min-w-[100px] text-center tracking-wider">
+          {currentSpread + 1} of {totalSpreads}
         </span>
         
         <Button
-          variant="outline"
+          variant="ghost"
           size="icon"
           onClick={goToNextSpread}
           disabled={currentSpread >= totalSpreads - 1 || isFlipping}
-          className="bg-white/10 border-white/20 text-white hover:bg-white/20 disabled:opacity-30"
+          className="w-12 h-12 rounded-full bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white disabled:opacity-20 transition-all"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="h-6 w-6" />
         </Button>
       </div>
 
-      {/* Keyboard navigation hint */}
-      <p className="text-white/40 text-xs mt-4">
-        Use arrow keys or click buttons to navigate
+      {/* Navigation hint */}
+      <p className="font-cormorant text-white/30 text-sm mt-4 italic">
+        Swipe or use arrow keys to turn pages
       </p>
 
       {/* Keyboard navigation */}
@@ -391,7 +463,7 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
   );
 }
 
-// Keyboard navigation hook component
+// Keyboard navigation component
 function KeyboardNavigation({ onPrev, onNext }: { onPrev: () => void; onNext: () => void }) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
