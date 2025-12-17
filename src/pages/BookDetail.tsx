@@ -406,6 +406,15 @@ export default function BookDetail() {
                     <BookOpen className="w-4 h-4 mr-2" />
                     View Story
                   </Button>
+                  {bookStory.approved && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate(`/book/preview/${bookStory.id}`)}
+                    >
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      Preview Book
+                    </Button>
+                  )}
                   <Button 
                     variant="outline"
                     onClick={() => setShowStyleDialog(true)}

@@ -1,6 +1,6 @@
 // StoryDetail page - displays story content with images
 import { useState, useEffect, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, 
   Edit, 
@@ -14,7 +14,8 @@ import {
   FileText,
   X,
   Image as ImageIcon,
-  Trash2
+  Trash2,
+  BookOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -101,6 +102,7 @@ Those were simpler times, but they were rich with community and connection. Ever
 
 export default function StoryDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { getStory, updateStory } = useStories();
   const { storyGroups } = useStoryGroups();
@@ -438,6 +440,16 @@ export default function StoryDetail() {
                 <CheckCircle className="w-4 h-4" />
                 Approve
               </Button>
+              {story.approved && (
+                <Button 
+                  variant="outline"
+                  onClick={() => navigate(`/book/preview/${story.id}`)}
+                  className="gap-2"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  Preview Book
+                </Button>
+              )}
               <Button 
                 variant="outline" 
                 onClick={() => setRegenerateDialog(true)}
