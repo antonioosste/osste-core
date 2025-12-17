@@ -51,8 +51,10 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
   const [currentSpread, setCurrentSpread] = useState(0);
   const [isFlipping, setIsFlipping] = useState(false);
   const [flipDirection, setFlipDirection] = useState<"next" | "prev" | null>(null);
+  const [dragOffset, setDragOffset] = useState(0);
   const bookRef = useRef<HTMLDivElement>(null);
   const dragStartX = useRef<number | null>(null);
+  const isDragging = useRef(false);
 
   // Generate all pages from story data
   const pages = useMemo(() => {
@@ -120,6 +122,7 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
     if (currentSpread < totalSpreads - 1 && !isFlipping) {
       setFlipDirection("next");
       setIsFlipping(true);
+      setDragOffset(0);
       setTimeout(() => {
         setCurrentSpread(prev => prev + 1);
         setIsFlipping(false);
@@ -132,6 +135,7 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
     if (currentSpread > 0 && !isFlipping) {
       setFlipDirection("prev");
       setIsFlipping(true);
+      setDragOffset(0);
       setTimeout(() => {
         setCurrentSpread(prev => prev - 1);
         setIsFlipping(false);
@@ -140,16 +144,30 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
     }
   };
 
-  // Swipe/drag handling
+  // Swipe/drag handling with visual feedback
   const handleDragStart = (clientX: number) => {
+    if (isFlipping) return;
     dragStartX.current = clientX;
+    isDragging.current = true;
+  };
+
+  const handleDragMove = (clientX: number) => {
+    if (!isDragging.current || dragStartX.current === null || isFlipping) return;
+    const delta = clientX - dragStartX.current;
+    // Limit drag offset for visual feedback
+    const maxDrag = 100;
+    setDragOffset(Math.max(-maxDrag, Math.min(maxDrag, delta * 0.5)));
   };
 
   const handleDragEnd = (clientX: number) => {
     if (dragStartX.current === null) return;
     const delta = clientX - dragStartX.current;
-    if (delta < -50) goToNextSpread();
-    if (delta > 50) goToPrevSpread();
+    setDragOffset(0);
+    isDragging.current = false;
+    
+    if (delta < -60) goToNextSpread();
+    else if (delta > 60) goToPrevSpread();
+    
     dragStartX.current = null;
   };
 
@@ -307,16 +325,18 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
         return (
           <div className={cn(baseStyles, "book-page-paper justify-center items-center", pageContent)}>
             <div 
-              className="polaroid-frame"
+              className="polaroid-frame group cursor-pointer"
               style={{ transform: `rotate(${rotation}deg)` }}
             >
-              <img
-                src={page.imageUrl}
-                alt={page.imageCaption || "Story memory"}
-                className="w-full aspect-[4/3] object-cover"
-              />
+              <div className="overflow-hidden">
+                <img
+                  src={page.imageUrl}
+                  alt={page.imageCaption || "Story memory"}
+                  className="w-full aspect-[4/3] object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+              </div>
               {page.imageCaption && (
-                <p className="font-reenie text-lg md:text-xl text-[#2c3e50]/80 text-center mt-3 px-2">
+                <p className="font-reenie text-lg md:text-xl text-[#2c3e50]/80 text-center mt-3 px-2 transition-colors duration-300 group-hover:text-[#2c3e50]">
                   {page.imageCaption}
                 </p>
               )}
@@ -348,12 +368,42 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
     }
   };
 
+  // Calculate drag-based rotation for page curl effect
+  const getPageStyle = (side: "left" | "right") => {
+    const baseRotation = side === "right" ? dragOffset * -0.3 : dragOffset * 0.3;
+    
+    if (isFlipping) {
+      return {};
+    }
+    
+    if (dragOffset !== 0) {
+      return {
+        transform: side === "right" && dragOffset < 0 
+          ? `rotateY(${Math.max(-30, dragOffset * 0.3)}deg)` 
+          : side === "left" && dragOffset > 0
+          ? `rotateY(${Math.min(30, dragOffset * 0.3)}deg)`
+          : undefined
+      };
+    }
+    
+    return {};
+  };
+
   return (
     <div 
       className="fixed inset-0 z-50 book-ambient-bg flex flex-col items-center justify-center p-4"
       onMouseDown={(e) => handleDragStart(e.clientX)}
+      onMouseMove={(e) => handleDragMove(e.clientX)}
       onMouseUp={(e) => handleDragEnd(e.clientX)}
+      onMouseLeave={() => {
+        if (isDragging.current) {
+          setDragOffset(0);
+          isDragging.current = false;
+          dragStartX.current = null;
+        }
+      }}
       onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+      onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
       onTouchEnd={(e) => handleDragEnd(e.changedTouches[0].clientX)}
     >
       {/* Close button */}
@@ -362,22 +412,12 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
           variant="ghost"
           size="sm"
           onClick={onClose}
-          className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/10 font-cinzel text-sm gap-2"
+          className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/10 font-cinzel text-sm gap-2 z-50"
         >
           <X className="h-4 w-4" />
           Close
         </Button>
       )}
-
-      {/* SVG Filter for paper texture */}
-      <svg className="absolute w-0 h-0">
-        <filter id="paper-texture">
-          <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise" />
-          <feDiffuseLighting in="noise" lightingColor="#fdfbf7" surfaceScale="2">
-            <feDistantLight azimuth="45" elevation="60" />
-          </feDiffuseLighting>
-        </filter>
-      </svg>
 
       {/* Book container */}
       <div 
@@ -392,13 +432,15 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
         <div 
           className={cn(
             "absolute left-0 top-0 w-1/2 h-full overflow-hidden rounded-l-sm",
-            "origin-right",
+            "origin-right backface-hidden",
             isFlipping && flipDirection === "prev" && "book-flip-left"
           )}
           style={{
             transformStyle: "preserve-3d",
+            backfaceVisibility: "hidden",
             boxShadow: "inset -15px 0 40px rgba(0,0,0,0.15), -2px 0 8px rgba(0,0,0,0.1)",
-            transition: "transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1)"
+            transition: isFlipping ? "transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1)" : "transform 0.15s ease-out",
+            ...getPageStyle("left")
           }}
         >
           <div className="relative w-full h-full">
@@ -410,13 +452,15 @@ export function InteractiveBook({ title, subtitle, author, chapters, onClose }: 
         <div 
           className={cn(
             "absolute right-0 top-0 w-1/2 h-full overflow-hidden rounded-r-sm",
-            "origin-left",
+            "origin-left backface-hidden",
             isFlipping && flipDirection === "next" && "book-flip-right"
           )}
           style={{
             transformStyle: "preserve-3d",
+            backfaceVisibility: "hidden",
             boxShadow: "inset 15px 0 40px rgba(0,0,0,0.15), 2px 0 8px rgba(0,0,0,0.1)",
-            transition: "transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1)"
+            transition: isFlipping ? "transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1)" : "transform 0.15s ease-out",
+            ...getPageStyle("right")
           }}
         >
           <div className="relative w-full h-full">
