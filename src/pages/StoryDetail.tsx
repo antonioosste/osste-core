@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useStories } from "@/hooks/useStories";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
 import { StoryImageUploader, UploadedImage } from "@/components/ui/story-image-uploader";
+import { GeneratingOverlay } from "@/components/loaders/GeneratingOverlay";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -352,6 +353,13 @@ export default function StoryDetail() {
   return (
     <div className="min-h-screen bg-background">
       <Header isAuthenticated={true} />
+      
+      {/* Story Regeneration Overlay */}
+      <GeneratingOverlay 
+        isVisible={isRegenerating} 
+        type="story" 
+        title={getDisplayTitle()}
+      />
       
       <div className="container mx-auto px-4 py-8">
         {/* Back Navigation */}
