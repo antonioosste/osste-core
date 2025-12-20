@@ -272,10 +272,16 @@ export default function ChapterDetail() {
                 sessionId={sessionId}
                 chapterId={id}
                 usage="embedded"
-                maxFiles={10}
+                maxFiles={Math.max(0, 3 - uploadedImages.length)}
                 maxSizeMB={8}
                 onUploadSuccess={handleImageUploadSuccess}
               />
+            )}
+            
+            {uploadedImages.length >= 3 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Maximum of 3 images per chapter reached.
+              </p>
             )}
             
             {uploadedImages.length > 0 && (
