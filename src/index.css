@@ -241,95 +241,237 @@ All colors MUST be HSL.
   }
 }
 
-/* ---------- Interactive Book Design System ---------- */
-@layer components {
-  /* Book Typography */
-  .font-cinzel {
-    font-family: 'Cinzel', serif;
-  }
-  
-  .font-cormorant {
-    font-family: 'Cormorant Garamond', serif;
-  }
-  
-  .font-reenie {
-    font-family: 'Reenie Beanie', cursive;
-  }
+/* ============================================
+   INTERACTIVE BOOK DESIGN SYSTEM
+   ============================================ */
 
-  /* Book Container - Responsive sizing */
+/* Book Typography */
+.font-cinzel { font-family: 'Cinzel', 'Playfair Display', Georgia, serif; }
+.font-cormorant { font-family: 'Cormorant Garamond', 'EB Garamond', Georgia, serif; }
+.font-reenie { font-family: 'Reenie Beanie', 'Dancing Script', cursive; }
+
+/* Ambient Background */
+.book-ambient-bg {
+  background: radial-gradient(ellipse at center, #1a1a2e 0%, #0d0d1a 50%, #000 100%);
+}
+
+/* Ambient Glow Effect */
+.book-ambient-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(ellipse at center, rgba(197, 160, 89, 0.08) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Vignette Effect */
+.book-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Book Wrapper for Animation */
+.book-wrapper {
+  perspective: 2500px;
+  perspective-origin: center center;
+  z-index: 10;
+}
+
+/* Book Container - Fluid Responsive Sizing */
+.book-container {
+  --book-width: clamp(280px, 42vw, 480px);
+  --book-height: clamp(380px, 58vh, 640px);
+  width: var(--book-width);
+  height: var(--book-height);
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.4s ease;
+}
+
+/* Hover lift effect */
+.book-container:hover {
+  transform: translateY(-4px) rotateX(2deg);
+}
+
+/* Portrait mode adjustments */
+@media (max-aspect-ratio: 3/4) {
   .book-container {
-    --book-width: min(90vw, 500px);
-    --book-height: min(70vh, 650px);
+    --book-width: clamp(260px, 75vw, 360px);
+    --book-height: clamp(350px, 55vh, 500px);
   }
+}
 
-  @media (min-width: 768px) {
-    .book-container {
-      --book-width: min(85vw, 600px);
-      --book-height: min(75vh, 750px);
-    }
+/* Small screens */
+@media (max-width: 480px) {
+  .book-container {
+    --book-width: clamp(240px, 85vw, 320px);
+    --book-height: clamp(320px, 52vh, 440px);
   }
+}
 
-  @media (min-width: 1024px) {
-    .book-container {
-      --book-width: min(45vw, 550px);
-      --book-height: min(80vh, 700px);
-    }
-  }
+/* Edge Gilding Effect */
+.book-edge-gilding {
+  position: absolute;
+  background: linear-gradient(90deg, 
+    #8b6914 0%, 
+    #c5a059 20%, 
+    #f4d47c 50%, 
+    #c5a059 80%, 
+    #8b6914 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
 
-  /* Book Ambient Background */
-  .book-ambient-bg {
-    background: radial-gradient(ellipse at center, #2b2b2b 0%, #1a1a1a 100%);
-  }
+.book-edge-top {
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 3px;
+  border-radius: 0 2px 0 0;
+}
 
-  /* Book Cover Styling */
-  .book-cover {
-    background: linear-gradient(145deg, #2c3e50 0%, #1a252f 100%);
-    border: 1px solid rgba(197, 160, 89, 0.2);
-  }
+.book-edge-bottom {
+  bottom: 0;
+  right: -3px;
+  width: 6px;
+  height: 3px;
+  border-radius: 0 0 2px 0;
+}
 
-  .book-cover-ornament {
-    color: rgba(197, 160, 89, 0.5);
-    font-size: 1.25rem;
-    letter-spacing: 0.4em;
-  }
+.book-edge-right {
+  top: 3px;
+  right: -4px;
+  width: 5px;
+  height: calc(100% - 6px);
+  background: linear-gradient(180deg,
+    #f4d47c 0%,
+    #c5a059 10%,
+    #a88b3d 30%,
+    #c5a059 50%,
+    #a88b3d 70%,
+    #c5a059 90%,
+    #f4d47c 100%
+  );
+}
 
-  /* Book Page Paper Texture */
-  .book-page-paper {
-    background-color: #fdfbf7;
-    background-image: 
-      linear-gradient(90deg, rgba(0,0,0,0.04) 0%, transparent 8%, transparent 92%, rgba(0,0,0,0.04) 100%),
-      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    background-blend-mode: normal, soft-light;
-  }
+/* Book Spine */
+.book-spine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 8px;
+  background: linear-gradient(90deg, 
+    rgba(0,0,0,0.4) 0%, 
+    rgba(0,0,0,0.15) 30%,
+    rgba(255,255,255,0.05) 50%,
+    rgba(0,0,0,0.15) 70%,
+    rgba(0,0,0,0.4) 100%
+  );
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 50;
+}
 
-  /* Paper face defaults */
-  .paper-face {
-    background-color: #fdfbf7;
-  }
+/* Cover Styling */
+.book-cover {
+  background: linear-gradient(145deg, #2c1810 0%, #1a0f09 50%, #0d0805 100%);
+  border: 2px solid #c5a059;
+  border-left: none;
+  box-shadow:
+    inset 0 0 60px rgba(0,0,0,0.6),
+    inset 0 0 20px rgba(197, 160, 89, 0.1);
+  position: relative;
+  overflow: hidden;
+}
 
-  /* Polaroid Frame for Images */
+/* Cover Texture */
+.book-cover-texture {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E");
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.book-cover-ornament {
+  font-size: 1.25rem;
+  color: rgba(197, 160, 89, 0.5);
+  text-shadow: 0 0 10px rgba(197, 160, 89, 0.3);
+  animation: ornament-pulse 3s ease-in-out infinite;
+}
+
+@keyframes ornament-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+/* Page Paper Styling */
+.book-page-paper {
+  background: linear-gradient(135deg, 
+    #faf8f3 0%, 
+    #f5f0e6 30%,
+    #efe8db 70%,
+    #e8dfd0 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+/* Paper Texture */
+.book-paper-texture {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23paper)' opacity='0.08'/%3E%3C/svg%3E");
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Paper face defaults */
+.paper-face {
+  background-color: #fdfbf7;
+}
+
+/* Page flip animation enhancement */
+.page-flipping {
+  filter: drop-shadow(0 0 20px rgba(0,0,0,0.3));
+}
+
+/* Polaroid Frame */
+.polaroid-frame {
+  background: white;
+  padding: 8px 8px 24px 8px;
+  max-width: 70%;
+  box-shadow:
+    0 4px 15px rgba(0,0,0,0.15),
+    0 8px 30px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+@media (min-width: 640px) {
   .polaroid-frame {
-    background: #fff;
-    padding: 10px 10px 32px 10px;
-    box-shadow: 
-      0 4px 6px rgba(0, 0, 0, 0.1),
-      0 10px 20px rgba(0, 0, 0, 0.12),
-      0 1px 3px rgba(0, 0, 0, 0.06);
-    max-width: 80%;
-    transition: transform 0.4s ease, box-shadow 0.4s ease;
+    padding: 12px 12px 32px 12px;
   }
+}
 
-  .polaroid-frame:hover {
-    box-shadow: 
-      0 8px 12px rgba(0, 0, 0, 0.15),
-      0 16px 32px rgba(0, 0, 0, 0.18),
-      0 2px 4px rgba(0, 0, 0, 0.08);
-  }
+.polaroid-frame:hover {
+  transform: scale(1.02) !important;
+  box-shadow:
+    0 8px 25px rgba(0,0,0,0.2),
+    0 12px 40px rgba(0,0,0,0.15);
+}
 
-  /* Book flip animations - no longer needed with inline styles */
-  .book .paper {
-    cursor: pointer;
-  }
+/* Book cursor */
+.book .paper {
+  cursor: pointer;
 }
 
 /* Print styles for PDF generation */
@@ -338,6 +480,13 @@ All colors MUST be HSL.
     background: white !important;
     position: static !important;
     padding: 0 !important;
+  }
+
+  .book-ambient-glow,
+  .book-vignette,
+  .book-edge-gilding,
+  .book-spine {
+    display: none !important;
   }
 
   .book-container {
@@ -388,4 +537,3 @@ All colors MUST be HSL.
     backface-visibility: hidden;
   }
 }
-
