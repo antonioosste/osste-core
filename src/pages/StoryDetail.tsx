@@ -578,20 +578,6 @@ export default function StoryDetail() {
           </CardContent>
         </Card>
 
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-4 mt-8">
-          <Button className="flex-1" asChild>
-            <Link to="/book/preview">Add to Book</Link>
-          </Button>
-          <Button variant="outline" className="flex-1 gap-2">
-            <Share2 className="w-4 h-4" />
-            Share with Family
-          </Button>
-          <Button variant="outline" className="flex-1 gap-2">
-            <Download className="w-4 h-4" />
-            Download PDF
-          </Button>
-        </div>
       </div>
 
       {/* Regenerate Confirmation Dialog */}
