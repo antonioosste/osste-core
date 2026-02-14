@@ -33,6 +33,7 @@ export default function Books() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newBookTitle, setNewBookTitle] = useState('');
   const [newBookDescription, setNewBookDescription] = useState('');
+  const [titleError, setTitleError] = useState('');
   const [deleteBookId, setDeleteBookId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -47,14 +48,18 @@ export default function Books() {
   };
 
   const handleCreateBook = async () => {
-    if (!newBookTitle.trim()) return;
+    const trimmed = newBookTitle.trim();
+    if (!trimmed) {
+      setTitleError('A book title is required');
+      return;
+    }
+    setTitleError('');
     
     try {
-      const newBook = await createStoryGroup(newBookTitle.trim(), newBookDescription.trim() || undefined);
+      const newBook = await createStoryGroup(trimmed, newBookDescription.trim() || undefined);
       setIsCreateDialogOpen(false);
       setNewBookTitle('');
       setNewBookDescription('');
-      // Navigate to the new book
       navigate(`/books/${newBook.id}`);
     } catch (error) {
       console.error('Failed to create book:', error);
@@ -112,13 +117,17 @@ export default function Books() {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Book Title</Label>
+                <Label htmlFor="title">Book Title <span className="text-destructive">*</span></Label>
                 <Input
                   id="title"
                   placeholder="e.g., My Childhood, Family Memories, Career Journey"
                   value={newBookTitle}
-                  onChange={(e) => setNewBookTitle(e.target.value)}
+                  onChange={(e) => { setNewBookTitle(e.target.value); if (titleError) setTitleError(''); }}
+                  className={titleError ? 'border-destructive' : ''}
                 />
+                {titleError && (
+                  <p className="text-sm text-destructive">{titleError}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description (Optional)</Label>
