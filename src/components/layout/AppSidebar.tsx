@@ -1,11 +1,10 @@
-import { Library, FolderKanban, PenLine, Settings, HelpCircle, LogOut } from "lucide-react";
+import { Library, BookOpen, Settings, HelpCircle, LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -49,7 +48,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-2 pt-2">
-        {/* Library — top-level overview */}
+        {/* Primary navigation */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -61,30 +60,11 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <Separator className="my-2 opacity-40" />
-
-        {/* Content hierarchy */}
-        <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/60 px-3 mb-1">Content</SidebarGroupLabel>}
-          <SidebarGroupContent>
-            <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link to="/books" className={`flex items-center gap-3 px-3 py-2.5 rounded-md ${isActive('/books') ? 'bg-accent' : ''}`}>
-                    <FolderKanban className={`h-5 w-5 ${isActive('/books') ? 'text-primary' : 'text-muted-foreground'}`} />
-                    {!collapsed && <span className={isActive('/books') ? 'font-semibold text-foreground' : 'text-muted-foreground'}>Projects</span>}
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/stories" className={`flex items-center gap-3 px-3 py-2.5 rounded-md ${collapsed ? '' : 'pl-6'} ${isActive('/stories') ? 'bg-accent' : ''}`}>
-                    <PenLine className={`h-4 w-4 ${isActive('/stories') ? 'text-primary' : 'text-muted-foreground/70'}`} />
-                    {!collapsed && <span className={`text-[13px] ${isActive('/stories') ? 'font-medium text-foreground' : 'text-muted-foreground/80'}`}>Stories</span>}
+                    <BookOpen className={`h-5 w-5 ${isActive('/books') ? 'text-primary' : 'text-muted-foreground'}`} />
+                    {!collapsed && <span className={isActive('/books') ? 'font-semibold text-foreground' : 'text-muted-foreground'}>Books</span>}
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
