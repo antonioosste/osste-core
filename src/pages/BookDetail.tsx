@@ -354,10 +354,10 @@ export default function BookDetail() {
               </div>
             </div>
           ) : (
-            <div className="flex items-start justify-between">
-              <div>
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+              <div className="min-w-0">
                 <div className="flex items-center gap-3 mb-2">
-                  <BookOpen className="w-8 h-8 text-primary" />
+                  <BookOpen className="w-6 sm:w-8 h-6 sm:h-8 text-primary shrink-0" />
                   <h1 className="text-3xl font-serif font-bold text-foreground">
                     {book.title}
                   </h1>
@@ -391,7 +391,7 @@ export default function BookDetail() {
         {bookStory ? (
           <Card className="mb-8 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="w-5 h-5 text-primary" />
@@ -401,8 +401,8 @@ export default function BookDetail() {
                     Generated from {bookSessions.length} chapter{bookSessions.length !== 1 ? 's' : ''}
                   </CardDescription>
                 </div>
-                <div className="flex gap-2">
-                  <Button onClick={() => navigate(`/stories/${bookStory.id}`)}>
+                <div className="flex flex-wrap gap-2 w-full lg:w-auto">
+                  <Button onClick={() => navigate(`/stories/${bookStory.id}`)} className="flex-1 sm:flex-none min-h-[44px]">
                     <BookOpen className="w-4 h-4 mr-2" />
                     View Story
                   </Button>
@@ -410,6 +410,7 @@ export default function BookDetail() {
                     <Button 
                       variant="outline"
                       onClick={() => navigate(`/book/preview/${bookStory.id}`)}
+                      className="flex-1 sm:flex-none min-h-[44px]"
                     >
                       <BookOpen className="w-4 h-4 mr-2" />
                       Preview Book
@@ -419,6 +420,7 @@ export default function BookDetail() {
                     variant="outline"
                     onClick={() => setShowStyleDialog(true)}
                     disabled={isGeneratingStory}
+                    className="flex-1 sm:flex-none min-h-[44px]"
                   >
                     <RotateCcw className={`w-4 h-4 mr-2 ${isGeneratingStory ? 'animate-spin' : ''}`} />
                     Rewrite Story
@@ -426,6 +428,7 @@ export default function BookDetail() {
                   <Button 
                     variant="outline"
                     onClick={() => navigate(`/print-request?group=${bookId}`)}
+                    className="flex-1 sm:flex-none min-h-[44px]"
                   >
                     <Printer className="w-4 h-4 mr-2" />
                     Order Print

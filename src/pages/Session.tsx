@@ -1038,17 +1038,17 @@ export default function Session() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="max-w-4xl mx-auto w-full flex flex-col h-full px-4">
           {/* Minimalistic Header */}
-          <div className="flex items-center justify-between py-4 border-b border-border/50 flex-shrink-0">
-            <div className="flex items-center gap-4">
-              <h1 className="text-lg font-medium text-foreground">Chapter Recording</h1>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-3 sm:py-4 border-b border-border/50 flex-shrink-0 gap-2">
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+              <h1 className="text-base sm:text-lg font-medium text-foreground">Chapter Recording</h1>
               {getStatusBadge()}
               <span className="text-sm text-muted-foreground tabular-nums">{formatTime(sessionTime)}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={cancelAndExit} disabled={isGeneratingChapters}>
+              <Button variant="ghost" size="sm" onClick={cancelAndExit} disabled={isGeneratingChapters} className="min-h-[44px]">
                 Cancel
               </Button>
-              <Button size="sm" onClick={saveAndExit} disabled={isGeneratingChapters}>
+              <Button size="sm" onClick={saveAndExit} disabled={isGeneratingChapters} className="min-h-[44px]">
                 {isGeneratingChapters ? (
                   <>
                     <Loader2 className="w-3 h-3 mr-2 animate-spin" />
@@ -1084,7 +1084,7 @@ export default function Session() {
               <Button
                 size="lg"
                 variant={isRecording ? "destructive" : "default"}
-                className={`w-32 h-32 rounded-full shadow-lg hover:shadow-xl transition-all ${
+                className={`w-24 h-24 sm:w-32 sm:h-32 rounded-full shadow-lg hover:shadow-xl transition-all ${
                   isRecording ? "animate-pulse" : "hover:scale-105"
                 }`}
                 onClick={isRecording ? handleStopRecording : startRecording}
@@ -1093,9 +1093,9 @@ export default function Session() {
                 {isProcessing ? (
                   <Loader2 className="w-12 h-12 animate-spin" />
                 ) : isRecording ? (
-                  <Square className="w-12 h-12" />
+                  <Square className="w-8 h-8 sm:w-12 sm:h-12" />
                 ) : (
-                  <Mic className="w-12 h-12" />
+                  <Mic className="w-8 h-8 sm:w-12 sm:h-12" />
                 )}
               </Button>
               {micPermission === "denied" && (

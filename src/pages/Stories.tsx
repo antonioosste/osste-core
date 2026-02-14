@@ -110,7 +110,7 @@ export default function Stories() {
   );
 
   return (
-    <div className="container mx-auto px-6 py-8 max-w-7xl">
+    <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <div>
           <h1 className="text-3xl font-serif font-bold text-foreground mb-2">Story Library</h1>

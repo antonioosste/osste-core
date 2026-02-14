@@ -376,29 +376,31 @@ export default function StoryDetail() {
 
         {/* Story Header */}
         <div className="mb-8" ref={contentRef}>
-          <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
+          <div className="flex flex-col lg:flex-row items-start justify-between gap-4 mb-4">
+          <div className="flex-1 min-w-0">
               {isEditingTitle ? (
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-2">
                   <Input
                     value={editedTitle}
                     onChange={(e) => setEditedTitle(e.target.value)}
                     placeholder="Enter story title..."
-                    className="text-2xl font-bold h-12"
+                    className="text-xl sm:text-2xl font-bold h-12 w-full"
                     autoFocus
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') handleSaveTitle();
                       if (e.key === 'Escape') setIsEditingTitle(false);
                     }}
                   />
-                  <Button size="sm" onClick={handleSaveTitle}>Save</Button>
-                  <Button size="sm" variant="ghost" onClick={() => setIsEditingTitle(false)}>
-                    <X className="w-4 h-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={handleSaveTitle}>Save</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setIsEditingTitle(false)}>
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 mb-2 group">
-                  <h1 className="text-3xl font-bold text-foreground">
+                <div className="flex items-center gap-2 mb-2 group flex-wrap">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-foreground break-words">
                     {getDisplayTitle()}
                   </h1>
                   {/* Show "Suggested" badge for AI-generated titles */}
@@ -435,8 +437,8 @@ export default function StoryDetail() {
                 </span>
               </div>
             </div>
-            <div className="flex gap-2 ml-4">
-              <Button onClick={handleApprove} className="gap-2">
+            <div className="flex flex-wrap gap-2 w-full lg:w-auto">
+              <Button onClick={handleApprove} className="gap-2 flex-1 sm:flex-none min-h-[44px]">
                 <CheckCircle className="w-4 h-4" />
                 Approve
               </Button>
@@ -444,7 +446,7 @@ export default function StoryDetail() {
                 <Button 
                   variant="outline"
                   onClick={() => navigate(`/book/preview/${story.id}`)}
-                  className="gap-2"
+                  className="gap-2 flex-1 sm:flex-none min-h-[44px]"
                 >
                   <BookOpen className="w-4 h-4" />
                   Preview Book
@@ -453,7 +455,7 @@ export default function StoryDetail() {
               <Button 
                 variant="outline" 
                 onClick={() => setRegenerateDialog(true)}
-                className="gap-2"
+                className="gap-2 flex-1 sm:flex-none min-h-[44px]"
                 disabled={isRegenerating}
               >
                 <RotateCcw className={`w-4 h-4 ${isRegenerating ? 'animate-spin' : ''}`} />
