@@ -28,6 +28,7 @@ import { EmptyState } from "@/components/empty-states/EmptyState";
 import { Header } from "@/components/layout/Header";
 import { ChapterCard } from "@/components/chapters/ChapterCard";
 import { GeneratingOverlay } from "@/components/loaders/GeneratingOverlay";
+import { AiTitleSuggestion } from "@/components/book/AiTitleSuggestion";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
 import { useSessions } from "@/hooks/useSessions";
 import { useStories } from "@/hooks/useStories";
@@ -58,6 +59,7 @@ export default function BookDetail() {
   const [showStyleDialog, setShowStyleDialog] = useState(false);
   const [styleInstruction, setStyleInstruction] = useState("");
   const [recordingsBySession, setRecordingsBySession] = useState<Record<string, { duration_seconds: number }[]>>({});
+  const [dismissedSuggestionTitle, setDismissedSuggestionTitle] = useState<string | null>(null);
 
   // Get sessions for this book
   const bookSessions = sessions.filter(s => s.story_group_id === bookId);
@@ -385,6 +387,23 @@ export default function BookDetail() {
             </div>
           )}
         </div>
+
+        {/* AI Title Suggestion Banner */}
+        {bookStoryRecord?.title && 
+         book?.title && 
+         bookStoryRecord.title !== book.title && 
+         dismissedSuggestionTitle !== bookStoryRecord.title && (
+          <AiTitleSuggestion
+            suggestedTitle={bookStoryRecord.title}
+            onAccept={async (title) => {
+              await updateStoryGroup(bookId!, { title });
+              setBook((prev: any) => ({ ...prev, title }));
+              setEditTitle(title);
+              setDismissedSuggestionTitle(bookStoryRecord.title);
+            }}
+            onDismiss={() => setDismissedSuggestionTitle(bookStoryRecord.title!)}
+          />
+        )}
 
         <Separator className="mb-6" />
 
