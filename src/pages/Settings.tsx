@@ -90,7 +90,7 @@ export default function Settings() {
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-3 h-auto">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="billing">Billing</TabsTrigger>
             <TabsTrigger value="privacy">Privacy</TabsTrigger>
@@ -139,7 +139,7 @@ export default function Settings() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
                   <div>
                     <h3 className="text-lg font-semibold">
                       {profile?.plan === 'free' ? 'Free Plan' : 
@@ -203,7 +203,7 @@ export default function Settings() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div>
                     <p className="font-medium">Export Your Data</p>
                     <p className="text-sm text-muted-foreground">Download all your stories and recordings</p>
@@ -233,7 +233,7 @@ export default function Settings() {
                   </AlertDialog>
                 </div>
                 <Separator />
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div>
                     <p className="font-medium text-destructive">Delete Account</p>
                     <p className="text-sm text-muted-foreground">Permanently delete your account and all data</p>
@@ -273,7 +273,7 @@ export default function Settings() {
         {/* Account Actions */}
         <Card className="mt-8 border-destructive/20">
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <h3 className="font-medium text-foreground">Sign Out</h3>
                 <p className="text-sm text-muted-foreground">Sign out of your account on this device</p>

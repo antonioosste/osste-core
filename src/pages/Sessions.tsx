@@ -57,10 +57,10 @@ export default function Sessions() {
   };
 
   return (
-    <div className="container mx-auto px-6 py-8 max-w-6xl">
-      <div className="flex items-center justify-between mb-8">
+    <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-6xl">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-foreground mb-2">Recording Sessions</h1>
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground mb-2">Recording Sessions</h1>
           <p className="text-muted-foreground">
             Manage your storytelling sessions
           </p>
@@ -118,10 +118,10 @@ export default function Sessions() {
           {filteredSessions.map((session) => (
             <Card key={session.id} className="border-border/40 hover:shadow-md transition-shadow">
               <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-lg font-semibold text-foreground">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
+                  <div className="flex-1 space-y-3 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                      <h3 className="text-base sm:text-lg font-semibold text-foreground break-words">
                         {(session as any).title || "Untitled Session"}
                       </h3>
                       <Badge variant={session.status === 'completed' ? 'default' : 'secondary'}>
@@ -129,10 +129,10 @@ export default function Sessions() {
                       </Badge>
                     </div>
                     
-                    <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1.5">
-                        <FolderOpen className="w-4 h-4 text-primary" />
-                        <span>{getGroupName(session.story_group_id)}</span>
+                        <FolderOpen className="w-4 h-4 text-primary shrink-0" />
+                        <span className="truncate max-w-[120px] sm:max-w-none">{getGroupName(session.story_group_id)}</span>
                       </div>
                       
                       <div className="flex items-center gap-1.5">
@@ -161,7 +161,7 @@ export default function Sessions() {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <Button variant="outline" size="sm" asChild>
                       <Link to={`/session?id=${session.id}`}>
                         <Edit className="w-4 h-4 mr-2" />

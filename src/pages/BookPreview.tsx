@@ -248,8 +248,8 @@ export default function BookPreview() {
       
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <Button variant="ghost" asChild>
               <Link to={story.story_group_id ? `/books/${story.story_group_id}` : "/stories"}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -271,7 +271,7 @@ export default function BookPreview() {
         <div className="flex flex-col items-center gap-8">
           {/* Book Cover Preview */}
           <div 
-            className="relative w-80 cursor-pointer group"
+            className="relative w-64 sm:w-80 cursor-pointer group"
             onClick={() => setIsBookOpen(true)}
           >
             <div 
@@ -301,7 +301,7 @@ export default function BookPreview() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
             <Button 
               size="lg" 
               onClick={() => setIsBookOpen(true)}

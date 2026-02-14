@@ -139,17 +139,17 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="container mx-auto px-6 py-8 max-w-6xl">
+    <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-6xl">
       {/* Hero Section */}
-      <div className="mb-12">
-        <h1 className="text-4xl font-serif font-bold text-foreground mb-3">
+      <div className="mb-8 sm:mb-12">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-foreground mb-2 sm:mb-3">
           Welcome back{profile?.name ? `, ${profile.name}` : ''}
         </h1>
-        <p className="text-lg text-muted-foreground mb-8">
+        <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8">
           Continue capturing the memories that matter most
         </p>
         
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <Button 
             size="lg" 
             className="gap-2 text-lg px-8 py-6 h-auto"
@@ -214,9 +214,9 @@ export default function Dashboard() {
       {/* Paywall Card for Unpaid Users */}
       {!userPaid && (
         <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 mb-8">
-          <CardContent className="flex items-center justify-between p-6">
+          <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6">
             <div className="flex items-center space-x-4">
-              <div className="p-3 rounded-full bg-primary/10">
+              <div className="p-3 rounded-full bg-primary/10 shrink-0">
                 <Crown className="w-6 h-6 text-primary" />
               </div>
               <div>
@@ -226,7 +226,7 @@ export default function Dashboard() {
                 </p>
               </div>
             </div>
-            <Button onClick={() => navigate('/pricing')} className="shrink-0">
+            <Button onClick={() => navigate('/pricing')} className="shrink-0 w-full sm:w-auto">
               View Plans
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
@@ -235,7 +235,7 @@ export default function Dashboard() {
       )}
 
       {/* KPIs */}
-      <div className="grid gap-6 md:grid-cols-3 mb-12">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mb-8 sm:mb-12">
         <Card 
           className="border-border/40 hover:shadow-md transition-shadow cursor-pointer"
           onClick={() => navigate('/books')}
@@ -442,7 +442,7 @@ export default function Dashboard() {
       {activeChapter && (
         <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
           <CardContent className="p-6">
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold text-foreground">Continue Your Active Chapter</h3>
                 <p className="text-muted-foreground">
