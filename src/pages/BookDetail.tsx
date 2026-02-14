@@ -388,7 +388,7 @@ export default function BookDetail() {
 
         <Separator className="mb-6" />
 
-        {/* Tabbed content: Sessions · Chapters · Manuscript */}
+        {/* Tabbed content: Sessions · Chapters · Your Story */}
         <Tabs defaultValue="sessions" className="mb-8">
           <TabsList className="mb-6">
             <TabsTrigger value="sessions" className="gap-1.5">
@@ -404,7 +404,7 @@ export default function BookDetail() {
             </TabsTrigger>
             <TabsTrigger value="manuscript" className="gap-1.5">
               <BookOpen className="w-4 h-4" />
-              Manuscript
+              Your Story
             </TabsTrigger>
           </TabsList>
 
@@ -531,7 +531,7 @@ export default function BookDetail() {
             })()}
           </TabsContent>
 
-          {/* ── Manuscript Tab ── */}
+          {/* ── Your Story Tab ── */}
           <TabsContent value="manuscript">
             {bookStory ? (
               <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
@@ -540,7 +540,7 @@ export default function BookDetail() {
                     <div>
                       <CardTitle className="flex items-center gap-2">
                         <FileText className="w-5 h-5 text-primary" />
-                        Manuscript
+                        Your Story
                       </CardTitle>
                       <CardDescription>
                         Generated from {bookSessions.length} session{bookSessions.length !== 1 ? 's' : ''}
@@ -549,7 +549,7 @@ export default function BookDetail() {
                     <div className="flex flex-wrap gap-2 w-full lg:w-auto">
                       <Button onClick={() => navigate(`/stories/${bookStory.id}`)} className="flex-1 sm:flex-none min-h-[44px]">
                         <BookOpen className="w-4 h-4 mr-2" />
-                        View Manuscript
+                        View Your Story
                       </Button>
                       {bookStory.approved && (
                         <Button 
@@ -583,7 +583,7 @@ export default function BookDetail() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground line-clamp-3">
-                    {bookStory.edited_text || bookStory.raw_text || "Your manuscript content will appear here"}
+                    {bookStory.edited_text || bookStory.raw_text || "Your story content will appear here"}
                   </p>
                 </CardContent>
               </Card>
@@ -591,10 +591,10 @@ export default function BookDetail() {
               <Card className="border-dashed border-2">
                 <CardContent className="flex flex-col items-center justify-center py-8 text-center">
                   <Sparkles className="w-12 h-12 text-primary/50 mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">Ready to Generate Your Manuscript</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">Ready to Generate Your Story</h3>
                   <p className="text-muted-foreground mb-4 max-w-md">
                     You have {bookSessions.length} session{bookSessions.length !== 1 ? 's' : ''} recorded. 
-                    Generate your manuscript to create a polished narrative from all your recordings.
+                    Generate your story to create a polished narrative from all your recordings.
                   </p>
                   <div className="flex gap-2">
                     <Button 
@@ -610,7 +610,7 @@ export default function BookDetail() {
                       ) : (
                         <>
                           <Sparkles className="w-5 h-5 mr-2" />
-                          Generate Manuscript
+                          Generate Your Story
                         </>
                       )}
                     </Button>
@@ -627,8 +627,8 @@ export default function BookDetail() {
             ) : (
               <EmptyState
                 icon={FileText}
-                title="No manuscript yet"
-                description="Record at least one session, then generate your manuscript from the recordings."
+                title="No story yet"
+                description="Record at least one session, then generate your story from the recordings."
               />
             )}
           </TabsContent>
