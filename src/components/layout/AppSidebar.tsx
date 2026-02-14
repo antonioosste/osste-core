@@ -1,10 +1,11 @@
-import { Home, BookOpen, FileText, Settings, HelpCircle, LogOut } from "lucide-react";
+import { Library, FolderKanban, PenLine, Settings, HelpCircle, LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -17,17 +18,6 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfile } from "@/hooks/useProfile";
-
-const mainNavItems = [
-  { title: "Library", url: "/dashboard", icon: Home },
-  { title: "My Books", url: "/books", icon: BookOpen },
-  { title: "My Stories", url: "/stories", icon: FileText },
-];
-
-const secondaryNavItems = [
-  { title: "Account Settings", url: "/settings", icon: Settings },
-  { title: "Help", url: "/help", icon: HelpCircle },
-];
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -58,53 +48,72 @@ export function AppSidebar() {
         )}
       </SidebarHeader>
 
-      <SidebarContent className="px-2">
+      <SidebarContent className="px-2 pt-2">
+        {/* Library — top-level overview */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNavItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link 
-                      to={item.url} 
-                      className={`flex items-center gap-3 px-3 py-2 ${isActive(item.url) ? 'bg-accent' : ''}`}
-                    >
-                      <item.icon className={`h-5 w-5 ${isActive(item.url) ? 'text-primary' : 'text-muted-foreground'}`} />
-                      {!collapsed && (
-                        <span className={isActive(item.url) ? 'font-medium text-foreground' : 'text-muted-foreground'}>
-                          {item.title}
-                        </span>
-                      )}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/dashboard" className={`flex items-center gap-3 px-3 py-2.5 rounded-md ${isActive('/dashboard') ? 'bg-accent' : ''}`}>
+                    <Library className={`h-5 w-5 ${isActive('/dashboard') ? 'text-primary' : 'text-muted-foreground'}`} />
+                    {!collapsed && <span className={isActive('/dashboard') ? 'font-semibold text-foreground' : 'text-muted-foreground'}>Library</span>}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <Separator className="my-4" />
+        <Separator className="my-2 opacity-40" />
 
+        {/* Content hierarchy */}
+        <SidebarGroup>
+          {!collapsed && <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/60 px-3 mb-1">Content</SidebarGroupLabel>}
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/books" className={`flex items-center gap-3 px-3 py-2.5 rounded-md ${isActive('/books') ? 'bg-accent' : ''}`}>
+                    <FolderKanban className={`h-5 w-5 ${isActive('/books') ? 'text-primary' : 'text-muted-foreground'}`} />
+                    {!collapsed && <span className={isActive('/books') ? 'font-semibold text-foreground' : 'text-muted-foreground'}>Projects</span>}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/stories" className={`flex items-center gap-3 px-3 py-2.5 rounded-md ${collapsed ? '' : 'pl-6'} ${isActive('/stories') ? 'bg-accent' : ''}`}>
+                    <PenLine className={`h-4 w-4 ${isActive('/stories') ? 'text-primary' : 'text-muted-foreground/70'}`} />
+                    {!collapsed && <span className={`text-[13px] ${isActive('/stories') ? 'font-medium text-foreground' : 'text-muted-foreground/80'}`}>Stories</span>}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <Separator className="my-2 opacity-40" />
+
+        {/* Support */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {secondaryNavItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link 
-                      to={item.url} 
-                      className={`flex items-center gap-3 px-3 py-2 ${isActive(item.url) ? 'bg-accent' : ''}`}
-                    >
-                      <item.icon className={`h-5 w-5 ${isActive(item.url) ? 'text-primary' : 'text-muted-foreground'}`} />
-                      {!collapsed && (
-                        <span className={isActive(item.url) ? 'font-medium text-foreground' : 'text-muted-foreground'}>
-                          {item.title}
-                        </span>
-                      )}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/settings" className={`flex items-center gap-3 px-3 py-2 rounded-md ${isActive('/settings') ? 'bg-accent' : ''}`}>
+                    <Settings className={`h-5 w-5 ${isActive('/settings') ? 'text-primary' : 'text-muted-foreground'}`} />
+                    {!collapsed && <span className={isActive('/settings') ? 'font-medium text-foreground' : 'text-muted-foreground'}>Settings</span>}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/help" className={`flex items-center gap-3 px-3 py-2 rounded-md ${isActive('/help') ? 'bg-accent' : ''}`}>
+                    <HelpCircle className={`h-5 w-5 ${isActive('/help') ? 'text-primary' : 'text-muted-foreground'}`} />
+                    {!collapsed && <span className={isActive('/help') ? 'font-medium text-foreground' : 'text-muted-foreground'}>Help</span>}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
