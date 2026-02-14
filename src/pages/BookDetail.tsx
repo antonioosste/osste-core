@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/empty-states/EmptyState";
 import { Header } from "@/components/layout/Header";
 import { ChapterCard } from "@/components/chapters/ChapterCard";
@@ -385,169 +386,253 @@ export default function BookDetail() {
           )}
         </div>
 
-        <Separator className="mb-8" />
+        <Separator className="mb-6" />
 
-        {/* Story Section */}
-        {bookStory ? (
-          <Card className="mb-8 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-            <CardHeader>
-              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-primary" />
-                    Your Story
-                  </CardTitle>
-                  <CardDescription>
-                    Generated from {bookSessions.length} chapter{bookSessions.length !== 1 ? 's' : ''}
-                  </CardDescription>
+        {/* Tabbed content: Sessions · Chapters · Manuscript */}
+        <Tabs defaultValue="sessions" className="mb-8">
+          <TabsList className="mb-6">
+            <TabsTrigger value="sessions" className="gap-1.5">
+              <Mic className="w-4 h-4" />
+              Sessions
+              <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
+                {bookSessions.length}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="chapters" className="gap-1.5">
+              <FileText className="w-4 h-4" />
+              Chapters
+            </TabsTrigger>
+            <TabsTrigger value="manuscript" className="gap-1.5">
+              <BookOpen className="w-4 h-4" />
+              Manuscript
+            </TabsTrigger>
+          </TabsList>
+
+          {/* ── Sessions Tab ── */}
+          <TabsContent value="sessions">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-serif font-bold text-foreground">Sessions</h2>
+                <p className="text-muted-foreground">Recording sessions that make up this book</p>
+              </div>
+              <Button onClick={() => navigate(`/session?bookId=${bookId}`)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Session
+              </Button>
+            </div>
+
+            {bookSessions.length === 0 ? (
+              <EmptyState
+                icon={Mic}
+                title="No sessions yet"
+                description="Start recording to add your first session to this book"
+                action={{
+                  label: "Start Recording",
+                  onClick: () => navigate(`/session?bookId=${bookId}`)
+                }}
+              />
+            ) : (
+              <div className="space-y-3">
+                {bookSessions
+                  .sort((a, b) => new Date(a.started_at || 0).getTime() - new Date(b.started_at || 0).getTime())
+                  .map((sessionItem, index) => {
+                    const chapterData = chaptersBySessionId[sessionItem.id];
+                    const chapterTitle = getChapterDisplayTitle(sessionItem, chapterData);
+                    
+                    const chapterText = chapterData?.polished_text || chapterData?.raw_transcript || '';
+                    const wordCount = chapterText.trim() ? chapterText.trim().split(/\s+/).length : 0;
+                    
+                    const sessionRecordings = recordingsBySession[sessionItem.id] || [];
+                    const recordingDurationSeconds = sessionRecordings.reduce((sum, r) => sum + (r.duration_seconds || 0), 0);
+                    
+                    return (
+                      <ChapterCard
+                        key={sessionItem.id}
+                        sessionId={sessionItem.id}
+                        chapterId={chapterData?.id}
+                        chapterIndex={index + 1}
+                        title={chapterTitle}
+                        status={sessionItem.status || 'active'}
+                        startedAt={sessionItem.started_at}
+                        endedAt={sessionItem.ended_at}
+                        mode={sessionItem.mode}
+                        hasChapterContent={!!chapterData}
+                        wordCount={wordCount}
+                        recordingDurationSeconds={recordingDurationSeconds}
+                        onEdit={async (sessionId, newTitle) => {
+                          await updateSession(sessionId, { title: newTitle });
+                          toast({
+                            title: "Session title updated",
+                            description: "Your changes have been saved"
+                          });
+                        }}
+                        onDelete={(sessionId) => setDeleteChapterId(sessionId)}
+                      />
+                    );
+                  })}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ── Chapters Tab ── */}
+          <TabsContent value="chapters">
+            <div className="mb-6">
+              <h2 className="text-2xl font-serif font-bold text-foreground">Chapters</h2>
+              <p className="text-muted-foreground">Polished chapter content generated from your sessions</p>
+            </div>
+
+            {(() => {
+              const chaptersWithContent = bookSessions
+                .map(s => ({ session: s, chapter: chaptersBySessionId[s.id] }))
+                .filter(({ chapter }) => chapter && (chapter.polished_text || chapter.raw_transcript));
+              
+              if (chaptersWithContent.length === 0) {
+                return (
+                  <EmptyState
+                    icon={FileText}
+                    title="No chapters yet"
+                    description="Chapters are generated from your recording sessions. Complete a session to see chapter content here."
+                  />
+                );
+              }
+
+              return (
+                <div className="space-y-4">
+                  {chaptersWithContent.map(({ session: sessionItem, chapter: chapterData }, index) => (
+                    <Card key={chapterData!.id} className="border-border/40">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg font-serif">
+                            Chapter {index + 1}: {chapterData!.suggested_cover_title || chapterData!.title || sessionItem.title || 'Untitled'}
+                          </CardTitle>
+                          <Badge variant="secondary">
+                            {(chapterData!.polished_text || '').split(/\s+/).length} words
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-muted-foreground line-clamp-3 text-sm">
+                          {chapterData!.polished_text || chapterData!.raw_transcript || 'No content'}
+                        </p>
+                        {chapterData!.id && (
+                          <Button 
+                            variant="link" 
+                            className="px-0 mt-2" 
+                            onClick={() => navigate(`/chapters/${chapterData!.id}`)}
+                          >
+                            Read full chapter →
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-                <div className="flex flex-wrap gap-2 w-full lg:w-auto">
-                  <Button onClick={() => navigate(`/stories/${bookStory.id}`)} className="flex-1 sm:flex-none min-h-[44px]">
-                    <BookOpen className="w-4 h-4 mr-2" />
-                    View Story
-                  </Button>
-                  {bookStory.approved && (
+              );
+            })()}
+          </TabsContent>
+
+          {/* ── Manuscript Tab ── */}
+          <TabsContent value="manuscript">
+            {bookStory ? (
+              <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                <CardHeader>
+                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <FileText className="w-5 h-5 text-primary" />
+                        Manuscript
+                      </CardTitle>
+                      <CardDescription>
+                        Generated from {bookSessions.length} session{bookSessions.length !== 1 ? 's' : ''}
+                      </CardDescription>
+                    </div>
+                    <div className="flex flex-wrap gap-2 w-full lg:w-auto">
+                      <Button onClick={() => navigate(`/stories/${bookStory.id}`)} className="flex-1 sm:flex-none min-h-[44px]">
+                        <BookOpen className="w-4 h-4 mr-2" />
+                        View Manuscript
+                      </Button>
+                      {bookStory.approved && (
+                        <Button 
+                          variant="outline"
+                          onClick={() => navigate(`/book/preview/${bookStory.id}`)}
+                          className="flex-1 sm:flex-none min-h-[44px]"
+                        >
+                          <BookOpen className="w-4 h-4 mr-2" />
+                          Preview Book
+                        </Button>
+                      )}
+                      <Button 
+                        variant="outline"
+                        onClick={() => setShowStyleDialog(true)}
+                        disabled={isGeneratingStory}
+                        className="flex-1 sm:flex-none min-h-[44px]"
+                      >
+                        <RotateCcw className={`w-4 h-4 mr-2 ${isGeneratingStory ? 'animate-spin' : ''}`} />
+                        Rewrite
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => navigate(`/print-request?group=${bookId}`)}
+                        className="flex-1 sm:flex-none min-h-[44px]"
+                      >
+                        <Printer className="w-4 h-4 mr-2" />
+                        Order Print
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground line-clamp-3">
+                    {bookStory.edited_text || bookStory.raw_text || "Your manuscript content will appear here"}
+                  </p>
+                </CardContent>
+              </Card>
+            ) : bookSessions.length > 0 ? (
+              <Card className="border-dashed border-2">
+                <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                  <Sparkles className="w-12 h-12 text-primary/50 mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">Ready to Generate Your Manuscript</h3>
+                  <p className="text-muted-foreground mb-4 max-w-md">
+                    You have {bookSessions.length} session{bookSessions.length !== 1 ? 's' : ''} recorded. 
+                    Generate your manuscript to create a polished narrative from all your recordings.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => handleGenerateStory(false)}
+                      disabled={isGeneratingStory}
+                      size="lg"
+                    >
+                      {isGeneratingStory ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-5 h-5 mr-2" />
+                          Generate Manuscript
+                        </>
+                      )}
+                    </Button>
                     <Button 
                       variant="outline"
-                      onClick={() => navigate(`/book/preview/${bookStory.id}`)}
-                      className="flex-1 sm:flex-none min-h-[44px]"
+                      onClick={() => setShowStyleDialog(true)}
+                      disabled={isGeneratingStory}
                     >
-                      <BookOpen className="w-4 h-4 mr-2" />
-                      Preview Book
+                      With Custom Style
                     </Button>
-                  )}
-                  <Button 
-                    variant="outline"
-                    onClick={() => setShowStyleDialog(true)}
-                    disabled={isGeneratingStory}
-                    className="flex-1 sm:flex-none min-h-[44px]"
-                  >
-                    <RotateCcw className={`w-4 h-4 mr-2 ${isGeneratingStory ? 'animate-spin' : ''}`} />
-                    Rewrite Story
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => navigate(`/print-request?group=${bookId}`)}
-                    className="flex-1 sm:flex-none min-h-[44px]"
-                  >
-                    <Printer className="w-4 h-4 mr-2" />
-                    Order Print
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground line-clamp-3">
-                {bookStory.edited_text || bookStory.raw_text || "Your story content will appear here"}
-              </p>
-            </CardContent>
-          </Card>
-        ) : bookSessions.length > 0 ? (
-          <Card className="mb-8 border-dashed border-2">
-            <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-              <Sparkles className="w-12 h-12 text-primary/50 mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">Ready to Generate Your Story</h3>
-              <p className="text-muted-foreground mb-4 max-w-md">
-                You have {bookSessions.length} chapter{bookSessions.length !== 1 ? 's' : ''} recorded. 
-                Generate your story to create a polished narrative from all your recordings.
-              </p>
-              <div className="flex gap-2">
-                <Button 
-                  onClick={() => handleGenerateStory(false)}
-                  disabled={isGeneratingStory}
-                  size="lg"
-                >
-                  {isGeneratingStory ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-5 h-5 mr-2" />
-                      Generate Story
-                    </>
-                  )}
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => setShowStyleDialog(true)}
-                  disabled={isGeneratingStory}
-                >
-                  With Custom Style
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ) : null}
-
-        {/* Chapters Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-serif font-bold text-foreground">Chapters</h2>
-              <p className="text-muted-foreground">Recording sessions that make up this book</p>
-            </div>
-            <Button onClick={() => navigate(`/session?bookId=${bookId}`)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Chapter
-            </Button>
-          </div>
-
-          {bookSessions.length === 0 ? (
-            <EmptyState
-              icon={Mic}
-              title="No chapters yet"
-              description="Start recording to add your first chapter to this book"
-              action={{
-                label: "Start Recording",
-                onClick: () => navigate(`/session?bookId=${bookId}`)
-              }}
-            />
-          ) : (
-            <div className="space-y-3">
-              {bookSessions
-                .sort((a, b) => new Date(a.started_at || 0).getTime() - new Date(b.started_at || 0).getTime())
-                .map((sessionItem, index) => {
-                  const chapterData = chaptersBySessionId[sessionItem.id];
-                  const chapterTitle = getChapterDisplayTitle(sessionItem, chapterData);
-                  
-                  // Calculate word count from chapter content
-                  const chapterText = chapterData?.polished_text || chapterData?.raw_transcript || '';
-                  const wordCount = chapterText.trim() ? chapterText.trim().split(/\s+/).length : 0;
-                  
-                  // Calculate total recording duration for this session
-                  const sessionRecordings = recordingsBySession[sessionItem.id] || [];
-                  const recordingDurationSeconds = sessionRecordings.reduce((sum, r) => sum + (r.duration_seconds || 0), 0);
-                  
-                  return (
-                    <ChapterCard
-                      key={sessionItem.id}
-                      sessionId={sessionItem.id}
-                      chapterId={chapterData?.id}
-                      chapterIndex={index + 1}
-                      title={chapterTitle}
-                      status={sessionItem.status || 'active'}
-                      startedAt={sessionItem.started_at}
-                      endedAt={sessionItem.ended_at}
-                      mode={sessionItem.mode}
-                      hasChapterContent={!!chapterData}
-                      wordCount={wordCount}
-                      recordingDurationSeconds={recordingDurationSeconds}
-                      onEdit={async (sessionId, newTitle) => {
-                        await updateSession(sessionId, { title: newTitle });
-                        toast({
-                          title: "Chapter title updated",
-                          description: "Your changes have been saved"
-                        });
-                      }}
-                      onDelete={(sessionId) => setDeleteChapterId(sessionId)}
-                    />
-                  );
-                })}
-            </div>
-          )}
-        </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <EmptyState
+                icon={FileText}
+                title="No manuscript yet"
+                description="Record at least one session, then generate your manuscript from the recordings."
+              />
+            )}
+          </TabsContent>
+        </Tabs>
 
         {/* Delete Chapter Dialog */}
         <AlertDialog open={!!deleteChapterId} onOpenChange={(open) => !isDeletingChapter && !open && setDeleteChapterId(null)}>
