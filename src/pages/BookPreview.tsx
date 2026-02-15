@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { generateBookPDF, listStoryImages } from "@/lib/backend-api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getChapterDisplayTitle } from "@/lib/chapterTitle";
 
 interface StoryData {
   id: string;
@@ -23,9 +24,16 @@ interface StoryData {
 interface ChapterData {
   id: string;
   title: string | null;
+  suggested_cover_title: string | null;
   polished_text: string | null;
   order_index: number | null;
   session_id: string | null;
+}
+
+interface SessionData {
+  id: string;
+  title: string | null;
+  story_anchor: string | null;
 }
 
 interface StoryImage {
@@ -44,6 +52,7 @@ export default function BookPreview() {
   
   const [story, setStory] = useState<StoryData | null>(null);
   const [chapters, setChapters] = useState<ChapterData[]>([]);
+  const [sessionsByChapter, setSessionsByChapter] = useState<Record<string, SessionData>>({});
   const [images, setImages] = useState<StoryImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [isBookOpen, setIsBookOpen] = useState(false);
@@ -89,11 +98,17 @@ export default function BookPreview() {
           // Fetch sessions for this story group
           const { data: sessions } = await supabase
             .from("sessions")
-            .select("id")
+            .select("id, title, story_anchor")
             .eq("story_group_id", storyData.story_group_id);
 
           if (sessions && sessions.length > 0) {
             const sessionIds = sessions.map(s => s.id);
+
+            // Build session lookup for title hierarchy
+            const sessLookup: Record<string, SessionData> = {};
+            sessions.forEach((s: any) => {
+              sessLookup[s.id] = { id: s.id, title: s.title, story_anchor: s.story_anchor };
+            });
 
             // Fetch chapters from all sessions
             const { data: chaptersData, error: chaptersError } = await supabase
@@ -104,6 +119,14 @@ export default function BookPreview() {
 
             if (!chaptersError && chaptersData) {
               setChapters(chaptersData);
+              // Map sessions by chapter's session_id
+              const byChapter: Record<string, SessionData> = {};
+              chaptersData.forEach(ch => {
+                if (ch.session_id && sessLookup[ch.session_id]) {
+                  byChapter[ch.id] = sessLookup[ch.session_id];
+                }
+              });
+              setSessionsByChapter(byChapter);
             }
 
             // Fetch images via backend API
@@ -183,12 +206,14 @@ export default function BookPreview() {
 
   // Convert chapters to book format
   const bookChapters = chapters.map((chapter, index) => {
+    const sessionData = sessionsByChapter[chapter.id];
+    const resolvedTitle = getChapterDisplayTitle(sessionData, chapter);
     const chapterImages = images
       .filter(img => img.chapter_id === chapter.id)
       .map(img => ({ url: img.url, caption: img.caption || undefined }));
 
     return {
-      title: chapter.title || `Chapter ${index + 1}`,
+      title: resolvedTitle,
       content: chapter.polished_text || "",
       images: chapterImages,
     };
@@ -338,7 +363,7 @@ export default function BookPreview() {
                     className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
                   >
                     <span className="font-medium">
-                      Chapter {index + 1}: {chapter.title || "Untitled"}
+                      Chapter {index + 1}: {getChapterDisplayTitle(sessionsByChapter[chapter.id], chapter)}
                     </span>
                     <span className="text-sm text-muted-foreground">
                       {chapter.polished_text?.split(/\s+/).filter(Boolean).length || 0} words
