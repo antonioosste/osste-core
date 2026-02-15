@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useStoryImages } from "@/hooks/useStoryImages";
 import { Badge } from "@/components/ui/badge";
+import { getChapterDisplayTitle } from "@/lib/chapterTitle";
 
 export default function ChapterDetail() {
   const { id } = useParams<{ id: string }>();
@@ -27,7 +28,7 @@ export default function ChapterDetail() {
   const [overallSummary, setOverallSummary] = useState("");
   const [sessionId, setSessionId] = useState<string | undefined>();
   const { getChapter, updateChapter } = useChapters();
-  const { getSession } = useSessions();
+  const { getSession, updateSession } = useSessions();
   
   // Use hook for synchronized image management
   const { images: uploadedImages, deleteImage, refetch: refetchImages } = useStoryImages({ 
@@ -39,15 +40,19 @@ export default function ChapterDetail() {
     if (id) {
       getChapter(id).then(async (data: any) => {
         setChapter(data);
-        setTitle(data?.title || "");
         setSummary(data?.summary || "");
         setOverallSummary(data?.overall_summary || "");
         setSessionId(data?.session_id || undefined);
         
-        // Load session to get story_group_id for back navigation
+        // Load session to get story_group_id and resolve display title
         if (data?.session_id) {
           const sessionData = await getSession(data.session_id);
           setSession(sessionData);
+          // Use the shared title hierarchy to show the resolved title
+          const resolvedTitle = getChapterDisplayTitle(sessionData, data);
+          setTitle(resolvedTitle);
+        } else {
+          setTitle(data?.title || "");
         }
       });
     }
@@ -62,8 +67,13 @@ export default function ChapterDetail() {
   const handleSave = async () => {
     if (!id) return;
 
+    // Save title to session.title (user-edited level in hierarchy)
+    // This ensures the title is consistent across all pages
+    if (session?.id && title.trim()) {
+      await updateSession(session.id, { title: title.trim() });
+    }
+
     await updateChapter(id, {
-      title,
       summary,
       overall_summary: overallSummary,
     });
@@ -177,7 +187,7 @@ export default function ChapterDetail() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">Chapter Title</Label>
               <Input
                 id="title"
                 value={title}
