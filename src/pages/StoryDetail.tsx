@@ -367,9 +367,9 @@ export default function StoryDetail() {
         {/* Back Navigation */}
         <div className="mb-6">
           <Button variant="ghost" asChild>
-            <Link to="/stories">
+            <Link to={story?.story_group_id ? `/books/${story.story_group_id}` : '/books'}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Stories
+              Back to Book
             </Link>
           </Button>
         </div>
