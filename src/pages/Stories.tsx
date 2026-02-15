@@ -113,14 +113,14 @@ export default function Stories() {
     <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-foreground mb-2">Story Library</h1>
+          <h1 className="text-3xl font-serif font-bold text-foreground mb-2">Book Library</h1>
           <p className="text-muted-foreground">
-            Browse and manage your captured stories
+            Browse and manage your books
           </p>
         </div>
-        <Button onClick={() => navigate('/session')} size="lg">
+        <Button onClick={() => navigate('/books')} size="lg">
           <Plus className="w-4 h-4 mr-2" />
-          New Interview
+          New Book
         </Button>
       </div>
 
@@ -197,7 +197,7 @@ export default function Stories() {
                 
                 <div className="flex gap-2">
                   <Button asChild className="flex-1" size="sm">
-                    <Link to={`/stories/${story.id}`}>
+                    <Link to={story.id ? `/books/${dbStories.find(s => s.id === story.id)?.story_group_id || ''}` : '#'}>
                       <Eye className="w-4 h-4 mr-2" />
                       View
                     </Link>
@@ -211,7 +211,7 @@ export default function Stories() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="bg-background border border-border shadow-lg z-50">
                       <DropdownMenuItem asChild>
-                        <Link to={`/stories/${story.id}`} className="flex items-center">
+                        <Link to={`/books/${dbStories.find(s => s.id === story.id)?.story_group_id || ''}`} className="flex items-center">
                           <Edit className="w-4 h-4 mr-2" />
                           Edit
                         </Link>
@@ -239,15 +239,15 @@ export default function Stories() {
       ) : (
         <EmptyState
           icon={BookOpen}
-          title={searchTerm ? "No stories found" : "No stories yet"}
+          title={searchTerm ? "No stories found" : "No books yet"}
           description={
             searchTerm 
               ? "Try adjusting your search terms or clearing filters."
-              : "Start your first voice interview to begin capturing stories."
+              : "Create your first book to start capturing stories."
           }
           action={!searchTerm ? {
-            label: "Start Interview",
-            onClick: () => navigate('/session'),
+            label: "Create Book",
+            onClick: () => navigate('/books'),
           } : undefined}
         />
       )}
