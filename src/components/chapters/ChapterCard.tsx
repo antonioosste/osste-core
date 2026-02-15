@@ -199,17 +199,7 @@ export function ChapterCard({
           )}
 
           {/* View Button - only show if completed AND has chapter content */}
-          {canView && (
-            <Button
-              variant={isCompleted ? "default" : "outline"}
-              size="sm"
-              onClick={() => navigate(`/chapters/${chapterId}`)}
-              className="h-8"
-            >
-              <Eye className="w-3.5 h-3.5 mr-1.5" />
-              View
-            </Button>
-          )}
+          {/* View button hidden - chapter menu button handles viewing */}
 
           {/* If completed but wants to continue editing */}
           {isCompleted && (
