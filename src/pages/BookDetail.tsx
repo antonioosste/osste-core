@@ -37,6 +37,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { assembleStory } from "@/lib/backend-api";
 import { supabase } from "@/integrations/supabase/client";
+import { getChapterDisplayTitle } from "@/lib/chapterTitle";
 
 export default function BookDetail() {
   const navigate = useNavigate();
@@ -175,13 +176,8 @@ export default function BookDetail() {
     }
   };
 
-  const getChapterDisplayTitle = (sessionItem: typeof sessions[0], chapterData: typeof chapters[0] | undefined) => {
-    // Priority: 1. Session title (user edited), 2. Chapter suggested_cover_title, 3. Story anchor (prompt), 4. Chapter title, 5. Fallback
-    if (sessionItem.title) return sessionItem.title;
-    if (chapterData?.suggested_cover_title) return chapterData.suggested_cover_title;
-    if (sessionItem.story_anchor) return sessionItem.story_anchor;
-    if (chapterData?.title) return chapterData.title;
-    return `Recording ${formatDate(sessionItem.started_at)}`;
+  const getChapterTitle = (sessionItem: typeof sessions[0], chapterData: typeof chapters[0] | undefined) => {
+    return getChapterDisplayTitle(sessionItem, chapterData);
   };
 
   const handleGenerateStory = async (withStyle: boolean = false) => {
@@ -456,7 +452,7 @@ export default function BookDetail() {
                   .sort((a, b) => new Date(a.started_at || 0).getTime() - new Date(b.started_at || 0).getTime())
                   .map((sessionItem, index) => {
                     const chapterData = chaptersBySessionId[sessionItem.id];
-                    const chapterTitle = getChapterDisplayTitle(sessionItem, chapterData);
+                    const chapterTitle = getChapterTitle(sessionItem, chapterData);
                     
                     const chapterText = chapterData?.polished_text || chapterData?.raw_transcript || '';
                     const wordCount = chapterText.trim() ? chapterText.trim().split(/\s+/).length : 0;

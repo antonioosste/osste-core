@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { assembleStory } from "@/lib/backend-api";
 import { useStories } from "@/hooks/useStories";
+import { getChapterDisplayTitle } from "@/lib/chapterTitle";
 import { useState } from "react";
 import { useStoryImages } from "@/hooks/useStoryImages";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -34,14 +35,9 @@ export default function Chapters() {
 
   const selectedGroupId = searchParams.get('group') || 'all';
 
-  // Helper to get chapter display title following the title hierarchy
-  const getChapterDisplayTitle = (chapter: typeof chapters[0], sessionItem: typeof sessions[0] | undefined) => {
-    // Priority: 1. Session title (user edited), 2. Chapter suggested_cover_title, 3. Story anchor, 4. Chapter title, 5. Fallback
-    if (sessionItem?.title) return sessionItem.title;
-    if (chapter.suggested_cover_title) return chapter.suggested_cover_title;
-    if (sessionItem?.story_anchor) return sessionItem.story_anchor;
-    if (chapter.title) return chapter.title;
-    return "Untitled Chapter";
+  // Helper to get chapter display title following the shared title hierarchy
+  const getChapterTitle = (chapter: typeof chapters[0], sessionItem: typeof sessions[0] | undefined) => {
+    return getChapterDisplayTitle(sessionItem, chapter);
   };
 
   // Filter chapters by story group
@@ -330,7 +326,7 @@ export default function Chapters() {
                     .map((chapter, index) => {
                       const isExpanded = expandedChapters.has(chapter.id);
                       const sessionItem = sessions.find(s => s.id === chapter.session_id);
-                      const chapterTitle = getChapterDisplayTitle(chapter, sessionItem);
+                      const chapterTitle = getChapterTitle(chapter, sessionItem);
                       
                       return (
                         <Collapsible key={chapter.id} open={isExpanded} onOpenChange={() => toggleChapter(chapter.id)}>
