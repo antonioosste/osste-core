@@ -8,7 +8,7 @@ import { BookEmptyState } from "@/components/book/BookEmptyState";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { generateBookPDF, listStoryImages } from "@/lib/backend-api";
+import { listStoryImages } from "@/lib/backend-api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getChapterDisplayTitle } from "@/lib/chapterTitle";
 
@@ -165,32 +165,32 @@ export default function BookPreview() {
     fetchData();
   }, [storyId, session?.access_token, toast]);
 
-  // Handle PDF download via backend API
+  // Handle PDF download via edge function
   const handleDownloadPDF = async () => {
     if (!storyId || !session?.access_token) return;
 
     setIsDownloading(true);
     try {
-      const result = await generateBookPDF(session.access_token, storyId);
-      
-      if (result.pdfUrl) {
-        // Download the PDF
+      const { data, error } = await supabase.functions.invoke("generate-pdf", {
+        body: { storyId },
+      });
+
+      if (error) throw error;
+
+      if (data?.pdfUrl) {
         const link = document.createElement("a");
-        link.href = result.pdfUrl;
+        link.href = data.pdfUrl;
         link.download = `${storyGroupTitle || "book"}.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         toast({
           title: "Download Started",
           description: "Your printable book PDF is downloading.",
         });
       } else {
-        toast({
-          title: "PDF Queued",
-          description: `Your PDF is being generated (Job ID: ${result.jobId}). You'll be notified when it's ready.`,
-        });
+        throw new Error("No PDF URL returned");
       }
     } catch (error: any) {
       console.error("PDF download error:", error);
