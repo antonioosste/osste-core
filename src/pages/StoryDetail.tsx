@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
+import ReactMarkdown from "react-markdown";
 import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
 import { useStories } from "@/hooks/useStories";
@@ -476,10 +477,10 @@ export default function StoryDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent className="max-h-[600px] overflow-y-auto">
-              <div className="prose max-w-none">
-                <div className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+              <div className="prose prose-stone dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
+                <ReactMarkdown>
                   {story.raw_text || "No original content available"}
-                </div>
+                </ReactMarkdown>
               </div>
             </CardContent>
           </Card>
@@ -515,13 +516,11 @@ export default function StoryDetail() {
                   </div>
                 </div>
               ) : (
-                <div className="prose max-w-none">
-                  <div 
-                    className="font-serif text-foreground leading-relaxed max-h-[600px] overflow-y-auto whitespace-pre-wrap"
-                    style={{ fontFamily: 'Georgia, serif' }}
-                  >
-                    {displayContent}
-                  </div>
+                <div 
+                  className="prose prose-stone dark:prose-invert max-w-none max-h-[600px] overflow-y-auto font-serif"
+                  style={{ fontFamily: 'Georgia, serif' }}
+                >
+                  <ReactMarkdown>{displayContent}</ReactMarkdown>
                 </div>
               )}
             </CardContent>
