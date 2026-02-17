@@ -226,13 +226,29 @@ serve(async (req) => {
       }
     }
 
-    // Fallback: use story text as single chapter if no chapters
+    // Fallback: use story text which may contain markdown chapter headers
     if (chapters.length === 0) {
       const content = story.edited_text || story.raw_text || "";
-      if (content) {
-        chapters = [{ title: bookTitle, content }];
-      } else {
+      if (!content) {
         throw new Error("No content available to generate PDF");
+      }
+
+      // Parse markdown ## headers as chapter delimiters
+      const chapterRegex = /^##\s+(.+)$/gm;
+      const headerMatches = [...content.matchAll(chapterRegex)];
+
+      if (headerMatches.length > 0) {
+        for (let i = 0; i < headerMatches.length; i++) {
+          const headerTitle = headerMatches[i][1].trim();
+          const startIdx = headerMatches[i].index! + headerMatches[i][0].length;
+          const endIdx = i + 1 < headerMatches.length ? headerMatches[i + 1].index! : content.length;
+          const chapterContent = content.substring(startIdx, endIdx).trim();
+          if (chapterContent) {
+            chapters.push({ title: headerTitle, content: chapterContent });
+          }
+        }
+      } else {
+        chapters = [{ title: bookTitle, content }];
       }
     }
 
