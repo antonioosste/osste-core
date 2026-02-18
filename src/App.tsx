@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ApprovedRoute } from "@/components/auth/ApprovedRoute";
+import { useApproval } from "@/hooks/useApproval";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import Waitlist from "./pages/Waitlist";
 import Landing from "./pages/Landing";
@@ -44,22 +45,14 @@ import TestEmail from "./pages/TestEmail";
 
 const queryClient = new QueryClient();
 
-// Production-only waitlist lock: redirects non-authenticated users to waitlist
-function WaitlistGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  const location = useLocation();
-  
-  // Check if we're in production (not Lovable preview or local dev)
-  const isProduction = !window.location.hostname.includes('lovable') && 
-                       !window.location.hostname.includes('localhost');
-  
-  // Allow access if: not in production, user is authenticated, or already on waitlist
-  if (!isProduction || loading || user || location.pathname === '/') {
-    return <>{children}</>;
-  }
-  
-  // In production, redirect non-authenticated users to waitlist
-  return <Navigate to="/" replace />;
+// Redirect authenticated+approved users away from auth pages to dashboard
+function RedirectIfApproved({ children }: { children: React.ReactNode }) {
+  const { user, loading: authLoading } = useAuth();
+  const { approved, loading: approvalLoading } = useApproval();
+
+  if (authLoading || approvalLoading) return <>{children}</>;
+  if (user && approved) return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
 }
 
 const App = () => (
@@ -72,10 +65,10 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Waitlist />} />
-            <Route path="/home" element={<WaitlistGuard><Landing /></WaitlistGuard>} />
-            <Route path="/pricing" element={<WaitlistGuard><Pricing /></WaitlistGuard>} />
-            <Route path="/login" element={<WaitlistGuard><Login /></WaitlistGuard>} />
-            <Route path="/signup" element={<WaitlistGuard><Signup /></WaitlistGuard>} />
+            <Route path="/home" element={<Landing />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/login" element={<RedirectIfApproved><Login /></RedirectIfApproved>} />
+            <Route path="/signup" element={<RedirectIfApproved><Signup /></RedirectIfApproved>} />
             <Route path="/dashboard" element={<ApprovedRoute><DashboardLayout><Dashboard /></DashboardLayout></ApprovedRoute>} />
             <Route path="/session" element={<ApprovedRoute><Session /></ApprovedRoute>} />
             <Route path="/books" element={<ApprovedRoute><DashboardLayout><Books /></DashboardLayout></ApprovedRoute>} />
@@ -93,15 +86,15 @@ const App = () => (
             <Route path="/admin/import-questions" element={<ProtectedRoute><QuestionBankImport /></ProtectedRoute>} />
             <Route path="/admin/question-import" element={<ProtectedRoute><QuestionImport /></ProtectedRoute>} />
             <Route path="/interview" element={<ApprovedRoute><Interview /></ApprovedRoute>} />
-            <Route path="/terms" element={<WaitlistGuard><Terms /></WaitlistGuard>} />
-            <Route path="/privacy" element={<WaitlistGuard><Privacy /></WaitlistGuard>} />
-            <Route path="/cookies" element={<WaitlistGuard><Cookies /></WaitlistGuard>} />
-            <Route path="/faq" element={<WaitlistGuard><FAQ /></WaitlistGuard>} />
-            <Route path="/help" element={<WaitlistGuard><Help /></WaitlistGuard>} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/cookies" element={<Cookies />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/help" element={<Help />} />
             <Route path="/print-request" element={<ApprovedRoute><DashboardLayout><PrintRequest /></DashboardLayout></ApprovedRoute>} />
             <Route path="/print-success" element={<ApprovedRoute><DashboardLayout><PrintSuccess /></DashboardLayout></ApprovedRoute>} />
-            <Route path="/gift" element={<WaitlistGuard><GiftFlow /></WaitlistGuard>} />
-            <Route path="/gift/confirmation" element={<WaitlistGuard><GiftConfirmation /></WaitlistGuard>} />
+            <Route path="/gift" element={<GiftFlow />} />
+            <Route path="/gift/confirmation" element={<GiftConfirmation />} />
             <Route path="/test-email" element={<ProtectedRoute><TestEmail /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

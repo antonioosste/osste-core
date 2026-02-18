@@ -10,11 +10,13 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useApproval } from "@/hooks/useApproval";
-import { Clock } from "lucide-react";
+import { Clock, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export function OssteWaitlist() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const { approved, loading: approvalLoading } = useApproval();
+  const navigate = useNavigate();
   const [email, setEmail] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [message, setMessage] = React.useState<{
@@ -94,6 +96,17 @@ export function OssteWaitlist() {
                 <p className="text-sm text-muted-foreground">
                   Logged in as <strong>{user.email}</strong>
                 </p>
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    await signOut();
+                    navigate('/login');
+                  }}
+                  className="mt-2 gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Log out / Switch account
+                </Button>
               </div>
             </>
           ) : (
