@@ -19,7 +19,8 @@ import {
   Eye,
   Save,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +42,9 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { assembleStory } from "@/lib/backend-api";
 import { useStoryImages } from "@/hooks/useStoryImages";
+import { useChapters } from "@/hooks/useChapters";
+import { useSessions } from "@/hooks/useSessions";
+import { getChapterDisplayTitle } from "@/lib/chapterTitle";
 
 const sampleStory = {
   id: "1",
@@ -189,6 +193,22 @@ export default function StoryDetail() {
     storyId: id,
     storyGroupId: story?.story_group_id,
   });
+
+  // Fetch chapters and sessions for consistent title resolution
+  const { chapters: allChapters } = useChapters();
+  const { sessions: allSessions } = useSessions();
+
+  // Build ordered session+chapter pairs for this story's book
+  const orderedSessionChapters = useMemo(() => {
+    if (!story?.story_group_id) return [];
+    const bookSessions = allSessions
+      .filter(s => s.story_group_id === story.story_group_id)
+      .sort((a, b) => new Date(a.started_at || 0).getTime() - new Date(b.started_at || 0).getTime());
+    return bookSessions.map(s => ({
+      session: s,
+      chapter: allChapters.find(ch => ch.session_id === s.id),
+    }));
+  }, [story?.story_group_id, allSessions, allChapters]);
 
   useEffect(() => {
     const loadStory = async () => {
@@ -550,13 +570,29 @@ export default function StoryDetail() {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {parseChapters(displayContent).map((chapter, index) => (
+              {parseChapters(displayContent).map((chapter, index) => {
+                // Use title hierarchy for consistency with other views
+                const matchedPair = orderedSessionChapters[index];
+                const displayChapterTitle = matchedPair
+                  ? getChapterDisplayTitle(matchedPair.session, matchedPair.chapter)
+                  : chapter.title;
+                const suggestedTitle = matchedPair?.chapter?.suggested_cover_title;
+
+                return (
                 <div key={index} className="group">
-                  {chapter.title && (
+                  {(chapter.title || displayChapterTitle) && (
                     <div className="flex items-center justify-between mb-3">
-                      <h2 className="text-xl font-serif font-bold text-foreground">
-                        {chapter.title}
-                      </h2>
+                      <div>
+                        <h2 className="text-xl font-serif font-bold text-foreground">
+                          {displayChapterTitle || chapter.title}
+                        </h2>
+                        {suggestedTitle && suggestedTitle !== displayChapterTitle && (
+                          <p className="text-xs text-primary/70 flex items-center gap-1 mt-0.5">
+                            <Sparkles className="w-3 h-3" />
+                            <span className="italic">AI suggested: {suggestedTitle}</span>
+                          </p>
+                        )}
+                      </div>
                       {editingChapterIndex !== index && (
                         <Button
                           variant="ghost"
@@ -607,7 +643,8 @@ export default function StoryDetail() {
                     <hr className="mt-6 border-border/50" />
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
