@@ -19,16 +19,17 @@ export function useAdminRole() {
 
       try {
         const { data, error } = await supabase
-          .from('profiles')
-          .select('role, plan')
-          .eq('id', user.id)
-          .single();
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
 
         if (error) {
-          console.error('Error fetching profile for admin check:', error);
+          console.error('Error checking admin role:', error);
           setIsAdmin(false);
         } else {
-          setIsAdmin(data?.role === 'admin' || data?.plan === 'admin');
+          setIsAdmin(!!data);
         }
       } catch (error) {
         console.error('Error checking admin role:', error);
