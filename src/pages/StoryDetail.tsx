@@ -1,5 +1,5 @@
 // StoryDetail page - displays story content with images
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, 
@@ -15,7 +15,11 @@ import {
   X,
   Image as ImageIcon,
   Trash2,
-  BookOpen
+  BookOpen,
+  Eye,
+  Save,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import ReactMarkdown from "react-markdown";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
 import { useStories } from "@/hooks/useStories";
@@ -117,7 +122,50 @@ export default function StoryDetail() {
   const [editedTitle, setEditedTitle] = useState("");
   const [styleInstruction, setStyleInstruction] = useState("");
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [editingChapterIndex, setEditingChapterIndex] = useState<number | null>(null);
+  const [chapterEditContent, setChapterEditContent] = useState("");
+  const [showOriginal, setShowOriginal] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Parse markdown content into chapters based on ## headers
+  const parseChapters = useCallback((text: string) => {
+    if (!text) return [{ title: null, content: text }];
+    
+    const lines = text.split('\n');
+    const chapters: { title: string | null; content: string }[] = [];
+    let currentTitle: string | null = null;
+    let currentLines: string[] = [];
+
+    for (const line of lines) {
+      const headerMatch = line.match(/^##\s+(.+)$/);
+      if (headerMatch) {
+        // Save previous chapter
+        if (currentLines.length > 0 || currentTitle !== null) {
+          chapters.push({ title: currentTitle, content: currentLines.join('\n').trim() });
+        }
+        currentTitle = headerMatch[1];
+        currentLines = [];
+      } else {
+        currentLines.push(line);
+      }
+    }
+    // Push last chapter
+    if (currentLines.length > 0 || currentTitle !== null) {
+      chapters.push({ title: currentTitle, content: currentLines.join('\n').trim() });
+    }
+
+    return chapters.filter(c => c.title || c.content);
+  }, []);
+
+  // Reconstruct full markdown from chapters array
+  const reconstructMarkdown = useCallback((chapters: { title: string | null; content: string }[]) => {
+    return chapters.map(ch => {
+      if (ch.title) {
+        return `## ${ch.title}\n\n${ch.content}`;
+      }
+      return ch.content;
+    }).join('\n\n');
+  }, []);
   
   // Helper to get book title
   const getBookTitle = () => {
@@ -186,6 +234,30 @@ export default function StoryDetail() {
     } catch (error) {
       console.error('Error saving edit:', error);
     }
+  };
+
+  const handleSaveChapter = async (chapterIndex: number) => {
+    if (!id) return;
+    
+    const currentText = story.edited_text || story.raw_text || "";
+    const chapters = parseChapters(currentText);
+    chapters[chapterIndex] = { ...chapters[chapterIndex], content: chapterEditContent };
+    const newText = reconstructMarkdown(chapters);
+    
+    try {
+      await updateStory(id, { edited_text: newText });
+      setStory({ ...story, edited_text: newText });
+      setEditedContent(newText);
+      setEditingChapterIndex(null);
+      setChapterEditContent("");
+    } catch (error) {
+      console.error('Error saving chapter:', error);
+    }
+  };
+
+  const startEditingChapter = (index: number, content: string) => {
+    setEditingChapterIndex(index);
+    setChapterEditContent(content);
   };
 
   const handleSaveTitle = async () => {
@@ -466,66 +538,103 @@ export default function StoryDetail() {
           </div>
         </div>
 
-        {/* Two-Pane Layout */}
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Left Pane - Raw Text */}
-          <Card className="h-fit">
-            <CardHeader>
+        {/* Story Content */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <FileText className="w-5 h-5" />
-                Original Content
+                Your Story
               </CardTitle>
-            </CardHeader>
-            <CardContent className="max-h-[600px] overflow-y-auto">
-              <div className="prose prose-stone dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
-                <ReactMarkdown>
-                  {story.raw_text || "No original content available"}
-                </ReactMarkdown>
+              <div className="flex items-center gap-2">
+                {story.raw_text && story.edited_text && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowOriginal(!showOriginal)}
+                    className="gap-2 text-muted-foreground"
+                  >
+                    <Eye className="w-4 h-4" />
+                    {showOriginal ? "Show Edited" : "View Original"}
+                  </Button>
+                )}
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Right Pane - Polished Story */}
-          <Card className="h-fit">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Polished Story</CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsEditing(!isEditing)}
-                className="gap-2"
-              >
-                <Edit className="w-4 h-4" />
-                {isEditing ? "Cancel" : "Edit"}
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {isEditing ? (
-                <div className="space-y-4">
-                  <Textarea
-                    value={editedContent}
-                    onChange={(e) => setEditedContent(e.target.value)}
-                    className="min-h-[500px] resize-none"
-                    placeholder="Edit your story..."
-                  />
-                  <div className="flex gap-2">
-                    <Button onClick={handleSaveEdit}>Save Changes</Button>
-                    <Button variant="outline" onClick={() => setIsEditing(false)}>
-                      Cancel
-                    </Button>
+            </div>
+            {showOriginal && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Showing the original AI-generated content. Switch back to view your edited version.
+              </p>
+            )}
+          </CardHeader>
+          <CardContent>
+            {showOriginal ? (
+              <div className="prose prose-stone dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
+                <ReactMarkdown>{story.raw_text || "No original content"}</ReactMarkdown>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {parseChapters(displayContent).map((chapter, index) => (
+                  <div key={index} className="group">
+                    {chapter.title && (
+                      <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-xl font-serif font-bold text-foreground">
+                          {chapter.title}
+                        </h2>
+                        {editingChapterIndex !== index && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => startEditingChapter(index, chapter.content)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity gap-1"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                            Edit
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                    
+                    {editingChapterIndex === index ? (
+                      <div className="space-y-3 rounded-lg border border-border p-4 bg-muted/30">
+                        <Textarea
+                          value={chapterEditContent}
+                          onChange={(e) => setChapterEditContent(e.target.value)}
+                          className="min-h-[200px] resize-y font-serif"
+                          placeholder="Edit this chapter..."
+                        />
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => handleSaveChapter(index)} className="gap-1">
+                            <Save className="w-3.5 h-3.5" />
+                            Save
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => { setEditingChapterIndex(null); setChapterEditContent(""); }}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        className="prose prose-stone dark:prose-invert max-w-none font-serif leading-relaxed cursor-pointer hover:bg-muted/20 rounded-lg transition-colors p-2 -m-2"
+                        onClick={() => !chapter.title ? null : startEditingChapter(index, chapter.content)}
+                        title={chapter.title ? "Click to edit this chapter" : undefined}
+                      >
+                        <ReactMarkdown>{chapter.content}</ReactMarkdown>
+                      </div>
+                    )}
+                    
+                    {index < parseChapters(displayContent).length - 1 && (
+                      <hr className="mt-6 border-border/50" />
+                    )}
                   </div>
-                </div>
-              ) : (
-                <div 
-                  className="prose prose-stone dark:prose-invert max-w-none max-h-[600px] overflow-y-auto font-serif"
-                  style={{ fontFamily: 'Georgia, serif' }}
-                >
-                  <ReactMarkdown>{displayContent}</ReactMarkdown>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Story Images Section */}
         <Card className="mt-6">
