@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { 
   ArrowLeft, 
@@ -493,51 +493,97 @@ export default function BookDetail() {
           <TabsContent value="chapters">
             <div className="mb-6">
               <h2 className="text-2xl font-serif font-bold text-foreground">Chapters</h2>
-              <p className="text-muted-foreground">Polished chapter content generated from your sessions</p>
+              <p className="text-muted-foreground">Chapter content from your story</p>
             </div>
 
             {(() => {
-              const chaptersWithContent = bookSessions
-                .map(s => ({ session: s, chapter: chaptersBySessionId[s.id] }))
-                .filter(({ chapter }) => chapter && (chapter.polished_text || chapter.raw_transcript));
+              // Parse chapters from story raw_text markdown to match story detail page
+              const storyText = bookStory?.raw_text || "";
+              const parsedChapters: { title: string; content: string }[] = [];
               
-              if (chaptersWithContent.length === 0) {
+              if (storyText) {
+                const lines = storyText.split('\n');
+                let currentTitle: string | null = null;
+                let currentLines: string[] = [];
+
+                for (const line of lines) {
+                  const headerMatch = line.match(/^##\s+(.+)$/);
+                  if (headerMatch) {
+                    if (currentLines.length > 0 || currentTitle !== null) {
+                      parsedChapters.push({ title: currentTitle || 'Untitled', content: currentLines.join('\n').trim() });
+                    }
+                    currentTitle = headerMatch[1];
+                    currentLines = [];
+                  } else {
+                    currentLines.push(line);
+                  }
+                }
+                if (currentLines.length > 0 || currentTitle !== null) {
+                  parsedChapters.push({ title: currentTitle || 'Untitled', content: currentLines.join('\n').trim() });
+                }
+              }
+
+              const filtered = parsedChapters.filter(c => c.content);
+              
+              if (filtered.length === 0) {
+                // Fallback to DB chapters if no story text yet
+                const chaptersWithContent = bookSessions
+                  .map(s => ({ session: s, chapter: chaptersBySessionId[s.id] }))
+                  .filter(({ chapter }) => chapter && (chapter.polished_text || chapter.raw_transcript));
+                
+                if (chaptersWithContent.length === 0) {
+                  return (
+                    <EmptyState
+                      icon={FileText}
+                      title="No chapters yet"
+                      description="Chapters are generated from your recording sessions. Complete a session to see chapter content here."
+                    />
+                  );
+                }
+
                 return (
-                  <EmptyState
-                    icon={FileText}
-                    title="No chapters yet"
-                    description="Chapters are generated from your recording sessions. Complete a session to see chapter content here."
-                  />
+                  <div className="space-y-4">
+                    {chaptersWithContent.map(({ session: sessionItem, chapter: chapterData }, index) => (
+                      <Card key={chapterData!.id} className="border-border/40">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-lg font-serif">
+                              Chapter {index + 1}: {chapterData!.suggested_cover_title || chapterData!.title || sessionItem.title || 'Untitled'}
+                            </CardTitle>
+                            <Badge variant="secondary">
+                              {(chapterData!.polished_text || '').split(/\s+/).length} words
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-muted-foreground line-clamp-3 text-sm">
+                            {chapterData!.polished_text || chapterData!.raw_transcript || 'No content'}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                 );
               }
 
               return (
                 <div className="space-y-4">
-                  {chaptersWithContent.map(({ session: sessionItem, chapter: chapterData }, index) => (
-                    <Card key={chapterData!.id} className="border-border/40">
+                  {filtered.map((chapter, index) => (
+                    <Card key={index} className="border-border/40">
                       <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-lg font-serif">
-                            Chapter {index + 1}: {chapterData!.suggested_cover_title || chapterData!.title || sessionItem.title || 'Untitled'}
+                            {chapter.title}
                           </CardTitle>
                           <Badge variant="secondary">
-                            {(chapterData!.polished_text || '').split(/\s+/).length} words
+                            {chapter.content.split(/\s+/).length} words
                           </Badge>
                         </div>
                       </CardHeader>
                       <CardContent>
                         <p className="text-muted-foreground line-clamp-3 text-sm">
-                          {chapterData!.polished_text || chapterData!.raw_transcript || 'No content'}
+                          {chapter.content}
                         </p>
-                        {chapterData!.id && (
-                          <Button 
-                            variant="link" 
-                            className="px-0 mt-2" 
-                            onClick={() => navigate(`/chapters/${chapterData!.id}`)}
-                          >
-                            Read full chapter →
-                          </Button>
-                        )}
                       </CardContent>
                     </Card>
                   ))}
@@ -598,7 +644,7 @@ export default function BookDetail() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground line-clamp-3">
-                    {bookStory.edited_text || bookStory.raw_text || "Your story content will appear here"}
+                    {bookStory.raw_text || "Your story content will appear here"}
                   </p>
                 </CardContent>
               </Card>
