@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { listStoryImages } from "@/lib/backend-api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getChapterDisplayTitle } from "@/lib/chapterTitle";
 
 interface StoryData {
   id: string;
@@ -33,6 +34,7 @@ interface SessionData {
   id: string;
   title: string | null;
   story_anchor: string | null;
+  started_at: string | null;
 }
 
 interface StoryImage {
@@ -97,8 +99,9 @@ export default function BookPreview() {
           // Fetch sessions for this story group
           const { data: sessions } = await supabase
             .from("sessions")
-            .select("id, title, story_anchor")
-            .eq("story_group_id", storyData.story_group_id);
+            .select("id, title, story_anchor, started_at")
+            .eq("story_group_id", storyData.story_group_id)
+            .order("started_at", { ascending: true });
 
           if (sessions && sessions.length > 0) {
             const sessionIds = sessions.map(s => s.id);
@@ -106,7 +109,7 @@ export default function BookPreview() {
             // Build session lookup for title hierarchy
             const sessLookup: Record<string, SessionData> = {};
             sessions.forEach((s: any) => {
-              sessLookup[s.id] = { id: s.id, title: s.title, story_anchor: s.story_anchor };
+              sessLookup[s.id] = { id: s.id, title: s.title, story_anchor: s.story_anchor, started_at: s.started_at };
             });
 
             // Fetch chapters from all sessions
@@ -231,13 +234,15 @@ export default function BookPreview() {
 
   const storyContent = story?.raw_text || "";
 
-  // Build ordered session+chapter pairs for consistent title resolution
+  // Build ordered session+chapter pairs for consistent title resolution (sorted by started_at)
   const orderedSessionChapters = useMemo(() => {
-    return Object.values(sessionsByChapter)
+    const pairs = Object.values(sessionsByChapter)
       .map(sessionData => {
         const chapterData = chapters.find(ch => ch.session_id === sessionData.id);
         return { session: sessionData, chapter: chapterData };
-      });
+      })
+      .sort((a, b) => new Date(a.session.started_at || 0).getTime() - new Date(b.session.started_at || 0).getTime());
+    return pairs;
   }, [sessionsByChapter, chapters]);
 
   // Build book chapters from story markdown + images, using title hierarchy
@@ -253,7 +258,7 @@ export default function BookPreview() {
       // Use the title hierarchy for consistency with other views
       const matchedPair = orderedSessionChapters[index];
       const displayTitle = matchedPair 
-        ? (matchedPair.session.title || matchedPair.chapter?.suggested_cover_title || matchedPair.session.story_anchor || matchedPair.chapter?.title || ch.title)
+        ? getChapterDisplayTitle(matchedPair.session, matchedPair.chapter)
         : ch.title;
       
       return {
