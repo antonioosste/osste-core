@@ -497,7 +497,7 @@ export default function BookDetail() {
             </div>
 
             {(() => {
-              // Parse chapters from story raw_text markdown to match story detail page
+              // Parse chapters from story raw_text markdown for content
               const storyText = bookStory?.raw_text || "";
               const parsedChapters: { title: string; content: string }[] = [];
               
@@ -525,10 +525,14 @@ export default function BookDetail() {
 
               const filtered = parsedChapters.filter(c => c.content);
               
+              // Build ordered session+chapter pairs for consistent title resolution
+              const orderedSessionChapters = bookSessions
+                .sort((a, b) => new Date(a.started_at || 0).getTime() - new Date(b.started_at || 0).getTime())
+                .map(s => ({ session: s, chapter: chaptersBySessionId[s.id] }));
+              
               if (filtered.length === 0) {
                 // Fallback to DB chapters if no story text yet
-                const chaptersWithContent = bookSessions
-                  .map(s => ({ session: s, chapter: chaptersBySessionId[s.id] }))
+                const chaptersWithContent = orderedSessionChapters
                   .filter(({ chapter }) => chapter && (chapter.polished_text || chapter.raw_transcript));
                 
                 if (chaptersWithContent.length === 0) {
@@ -548,7 +552,7 @@ export default function BookDetail() {
                         <CardHeader className="pb-2">
                           <div className="flex items-center justify-between">
                             <CardTitle className="text-lg font-serif">
-                              Chapter {index + 1}: {chapterData!.suggested_cover_title || chapterData!.title || sessionItem.title || 'Untitled'}
+                              Chapter {index + 1}: {getChapterDisplayTitle(sessionItem, chapterData)}
                             </CardTitle>
                             <Badge variant="secondary">
                               {(chapterData!.polished_text || '').split(/\s+/).length} words
@@ -568,25 +572,33 @@ export default function BookDetail() {
 
               return (
                 <div className="space-y-4">
-                  {filtered.map((chapter, index) => (
-                    <Card key={index} className="border-border/40">
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg font-serif">
-                            {chapter.title}
-                          </CardTitle>
-                          <Badge variant="secondary">
-                            {chapter.content.split(/\s+/).length} words
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-muted-foreground line-clamp-3 text-sm">
-                          {chapter.content}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ))}
+                  {filtered.map((chapter, index) => {
+                    // Use the title hierarchy from sessions/chapters for consistency
+                    const matchedPair = orderedSessionChapters[index];
+                    const displayTitle = matchedPair 
+                      ? getChapterDisplayTitle(matchedPair.session, matchedPair.chapter)
+                      : chapter.title;
+                    
+                    return (
+                      <Card key={index} className="border-border/40">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-lg font-serif">
+                              Chapter {index + 1}: {displayTitle}
+                            </CardTitle>
+                            <Badge variant="secondary">
+                              {chapter.content.split(/\s+/).length} words
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-muted-foreground line-clamp-3 text-sm">
+                            {chapter.content}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               );
             })()}

@@ -231,7 +231,16 @@ export default function BookPreview() {
 
   const storyContent = story?.raw_text || "";
 
-  // Build book chapters from story markdown + images
+  // Build ordered session+chapter pairs for consistent title resolution
+  const orderedSessionChapters = useMemo(() => {
+    return Object.values(sessionsByChapter)
+      .map(sessionData => {
+        const chapterData = chapters.find(ch => ch.session_id === sessionData.id);
+        return { session: sessionData, chapter: chapterData };
+      });
+  }, [sessionsByChapter, chapters]);
+
+  // Build book chapters from story markdown + images, using title hierarchy
   const bookChapters = useMemo(() => {
     const parsed = parseChaptersFromMarkdown(storyContent);
     
@@ -240,13 +249,20 @@ export default function BookPreview() {
       const chapterImages = index === 0 
         ? images.map(img => ({ url: img.url, caption: img.caption || undefined }))
         : [];
+      
+      // Use the title hierarchy for consistency with other views
+      const matchedPair = orderedSessionChapters[index];
+      const displayTitle = matchedPair 
+        ? (matchedPair.session.title || matchedPair.chapter?.suggested_cover_title || matchedPair.session.story_anchor || matchedPair.chapter?.title || ch.title)
+        : ch.title;
+      
       return {
-        title: ch.title,
+        title: displayTitle,
         content: ch.content,
         images: chapterImages,
       };
     });
-  }, [storyContent, images, parseChaptersFromMarkdown]);
+  }, [storyContent, images, parseChaptersFromMarkdown, orderedSessionChapters]);
 
   // Loading state
   if (loading) {
