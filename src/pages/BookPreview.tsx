@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { listStoryImages } from "@/lib/backend-api";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getChapterDisplayTitle } from "@/lib/chapterTitle";
 
 interface StoryData {
   id: string;
@@ -204,20 +203,50 @@ export default function BookPreview() {
     }
   };
 
-  // Convert chapters to book format
-  const bookChapters = chapters.map((chapter, index) => {
-    const sessionData = sessionsByChapter[chapter.id];
-    const resolvedTitle = getChapterDisplayTitle(sessionData, chapter);
-    const chapterImages = images
-      .filter(img => img.chapter_id === chapter.id)
-      .map(img => ({ url: img.url, caption: img.caption || undefined }));
+  // Parse chapters from story raw_text markdown (## headers)
+  const parseChaptersFromMarkdown = useCallback((text: string) => {
+    if (!text) return [];
+    const lines = text.split('\n');
+    const result: { title: string; content: string }[] = [];
+    let currentTitle: string | null = null;
+    let currentLines: string[] = [];
 
-    return {
-      title: resolvedTitle,
-      content: chapter.polished_text || "",
-      images: chapterImages,
-    };
-  });
+    for (const line of lines) {
+      const headerMatch = line.match(/^##\s+(.+)$/);
+      if (headerMatch) {
+        if (currentLines.length > 0 || currentTitle !== null) {
+          result.push({ title: currentTitle || 'Untitled', content: currentLines.join('\n').trim() });
+        }
+        currentTitle = headerMatch[1];
+        currentLines = [];
+      } else {
+        currentLines.push(line);
+      }
+    }
+    if (currentLines.length > 0 || currentTitle !== null) {
+      result.push({ title: currentTitle || 'Untitled', content: currentLines.join('\n').trim() });
+    }
+    return result.filter(c => c.content);
+  }, []);
+
+  const storyContent = story?.raw_text || "";
+
+  // Build book chapters from story markdown + images
+  const bookChapters = useMemo(() => {
+    const parsed = parseChaptersFromMarkdown(storyContent);
+    
+    // Distribute images across chapters or attach to first chapter
+    return parsed.map((ch, index) => {
+      const chapterImages = index === 0 
+        ? images.map(img => ({ url: img.url, caption: img.caption || undefined }))
+        : [];
+      return {
+        title: ch.title,
+        content: ch.content,
+        images: chapterImages,
+      };
+    });
+  }, [storyContent, images, parseChaptersFromMarkdown]);
 
   // Loading state
   if (loading) {
@@ -262,8 +291,6 @@ export default function BookPreview() {
     );
   }
 
-  // Get story content for fallback display
-  const storyContent = story.edited_text || story.raw_text || "";
   const wordCount = storyContent.split(/\s+/).filter(Boolean).length;
   const estimatedPages = Math.max(1, Math.ceil(wordCount / 250));
 
@@ -286,7 +313,7 @@ export default function BookPreview() {
                 {storyGroupTitle || story.title || "Book Preview"}
               </h1>
               <p className="text-muted-foreground">
-                {chapters.length} chapters • ~{estimatedPages} pages • {wordCount.toLocaleString()} words
+                {bookChapters.length} chapters • ~{estimatedPages} pages • {wordCount.toLocaleString()} words
               </p>
             </div>
           </div>
@@ -353,20 +380,20 @@ export default function BookPreview() {
           </div>
 
           {/* Chapter List */}
-          {chapters.length > 0 && (
+          {bookChapters.length > 0 && (
             <div className="w-full max-w-2xl mt-8">
               <h3 className="text-lg font-semibold mb-4">Table of Contents</h3>
               <div className="space-y-2">
-                {chapters.map((chapter, index) => (
+                {bookChapters.map((chapter, index) => (
                   <div 
-                    key={chapter.id}
+                    key={index}
                     className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
                   >
                     <span className="font-medium">
-                      Chapter {index + 1}: {getChapterDisplayTitle(sessionsByChapter[chapter.id], chapter)}
+                      Chapter {index + 1}: {chapter.title}
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      {chapter.polished_text?.split(/\s+/).filter(Boolean).length || 0} words
+                      {chapter.content?.split(/\s+/).filter(Boolean).length || 0} words
                     </span>
                   </div>
                 ))}
