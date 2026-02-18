@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, ImageIcon, Trash2, Sparkles, Edit } from "lucide-react";
+import { ArrowLeft, Save, ImageIcon, Trash2, Sparkles, Edit, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StoryImageUploader } from "@/components/ui/story-image-uploader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +27,8 @@ export default function ChapterDetail() {
   const [summary, setSummary] = useState("");
   const [overallSummary, setOverallSummary] = useState("");
   const [sessionId, setSessionId] = useState<string | undefined>();
+  const [dismissedSuggestion, setDismissedSuggestion] = useState(false);
+  const [isSavingSuggestion, setIsSavingSuggestion] = useState(false);
   const { getChapter, updateChapter } = useChapters();
   const { getSession, updateSession } = useSessions();
   
@@ -44,16 +46,18 @@ export default function ChapterDetail() {
         setOverallSummary(data?.overall_summary || "");
         setSessionId(data?.session_id || undefined);
         
-        // Load session to get story_group_id and resolve display title
+        // Load session to get story_group_id
         if (data?.session_id) {
           const sessionData = await getSession(data.session_id);
           setSession(sessionData);
-          // Use the shared title hierarchy to show the resolved title
-          const resolvedTitle = getChapterDisplayTitle(sessionData, data);
-          setTitle(resolvedTitle);
-        } else {
-          setTitle(data?.title || "");
         }
+        
+        // Use chapters.title as single source of truth
+        const resolvedTitle = getChapterDisplayTitle(
+          data?.session_id ? await getSession(data.session_id) : null,
+          data
+        );
+        setTitle(resolvedTitle);
       });
     }
   }, [id]);
@@ -64,16 +68,36 @@ export default function ChapterDetail() {
     }
   }, [sessionId]);
 
+  // Determine if we should show AI suggestion
+  const suggestedTitle = chapter?.suggested_cover_title;
+  const currentTitle = chapter?.title;
+  const showSuggestion = suggestedTitle && 
+    suggestedTitle !== currentTitle && 
+    !dismissedSuggestion;
+
+  const handleAcceptSuggestion = async () => {
+    if (!id || !suggestedTitle) return;
+    setIsSavingSuggestion(true);
+    try {
+      await updateChapter(id, { title: suggestedTitle });
+      setChapter((prev: any) => ({ ...prev, title: suggestedTitle }));
+      setTitle(suggestedTitle);
+      setDismissedSuggestion(true);
+      toast({
+        title: "Title updated",
+        description: "AI suggested title has been applied.",
+      });
+    } finally {
+      setIsSavingSuggestion(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!id) return;
 
-    // Save title to session.title (user-edited level in hierarchy)
-    // This ensures the title is consistent across all pages
-    if (session?.id && title.trim()) {
-      await updateSession(session.id, { title: title.trim() });
-    }
-
+    // Save title to chapters.title (the single source of truth)
     await updateChapter(id, {
+      title: title.trim() || null,
       summary,
       overall_summary: overallSummary,
     });
@@ -143,6 +167,37 @@ export default function ChapterDetail() {
             </Button>
           )}
         </div>
+
+        {/* AI Suggested Title Banner - ONLY shown here */}
+        {showSuggestion && (
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-start gap-3">
+              <Sparkles className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-muted-foreground mb-1">AI Suggested Title</p>
+                <p className="text-base font-semibold text-foreground mb-3">"{suggestedTitle}"</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    onClick={handleAcceptSuggestion}
+                    disabled={isSavingSuggestion}
+                  >
+                    <Check className="w-3.5 h-3.5 mr-1.5" />
+                    Use This Title
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setDismissedSuggestion(true)}
+                  >
+                    <X className="w-3.5 h-3.5 mr-1.5" />
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Story Draft Section */}
         <Card className="mb-6">

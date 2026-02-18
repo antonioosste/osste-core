@@ -134,21 +134,8 @@ export default function Sessions() {
                         {session.status || 'active'}
                       </Badge>
                     </div>
-                    {/* Show AI suggested title if different */}
-                    {(() => {
-                      const chapterData = chapters.find(ch => ch.session_id === session.id);
-                      const displayTitle = getChapterDisplayTitle(session, chapterData);
-                      const suggestedTitle = chapterData?.suggested_cover_title;
-                      if (suggestedTitle && suggestedTitle !== displayTitle) {
-                        return (
-                          <p className="text-xs text-primary/70 flex items-center gap-1 -mt-1">
-                            <Sparkles className="w-3 h-3" />
-                            <span className="italic">AI suggested: {suggestedTitle}</span>
-                          </p>
-                        );
-                      }
-                      return null;
-                    })()}
+                    
+                    
                     
                     <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1.5">

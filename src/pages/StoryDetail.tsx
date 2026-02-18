@@ -586,12 +586,6 @@ export default function StoryDetail() {
                         <h2 className="text-xl font-serif font-bold text-foreground">
                           {displayChapterTitle || chapter.title}
                         </h2>
-                        {suggestedTitle && suggestedTitle !== displayChapterTitle && (
-                          <p className="text-xs text-primary/70 flex items-center gap-1 mt-0.5">
-                            <Sparkles className="w-3 h-3" />
-                            <span className="italic">AI suggested: {suggestedTitle}</span>
-                          </p>
-                        )}
                       </div>
                       {editingChapterIndex !== index && (
                         <Button

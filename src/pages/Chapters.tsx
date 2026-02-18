@@ -348,12 +348,6 @@ export default function Chapters() {
                                     <CardTitle className="text-xl mb-1">
                                       {chapterTitle}
                                     </CardTitle>
-                                    {chapter.suggested_cover_title && chapter.suggested_cover_title !== chapterTitle && (
-                                      <p className="text-xs text-primary/70 flex items-center gap-1">
-                                        <Sparkles className="w-3 h-3" />
-                                        <span className="italic">AI suggested: {chapter.suggested_cover_title}</span>
-                                      </p>
-                                    )}
                                     
                                     {chapter.summary && (
                                       <p className="text-sm text-muted-foreground line-clamp-2">
