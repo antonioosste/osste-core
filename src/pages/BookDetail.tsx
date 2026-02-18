@@ -467,6 +467,7 @@ export default function BookDetail() {
                         chapterId={chapterData?.id}
                         chapterIndex={index + 1}
                         title={chapterTitle}
+                        suggestedTitle={chapterData?.suggested_cover_title}
                         status={sessionItem.status || 'active'}
                         startedAt={sessionItem.started_at}
                         endedAt={sessionItem.ended_at}
@@ -551,9 +552,17 @@ export default function BookDetail() {
                       <Card key={chapterData!.id} className="border-border/40">
                         <CardHeader className="pb-2">
                           <div className="flex items-center justify-between">
-                            <CardTitle className="text-lg font-serif">
-                              Chapter {index + 1}: {getChapterDisplayTitle(sessionItem, chapterData)}
-                            </CardTitle>
+                            <div>
+                              <CardTitle className="text-lg font-serif">
+                                Chapter {index + 1}: {getChapterDisplayTitle(sessionItem, chapterData)}
+                              </CardTitle>
+                              {chapterData?.suggested_cover_title && chapterData.suggested_cover_title !== getChapterDisplayTitle(sessionItem, chapterData) && (
+                                <p className="text-xs text-primary/70 flex items-center gap-1 mt-0.5">
+                                  <Sparkles className="w-3 h-3" />
+                                  <span className="italic">AI suggested: {chapterData.suggested_cover_title}</span>
+                                </p>
+                              )}
+                            </div>
                             <Badge variant="secondary">
                               {(chapterData!.polished_text || '').split(/\s+/).length} words
                             </Badge>
@@ -583,9 +592,17 @@ export default function BookDetail() {
                       <Card key={index} className="border-border/40">
                         <CardHeader className="pb-2">
                           <div className="flex items-center justify-between">
-                            <CardTitle className="text-lg font-serif">
-                              Chapter {index + 1}: {displayTitle}
-                            </CardTitle>
+                            <div>
+                              <CardTitle className="text-lg font-serif">
+                                Chapter {index + 1}: {displayTitle}
+                              </CardTitle>
+                              {matchedPair?.chapter?.suggested_cover_title && matchedPair.chapter.suggested_cover_title !== displayTitle && (
+                                <p className="text-xs text-primary/70 flex items-center gap-1 mt-0.5">
+                                  <Sparkles className="w-3 h-3" />
+                                  <span className="italic">AI suggested: {matchedPair.chapter.suggested_cover_title}</span>
+                                </p>
+                              )}
+                            </div>
                             <Badge variant="secondary">
                               {chapter.content.split(/\s+/).length} words
                             </Badge>

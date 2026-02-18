@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSessions } from "@/hooks/useSessions";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
+import { useChapters } from "@/hooks/useChapters";
+import { getChapterDisplayTitle } from "@/lib/chapterTitle";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-states/EmptyState";
@@ -16,6 +18,7 @@ export default function Sessions() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { sessions, loading, deleteSession } = useSessions();
   const { storyGroups } = useStoryGroups();
+  const { chapters } = useChapters();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const selectedGroupId = searchParams.get('group') || 'all';
@@ -119,15 +122,33 @@ export default function Sessions() {
             <Card key={session.id} className="border-border/40 hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
-                  <div className="flex-1 space-y-3 min-w-0">
+                <div className="flex-1 space-y-3 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                       <h3 className="text-base sm:text-lg font-semibold text-foreground break-words">
-                        {(session as any).title || "Untitled Session"}
+                        {(() => {
+                          const chapterData = chapters.find(ch => ch.session_id === session.id);
+                          return getChapterDisplayTitle(session, chapterData);
+                        })()}
                       </h3>
                       <Badge variant={session.status === 'completed' ? 'default' : 'secondary'}>
                         {session.status || 'active'}
                       </Badge>
                     </div>
+                    {/* Show AI suggested title if different */}
+                    {(() => {
+                      const chapterData = chapters.find(ch => ch.session_id === session.id);
+                      const displayTitle = getChapterDisplayTitle(session, chapterData);
+                      const suggestedTitle = chapterData?.suggested_cover_title;
+                      if (suggestedTitle && suggestedTitle !== displayTitle) {
+                        return (
+                          <p className="text-xs text-primary/70 flex items-center gap-1 -mt-1">
+                            <Sparkles className="w-3 h-3" />
+                            <span className="italic">AI suggested: {suggestedTitle}</span>
+                          </p>
+                        );
+                      }
+                      return null;
+                    })()}
                     
                     <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1.5">
