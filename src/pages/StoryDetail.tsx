@@ -226,10 +226,10 @@ export default function StoryDetail() {
     if (!id) return;
     
     try {
-      await updateStory(id, { edited_text: editedContent });
+      await updateStory(id, { raw_text: editedContent });
       setIsEditing(false);
       if (story) {
-        setStory({ ...story, edited_text: editedContent });
+        setStory({ ...story, raw_text: editedContent });
       }
     } catch (error) {
       console.error('Error saving edit:', error);
@@ -239,14 +239,14 @@ export default function StoryDetail() {
   const handleSaveChapter = async (chapterIndex: number) => {
     if (!id) return;
     
-    const currentText = story.edited_text || story.raw_text || "";
+    const currentText = story.raw_text || "";
     const chapters = parseChapters(currentText);
     chapters[chapterIndex] = { ...chapters[chapterIndex], content: chapterEditContent };
     const newText = reconstructMarkdown(chapters);
     
     try {
-      await updateStory(id, { edited_text: newText });
-      setStory({ ...story, edited_text: newText });
+      await updateStory(id, { raw_text: newText });
+      setStory({ ...story, raw_text: newText });
       setEditedContent(newText);
       setEditingChapterIndex(null);
       setChapterEditContent("");
@@ -423,7 +423,7 @@ export default function StoryDetail() {
     );
   }
 
-  const displayContent = story.edited_text || story.raw_text || "No content available";
+  const displayContent = story.raw_text || "No content available";
 
   return (
     <div className="min-h-screen bg-background">
@@ -546,93 +546,69 @@ export default function StoryDetail() {
                 <FileText className="w-5 h-5" />
                 Your Story
               </CardTitle>
-              <div className="flex items-center gap-2">
-                {story.raw_text && story.edited_text && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowOriginal(!showOriginal)}
-                    className="gap-2 text-muted-foreground"
-                  >
-                    <Eye className="w-4 h-4" />
-                    {showOriginal ? "Show Edited" : "View Original"}
-                  </Button>
-                )}
-              </div>
             </div>
-            {showOriginal && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Showing the original AI-generated content. Switch back to view your edited version.
-              </p>
-            )}
           </CardHeader>
           <CardContent>
-            {showOriginal ? (
-              <div className="prose prose-stone dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
-                <ReactMarkdown>{story.raw_text || "No original content"}</ReactMarkdown>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {parseChapters(displayContent).map((chapter, index) => (
-                  <div key={index} className="group">
-                    {chapter.title && (
-                      <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-xl font-serif font-bold text-foreground">
-                          {chapter.title}
-                        </h2>
-                        {editingChapterIndex !== index && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => startEditingChapter(index, chapter.content)}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity gap-1"
-                          >
-                            <Edit className="w-3.5 h-3.5" />
-                            Edit
-                          </Button>
-                        )}
+            <div className="space-y-6">
+              {parseChapters(displayContent).map((chapter, index) => (
+                <div key={index} className="group">
+                  {chapter.title && (
+                    <div className="flex items-center justify-between mb-3">
+                      <h2 className="text-xl font-serif font-bold text-foreground">
+                        {chapter.title}
+                      </h2>
+                      {editingChapterIndex !== index && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => startEditingChapter(index, chapter.content)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity gap-1"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                          Edit
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                  
+                  {editingChapterIndex === index ? (
+                    <div className="space-y-3 rounded-lg border border-border p-4 bg-muted/30">
+                      <Textarea
+                        value={chapterEditContent}
+                        onChange={(e) => setChapterEditContent(e.target.value)}
+                        className="min-h-[200px] resize-y font-serif"
+                        placeholder="Edit this chapter..."
+                      />
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => handleSaveChapter(index)} className="gap-1">
+                          <Save className="w-3.5 h-3.5" />
+                          Save
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => { setEditingChapterIndex(null); setChapterEditContent(""); }}
+                        >
+                          Cancel
+                        </Button>
                       </div>
-                    )}
-                    
-                    {editingChapterIndex === index ? (
-                      <div className="space-y-3 rounded-lg border border-border p-4 bg-muted/30">
-                        <Textarea
-                          value={chapterEditContent}
-                          onChange={(e) => setChapterEditContent(e.target.value)}
-                          className="min-h-[200px] resize-y font-serif"
-                          placeholder="Edit this chapter..."
-                        />
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => handleSaveChapter(index)} className="gap-1">
-                            <Save className="w-3.5 h-3.5" />
-                            Save
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            onClick={() => { setEditingChapterIndex(null); setChapterEditContent(""); }}
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div 
-                        className="prose prose-stone dark:prose-invert max-w-none font-serif leading-relaxed cursor-pointer hover:bg-muted/20 rounded-lg transition-colors p-2 -m-2"
-                        onClick={() => !chapter.title ? null : startEditingChapter(index, chapter.content)}
-                        title={chapter.title ? "Click to edit this chapter" : undefined}
-                      >
-                        <ReactMarkdown>{chapter.content}</ReactMarkdown>
-                      </div>
-                    )}
-                    
-                    {index < parseChapters(displayContent).length - 1 && (
-                      <hr className="mt-6 border-border/50" />
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+                    </div>
+                  ) : (
+                    <div 
+                      className="prose prose-stone dark:prose-invert max-w-none font-serif leading-relaxed cursor-pointer hover:bg-muted/20 rounded-lg transition-colors p-2 -m-2"
+                      onClick={() => startEditingChapter(index, chapter.content)}
+                      title="Click to edit this chapter"
+                    >
+                      <ReactMarkdown>{chapter.content}</ReactMarkdown>
+                    </div>
+                  )}
+                  
+                  {index < parseChapters(displayContent).length - 1 && (
+                    <hr className="mt-6 border-border/50" />
+                  )}
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
