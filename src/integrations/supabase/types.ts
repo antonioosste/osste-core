@@ -273,9 +273,11 @@ export type Database = {
           avatar_url: string | null
           beta_access_until: string | null
           created_at: string | null
+          email: string | null
           id: string
           name: string | null
           plan: string | null
+          role: string | null
           updated_at: string | null
         }
         Insert: {
@@ -283,9 +285,11 @@ export type Database = {
           avatar_url?: string | null
           beta_access_until?: string | null
           created_at?: string | null
+          email?: string | null
           id: string
           name?: string | null
           plan?: string | null
+          role?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -293,9 +297,11 @@ export type Database = {
           avatar_url?: string | null
           beta_access_until?: string | null
           created_at?: string | null
+          email?: string | null
           id?: string
           name?: string | null
           plan?: string | null
+          role?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -781,6 +787,30 @@ export type Database = {
         }
         Relationships: []
       }
+      waitlist: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          notes: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          notes?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          notes?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       waitlist_signups: {
         Row: {
           created_at: string
@@ -821,6 +851,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
