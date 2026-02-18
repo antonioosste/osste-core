@@ -193,22 +193,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
       if (error) throw error;
-
-      toast({
-        title: "Logged out",
-        description: "You have been logged out successfully.",
-      });
-      navigate('/login');
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to log out. Please try again.",
-        variant: "destructive",
-      });
-      throw error;
+      // Even if server-side signout fails, clear local state
+      console.warn('Sign out error (clearing local state anyway):', error.message);
     }
+    setUser(null);
+    setSession(null);
+    toast({
+      title: "Logged out",
+      description: "You have been logged out successfully.",
+    });
+    navigate('/login');
   };
 
   return (
