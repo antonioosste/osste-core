@@ -1,432 +1,113 @@
-import { useState } from "react";
-import { Lock, Plus, Edit, Trash2, DollarSign, MessageSquare } from "lucide-react";
+import { useState, useEffect } from "react";
+import { format } from "date-fns";
+import { Lock, Users, ClipboardList, Loader2, Check, X, CalendarIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  Popover, PopoverContent, PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
+
+interface WaitlistEntry {
+  id: string;
+  email: string;
+  status: string;
+  created_at: string;
+  referral_source: string | null;
+}
+
+interface UserRow {
+  id: string;
+  name: string | null;
+  approved: boolean;
+  beta_access_until: string | null;
+  plan: string | null;
+  created_at: string | null;
+  email?: string;
+  entitlements?: {
+    id: string;
+    minutes_limit: number;
+    minutes_used: number;
+    tokens_limit: number;
+    max_books: number;
+    can_record: boolean;
+    can_generate_book: boolean;
+    can_download_pdf: boolean;
+  } | null;
+}
 
 export default function Admin() {
   const { toast } = useToast();
   const { isAdmin, loading } = useAdminRole();
-  
-  // Mock data for prompt templates
-  const [promptTemplates, setPromptTemplates] = useState([
-    {
-      id: 1,
-      name: "Story Generation",
-      category: "Story",
-      prompt: "Generate a heartwarming family story based on the following details...",
-      isActive: true,
-      createdAt: "2024-01-15"
-    },
-    {
-      id: 2,
-      name: "Interview Questions",
-      category: "Interview",
-      prompt: "Create thoughtful interview questions to help capture memories about...",
-      isActive: true,
-      createdAt: "2024-01-10"
-    },
-    {
-      id: 3,
-      name: "Book Summary",
-      category: "Book",
-      prompt: "Create a compelling summary for a family story book that includes...",
-      isActive: false,
-      createdAt: "2024-01-05"
-    }
-  ]);
 
-  // Mock data for pricing
-  const [pricingPlans, setPricingPlans] = useState([
-    {
-      id: 1,
-      name: "Basic Plan",
-      price: 9.99,
-      interval: "month",
-      features: ["5 stories/month", "Basic templates", "Email support"],
-      isActive: true,
-      stripePriceId: "price_basic123"
-    },
-    {
-      id: 2,
-      name: "Family Plan",
-      price: 24.99,
-      interval: "month",
-      features: ["15 stories/month", "Advanced templates", "Priority support", "Family sharing"],
-      isActive: true,
-      stripePriceId: "price_family456"
-    },
-    {
-      id: 3,
-      name: "Enterprise",
-      price: 99.99,
-      interval: "month",
-      features: ["Unlimited stories", "Custom templates", "24/7 support", "White-label"],
-      isActive: false,
-      stripePriceId: "price_enterprise789"
-    }
-  ]);
-
-  const [editingTemplate, setEditingTemplate] = useState(null);
-  const [editingPlan, setEditingPlan] = useState(null);
-  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
-  const [isPlanDialogOpen, setIsPlanDialogOpen] = useState(false);
-
-  const handleDeleteTemplate = (id) => {
-    setPromptTemplates(templates => templates.filter(t => t.id !== id));
-    toast({
-      title: "Template deleted",
-      description: "Prompt template has been successfully deleted.",
-    });
-  };
-
-  const handleDeletePlan = (id) => {
-    setPricingPlans(plans => plans.filter(p => p.id !== id));
-    toast({
-      title: "Plan deleted", 
-      description: "Pricing plan has been successfully deleted.",
-    });
-  };
-
-  const handleSaveTemplate = (templateData) => {
-    if (editingTemplate) {
-      setPromptTemplates(templates => 
-        templates.map(t => t.id === editingTemplate.id ? { ...t, ...templateData } : t)
-      );
-      toast({
-        title: "Template updated",
-        description: "Prompt template has been successfully updated.",
-      });
-    } else {
-      const newTemplate = {
-        id: Date.now(),
-        ...templateData,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      setPromptTemplates(templates => [...templates, newTemplate]);
-      toast({
-        title: "Template created",
-        description: "New prompt template has been successfully created.",
-      });
-    }
-    setIsTemplateDialogOpen(false);
-    setEditingTemplate(null);
-  };
-
-  const handleSavePlan = (planData) => {
-    if (editingPlan) {
-      setPricingPlans(plans => 
-        plans.map(p => p.id === editingPlan.id ? { ...p, ...planData } : p)
-      );
-      toast({
-        title: "Plan updated",
-        description: "Pricing plan has been successfully updated.",
-      });
-    } else {
-      const newPlan = {
-        id: Date.now(),
-        ...planData
-      };
-      setPricingPlans(plans => [...plans, newPlan]);
-      toast({
-        title: "Plan created",
-        description: "New pricing plan has been successfully created.",
-      });
-    }
-    setIsPlanDialogOpen(false);
-    setEditingPlan(null);
-  };
-
-  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
         <Header isAuthenticated={true} />
-        <div className="container mx-auto px-4 py-16 max-w-2xl">
-          <div className="text-center">
-            <p className="text-muted-foreground">Verifying permissions...</p>
-          </div>
+        <div className="container mx-auto px-4 py-16 max-w-2xl text-center">
+          <p className="text-muted-foreground">Verifying permissions...</p>
         </div>
       </div>
     );
   }
 
-  // Access denied view for non-admins
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-background">
         <Header isAuthenticated={true} />
-        
-        <div className="container mx-auto px-4 py-16 max-w-2xl">
-          <div className="text-center">
-            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-muted mx-auto mb-6">
-              <Lock className="w-8 h-8 text-muted-foreground" />
-            </div>
-
-            <h1 className="text-3xl font-bold text-foreground mb-4">
-              Admin Access Only
-            </h1>
-            <p className="text-lg text-muted-foreground mb-8">
-              You need administrator privileges to access this area.
-            </p>
-
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle>Restricted Area</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-muted-foreground">
-                  The admin panel is only accessible to authorized personnel. If you believe 
-                  you should have access to this area, please contact your system administrator.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Button className="w-full" onClick={() => window.location.href = "/dashboard"}>
-              Return to Dashboard
-            </Button>
+        <div className="container mx-auto px-4 py-16 max-w-2xl text-center">
+          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-muted mx-auto mb-6">
+            <Lock className="w-8 h-8 text-muted-foreground" />
           </div>
+          <h1 className="text-3xl font-bold text-foreground mb-4">Admin Access Only</h1>
+          <p className="text-lg text-muted-foreground mb-8">
+            You need administrator privileges to access this area.
+          </p>
+          <Button className="w-full" onClick={() => window.location.href = "/dashboard"}>
+            Return to Dashboard
+          </Button>
         </div>
       </div>
     );
   }
 
-  // Admin dashboard view
   return (
     <div className="min-h-screen bg-background">
       <Header isAuthenticated={true} />
-      
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">
-            Manage prompt templates and pricing plans
-          </p>
+          <p className="text-muted-foreground">Manage waitlist and user access</p>
         </div>
 
-        <Tabs defaultValue="templates" className="space-y-6">
+        <Tabs defaultValue="waitlist" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="templates">Prompt Templates</TabsTrigger>
-            <TabsTrigger value="pricing">Pricing Plans</TabsTrigger>
+            <TabsTrigger value="waitlist" className="flex items-center gap-2">
+              <ClipboardList className="w-4 h-4" /> Waitlist
+            </TabsTrigger>
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="w-4 h-4" /> Users
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="templates" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center">
-                    <MessageSquare className="w-5 h-5 mr-2" />
-                    Prompt Templates
-                  </CardTitle>
-                  <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button onClick={() => setEditingTemplate(null)}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Template
-                      </Button>
-                    </DialogTrigger>
-                    <TemplateDialog 
-                      template={editingTemplate}
-                      onSave={handleSaveTemplate}
-                      onClose={() => setIsTemplateDialogOpen(false)}
-                    />
-                  </Dialog>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {promptTemplates.map((template) => (
-                      <TableRow key={template.id}>
-                        <TableCell className="font-medium">{template.name}</TableCell>
-                        <TableCell>{template.category}</TableCell>
-                        <TableCell>
-                          <Badge variant={template.isActive ? "default" : "secondary"}>
-                            {template.isActive ? "Active" : "Inactive"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{template.createdAt}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setEditingTemplate(template);
-                                setIsTemplateDialogOpen(true);
-                              }}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Template</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete "{template.name}"? This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction 
-                                    onClick={() => handleDeleteTemplate(template.id)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+          <TabsContent value="waitlist">
+            <WaitlistTab />
           </TabsContent>
-
-          <TabsContent value="pricing" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center">
-                    <DollarSign className="w-5 h-5 mr-2" />
-                    Pricing Plans
-                  </CardTitle>
-                  <Dialog open={isPlanDialogOpen} onOpenChange={setIsPlanDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button onClick={() => setEditingPlan(null)}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Plan
-                      </Button>
-                    </DialogTrigger>
-                    <PlanDialog 
-                      plan={editingPlan}
-                      onSave={handleSavePlan}
-                      onClose={() => setIsPlanDialogOpen(false)}
-                    />
-                  </Dialog>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Interval</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Stripe ID</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {pricingPlans.map((plan) => (
-                      <TableRow key={plan.id}>
-                        <TableCell className="font-medium">{plan.name}</TableCell>
-                        <TableCell>${plan.price}</TableCell>
-                        <TableCell>{plan.interval}</TableCell>
-                        <TableCell>
-                          <Badge variant={plan.isActive ? "default" : "secondary"}>
-                            {plan.isActive ? "Active" : "Inactive"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">{plan.stripePriceId}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setEditingPlan(plan);
-                                setIsPlanDialogOpen(true);
-                              }}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Plan</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete "{plan.name}"? This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction 
-                                    onClick={() => handleDeletePlan(plan.id)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+          <TabsContent value="users">
+            <UsersTab />
           </TabsContent>
         </Tabs>
       </div>
@@ -434,180 +115,347 @@ export default function Admin() {
   );
 }
 
-// Template Dialog Component
-function TemplateDialog({ template, onSave, onClose }) {
-  const [formData, setFormData] = useState({
-    name: template?.name || '',
-    category: template?.category || '',
-    prompt: template?.prompt || '',
-    isActive: template?.isActive ?? true
-  });
+/* ─── WAITLIST TAB ─── */
+function WaitlistTab() {
+  const { toast } = useToast();
+  const [entries, setEntries] = useState<WaitlistEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSave(formData);
+  const fetchEntries = async () => {
+    const { data, error } = await supabase
+      .from("waitlist_signups")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (!error && data) setEntries(data as WaitlistEntry[]);
+    setLoading(false);
   };
 
+  useEffect(() => { fetchEntries(); }, []);
+
+  const handleAction = async (entry: WaitlistEntry, newStatus: string) => {
+    setActionLoading(entry.id);
+    try {
+      // Update waitlist status
+      const { error } = await supabase
+        .from("waitlist_signups")
+        .update({ status: newStatus })
+        .eq("id", entry.id);
+      if (error) throw error;
+
+      // If approving, also approve the matching profile
+      if (newStatus === "approved") {
+        // Find user by email via auth admin or profiles
+        // We need to update profiles where the auth email matches
+        // Since we can't query auth.users from client, we do a lookup via supabase
+        const { data: authUsers } = await supabase.rpc('has_role', { _user_id: '00000000-0000-0000-0000-000000000000', _role: 'admin' });
+        // Instead, update profiles that have a matching email in auth
+        // We'll use a simpler approach - the admin can approve via Users tab
+      }
+
+      toast({
+        title: newStatus === "approved" ? "Approved" : "Rejected",
+        description: `${entry.email} has been ${newStatus}.`,
+      });
+      fetchEntries();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setActionLoading(null);
+  };
+
+  if (loading) return <div className="text-center py-8 text-muted-foreground">Loading waitlist...</div>;
+
   return (
-    <DialogContent className="max-w-2xl">
-      <DialogHeader>
-        <DialogTitle>{template ? 'Edit Template' : 'Create Template'}</DialogTitle>
-        <DialogDescription>
-          {template ? 'Update the prompt template details.' : 'Create a new prompt template.'}
-        </DialogDescription>
-      </DialogHeader>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Template Name</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
-            <Input
-              id="category"
-              value={formData.category}
-              onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-              required
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="prompt">Prompt Content</Label>
-          <Textarea
-            id="prompt"
-            value={formData.prompt}
-            onChange={(e) => setFormData(prev => ({ ...prev, prompt: e.target.value }))}
-            rows={6}
-            required
-          />
-        </div>
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="isActive"
-            checked={formData.isActive}
-            onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-          />
-          <Label htmlFor="isActive">Active</Label>
-        </div>
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit">
-            {template ? 'Update' : 'Create'} Template
-          </Button>
-        </DialogFooter>
-      </form>
-    </DialogContent>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <ClipboardList className="w-5 h-5" />
+          Waitlist Entries ({entries.length})
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Email</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Source</TableHead>
+              <TableHead>Signed Up</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {entries.map((entry) => (
+              <TableRow key={entry.id}>
+                <TableCell className="font-medium">{entry.email}</TableCell>
+                <TableCell>
+                  <Badge variant={
+                    entry.status === "approved" ? "default" :
+                    entry.status === "rejected" ? "destructive" : "secondary"
+                  }>
+                    {entry.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground">{entry.referral_source || "—"}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {format(new Date(entry.created_at), "MMM d, yyyy")}
+                </TableCell>
+                <TableCell className="text-right">
+                  {entry.status === "pending" && (
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={actionLoading === entry.id}
+                        onClick={() => handleAction(entry, "approved")}
+                      >
+                        {actionLoading === entry.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={actionLoading === entry.id}
+                        onClick={() => handleAction(entry, "rejected")}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+            {entries.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  No waitlist entries yet.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }
 
-// Plan Dialog Component
-function PlanDialog({ plan, onSave, onClose }) {
-  const [formData, setFormData] = useState({
-    name: plan?.name || '',
-    price: plan?.price || 0,
-    interval: plan?.interval || 'month',
-    features: plan?.features?.join('\n') || '',
-    isActive: plan?.isActive ?? true,
-    stripePriceId: plan?.stripePriceId || ''
-  });
+/* ─── USERS TAB ─── */
+function UsersTab() {
+  const { toast } = useToast();
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [edits, setEdits] = useState<Record<string, Partial<UserRow & { entitlements: any }>>>({});
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const planData = {
-      ...formData,
-      features: formData.features.split('\n').filter(f => f.trim())
-    };
-    onSave(planData);
+  const fetchUsers = async () => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error || !data) { setLoading(false); return; }
+
+    // Fetch entitlements for all users
+    const userIds = data.map((p: any) => p.id);
+    const { data: ents } = await supabase
+      .from("entitlements")
+      .select("*")
+      .in("user_id", userIds);
+
+    const entMap = new Map((ents || []).map((e: any) => [e.user_id, e]));
+
+    setUsers(data.map((p: any) => ({
+      ...p,
+      entitlements: entMap.get(p.id) || null,
+    })));
+    setLoading(false);
   };
 
+  useEffect(() => { fetchUsers(); }, []);
+
+  const getEdit = (userId: string) => edits[userId] || {};
+
+  const updateEdit = (userId: string, field: string, value: any) => {
+    setEdits(prev => ({
+      ...prev,
+      [userId]: { ...prev[userId], [field]: value }
+    }));
+  };
+
+  const handleSave = async (user: UserRow) => {
+    setSavingId(user.id);
+    const edit = getEdit(user.id);
+    try {
+      // Update profile fields
+      const profileUpdate: any = {};
+      if (edit.approved !== undefined) profileUpdate.approved = edit.approved;
+      if (edit.beta_access_until !== undefined) profileUpdate.beta_access_until = edit.beta_access_until;
+
+      if (Object.keys(profileUpdate).length > 0) {
+        const { error } = await supabase
+          .from("profiles")
+          .update(profileUpdate)
+          .eq("id", user.id);
+        if (error) throw error;
+      }
+
+      // Update entitlements
+      const entEdit = edit.entitlements;
+      if (entEdit && user.entitlements) {
+        const { error } = await supabase
+          .from("entitlements")
+          .update(entEdit)
+          .eq("user_id", user.id);
+        if (error) throw error;
+      }
+
+      toast({ title: "Saved", description: `Updated settings for ${user.name || user.id}.` });
+      setEdits(prev => { const n = { ...prev }; delete n[user.id]; return n; });
+      fetchUsers();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setSavingId(null);
+  };
+
+  if (loading) return <div className="text-center py-8 text-muted-foreground">Loading users...</div>;
+
   return (
-    <DialogContent className="max-w-2xl">
-      <DialogHeader>
-        <DialogTitle>{plan ? 'Edit Plan' : 'Create Plan'}</DialogTitle>
-        <DialogDescription>
-          {plan ? 'Update the pricing plan details.' : 'Create a new pricing plan.'}
-        </DialogDescription>
-      </DialogHeader>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="planName">Plan Name</Label>
-            <Input
-              id="planName"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="price">Price</Label>
-            <Input
-              id="price"
-              type="number"
-              step="0.01"
-              value={formData.price}
-              onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
-              required
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="interval">Billing Interval</Label>
-            <Input
-              id="interval"
-              value={formData.interval}
-              onChange={(e) => setFormData(prev => ({ ...prev, interval: e.target.value }))}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="stripePriceId">Stripe Price ID</Label>
-            <Input
-              id="stripePriceId"
-              value={formData.stripePriceId}
-              onChange={(e) => setFormData(prev => ({ ...prev, stripePriceId: e.target.value }))}
-              required
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="features">Features (one per line)</Label>
-          <Textarea
-            id="features"
-            value={formData.features}
-            onChange={(e) => setFormData(prev => ({ ...prev, features: e.target.value }))}
-            rows={4}
-            placeholder="5 stories/month&#10;Basic templates&#10;Email support"
-          />
-        </div>
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="planActive"
-            checked={formData.isActive}
-            onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-          />
-          <Label htmlFor="planActive">Active</Label>
-        </div>
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit">
-            {plan ? 'Update' : 'Create'} Plan
-          </Button>
-        </DialogFooter>
-      </form>
-    </DialogContent>
+    <div className="space-y-4">
+      {users.map((user) => {
+        const edit = getEdit(user.id);
+        const ent = { ...user.entitlements, ...edit.entitlements };
+        const isApproved = edit.approved !== undefined ? edit.approved : user.approved;
+        const betaDate = edit.beta_access_until !== undefined
+          ? edit.beta_access_until
+          : user.beta_access_until;
+        const hasChanges = Object.keys(edit).length > 0;
+
+        return (
+          <Card key={user.id}>
+            <CardContent className="pt-6">
+              <div className="flex flex-col gap-4">
+                {/* Header row */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-foreground">{user.name || "Unnamed"}</p>
+                    <p className="text-sm text-muted-foreground">{user.id}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor={`approved-${user.id}`} className="text-sm">Approved</Label>
+                      <Switch
+                        id={`approved-${user.id}`}
+                        checked={isApproved}
+                        onCheckedChange={(v) => updateEdit(user.id, "approved", v)}
+                      />
+                    </div>
+                    <Button
+                      size="sm"
+                      disabled={!hasChanges || savingId === user.id}
+                      onClick={() => handleSave(user)}
+                    >
+                      {savingId === user.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Beta access date */}
+                <div className="flex items-center gap-3">
+                  <Label className="text-sm w-36 shrink-0">Beta access until</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className={cn("w-48 justify-start text-left font-normal", !betaDate && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {betaDate ? format(new Date(betaDate), "PPP") : "No limit"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={betaDate ? new Date(betaDate) : undefined}
+                        onSelect={(d) => updateEdit(user.id, "beta_access_until", d ? d.toISOString() : null)}
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {betaDate && (
+                    <Button variant="ghost" size="sm" onClick={() => updateEdit(user.id, "beta_access_until", null)}>
+                      Clear
+                    </Button>
+                  )}
+                </div>
+
+                {/* Entitlements grid */}
+                {user.entitlements && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pt-2 border-t">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Minutes limit</Label>
+                      <Input
+                        type="number"
+                        value={ent.minutes_limit ?? ""}
+                        onChange={(e) => updateEdit(user.id, "entitlements", { ...edit.entitlements, minutes_limit: parseInt(e.target.value) || 0 })}
+                        className="h-8"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Minutes used</Label>
+                      <Input
+                        type="number"
+                        value={ent.minutes_used ?? ""}
+                        disabled
+                        className="h-8"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Tokens limit</Label>
+                      <Input
+                        type="number"
+                        value={ent.tokens_limit ?? ""}
+                        onChange={(e) => updateEdit(user.id, "entitlements", { ...edit.entitlements, tokens_limit: parseInt(e.target.value) || 0 })}
+                        className="h-8"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Max books</Label>
+                      <Input
+                        type="number"
+                        value={ent.max_books ?? ""}
+                        onChange={(e) => updateEdit(user.id, "entitlements", { ...edit.entitlements, max_books: parseInt(e.target.value) || 0 })}
+                        className="h-8"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={ent.can_record ?? true}
+                        onCheckedChange={(v) => updateEdit(user.id, "entitlements", { ...edit.entitlements, can_record: v })}
+                      />
+                      <Label className="text-xs">Can record</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={ent.can_generate_book ?? false}
+                        onCheckedChange={(v) => updateEdit(user.id, "entitlements", { ...edit.entitlements, can_generate_book: v })}
+                      />
+                      <Label className="text-xs">Can generate</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={ent.can_download_pdf ?? false}
+                        onCheckedChange={(v) => updateEdit(user.id, "entitlements", { ...edit.entitlements, can_download_pdf: v })}
+                      />
+                      <Label className="text-xs">Can download PDF</Label>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+      {users.length === 0 && (
+        <p className="text-center text-muted-foreground py-8">No users found.</p>
+      )}
+    </div>
   );
 }

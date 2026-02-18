@@ -39,6 +39,7 @@ import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { useTurns } from "@/hooks/useTurns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useEntitlements } from "@/hooks/useEntitlements";
 import { generateChapters } from "@/lib/backend-api";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
 
@@ -75,6 +76,7 @@ export default function Session() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { storyGroups, loading: storyGroupsLoading, createStoryGroup } = useStoryGroups();
+  const { isRecordingLimitReached } = useEntitlements();
   const { sessionId, startSession: startSessionDb, endSession, loadSession } = useSession(existingSessionId);
   const {
     isRecording,
@@ -588,6 +590,16 @@ export default function Session() {
   };
 
   const startRecording = async () => {
+    // Check recording limit
+    if (isRecordingLimitReached) {
+      toast({
+        title: "Limit reached",
+        description: "You've used all your recording minutes. Contact admin for more.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (micPermission !== "granted") {
       await requestMicPermission();
       return;

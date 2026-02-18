@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Link } from "react-router-dom";
 import { GridBackground } from "@/components/ui/grid-background";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,13 +8,20 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Icons } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useApproval } from "@/hooks/useApproval";
+import { Clock } from "lucide-react";
+
 export function OssteWaitlist() {
+  const { user, loading: authLoading } = useAuth();
+  const { approved, loading: approvalLoading } = useApproval();
   const [email, setEmail] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [message, setMessage] = React.useState<{
     type: string;
     text: string;
   } | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
@@ -23,7 +29,7 @@ export function OssteWaitlist() {
     setMessage(null);
     try {
       const { error } = await supabase.from("waitlist_signups").insert({ email });
-      
+
       if (error) {
         if (error.code === "23505") {
           setMessage({
@@ -40,9 +46,8 @@ export function OssteWaitlist() {
         return;
       }
 
-      // Send welcome email via unified email edge function
       await supabase.functions.invoke("send-email", {
-        body: { 
+        body: {
           type: 'welcome',
           email,
           source: 'waitlist'
@@ -62,7 +67,12 @@ export function OssteWaitlist() {
     }
     setIsSubmitting(false);
   };
-  return <div className="relative min-h-[85vh] flex items-center justify-center bg-background">
+
+  // Show pending approval state for logged-in but unapproved users
+  const showPending = !authLoading && !approvalLoading && user && !approved;
+
+  return (
+    <div className="relative min-h-[85vh] flex items-center justify-center bg-background">
       <GridBackground />
 
       <div className="relative z-10 w-full max-w-3xl px-6 py-16">
@@ -71,54 +81,91 @@ export function OssteWaitlist() {
         </div>
 
         <div className="bg-card/80 backdrop-blur-lg rounded-3xl shadow-lg border border-border px-10 py-12 space-y-10">
-          <h1 className="text-4xl font-semibold text-center">
-            Join the{" "}
-            <span className="bg-gradient-to-r from-primary to-warning text-transparent bg-clip-text">
-              OSSTE Early Access Waitlist
-            </span>
-          </h1>
+          {showPending ? (
+            <>
+              <div className="flex flex-col items-center gap-4">
+                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-muted">
+                  <Clock className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h1 className="text-3xl font-semibold text-center">Pending Approval</h1>
+                <p className="text-lg text-muted-foreground text-center max-w-md">
+                  Your account has been created. We're reviewing your access request and will notify you by email once approved.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Logged in as <strong>{user.email}</strong>
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <h1 className="text-4xl font-semibold text-center">
+                Join the{" "}
+                <span className="bg-gradient-to-r from-primary to-warning text-transparent bg-clip-text">
+                  OSSTE Early Access Waitlist
+                </span>
+              </h1>
 
-          <p className="text-lg text-muted-foreground text-center">A timeless way to capture life’s most meaningful moments. Transform shared memories into handcrafted keepsake books for those you love.</p>
+              <p className="text-lg text-muted-foreground text-center">
+                A timeless way to capture life's most meaningful moments. Transform shared memories into handcrafted keepsake books for those you love.
+              </p>
 
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <Input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter your email" className="h-12 bg-secondary/50 border-border" />
-            <Button type="submit" disabled={isSubmitting} className="h-12 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
-              {isSubmitting ? "Adding..." : "Join waitlist"}
-            </Button>
-          </form>
+              <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                <Input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="h-12 bg-secondary/50 border-border"
+                />
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="h-12 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                >
+                  {isSubmitting ? "Adding..." : "Join waitlist"}
+                </Button>
+              </form>
 
-          {message && <p className={cn("text-center text-sm font-medium", message.type === "success" ? "text-success" : "text-destructive")}>
-              {message.text}
-            </p>}
+              {message && (
+                <p className={cn(
+                  "text-center text-sm font-medium",
+                  message.type === "success" ? "text-success" : "text-destructive"
+                )}>
+                  {message.text}
+                </p>
+              )}
 
-          <div className="flex flex-col items-center gap-6">
-            <div className="flex -space-x-3">
-              <Avatar className="border-2 border-background w-12 h-12 bg-primary/80">
-                <AvatarFallback className="text-primary-foreground font-semibold">SC</AvatarFallback>
-              </Avatar>
-              <Avatar className="border-2 border-background w-12 h-12 bg-warning/80">
-                <AvatarFallback className="text-primary-foreground font-semibold">LM</AvatarFallback>
-              </Avatar>
-              <Avatar className="border-2 border-background w-12 h-12 bg-destructive/80">
-                <AvatarFallback className="text-destructive-foreground font-semibold">JP</AvatarFallback>
-              </Avatar>
-            </div>
+              <div className="flex flex-col items-center gap-6">
+                <div className="flex -space-x-3">
+                  <Avatar className="border-2 border-background w-12 h-12 bg-primary/80">
+                    <AvatarFallback className="text-primary-foreground font-semibold">SC</AvatarFallback>
+                  </Avatar>
+                  <Avatar className="border-2 border-background w-12 h-12 bg-warning/80">
+                    <AvatarFallback className="text-primary-foreground font-semibold">LM</AvatarFallback>
+                  </Avatar>
+                  <Avatar className="border-2 border-background w-12 h-12 bg-destructive/80">
+                    <AvatarFallback className="text-destructive-foreground font-semibold">JP</AvatarFallback>
+                  </Avatar>
+                </div>
 
-            <span className="text-foreground">
-              Join the first <strong className="text-primary">100 families</strong> using OSSTE.
-            </span>
+                <span className="text-foreground">
+                  Join the first <strong className="text-primary">100 families</strong> using OSSTE.
+                </span>
 
-            <div className="flex gap-5 text-muted-foreground">
-              <button type="button" onClick={() => window.open("https://x.com/osste", "_blank")} className="hover:text-primary transition-colors">
-                <Icons.twitter className="w-6 h-6" />
-              </button>
-
-              <button type="button" onClick={() => window.open("https://instagram.com/osste", "_blank")} className="hover:text-primary transition-colors">
-                <Icons.instagram className="w-6 h-6" />
-              </button>
-            </div>
-          </div>
+                <div className="flex gap-5 text-muted-foreground">
+                  <button type="button" onClick={() => window.open("https://x.com/osste", "_blank")} className="hover:text-primary transition-colors">
+                    <Icons.twitter className="w-6 h-6" />
+                  </button>
+                  <button type="button" onClick={() => window.open("https://instagram.com/osste", "_blank")} className="hover:text-primary transition-colors">
+                    <Icons.instagram className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
-    </div>;
+    </div>
+  );
 }

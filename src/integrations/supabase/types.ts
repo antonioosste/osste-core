@@ -67,6 +67,48 @@ export type Database = {
           },
         ]
       }
+      entitlements: {
+        Row: {
+          can_download_pdf: boolean
+          can_generate_book: boolean
+          can_record: boolean
+          created_at: string
+          id: string
+          max_books: number
+          minutes_limit: number
+          minutes_used: number
+          tokens_limit: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          can_download_pdf?: boolean
+          can_generate_book?: boolean
+          can_record?: boolean
+          created_at?: string
+          id?: string
+          max_books?: number
+          minutes_limit?: number
+          minutes_used?: number
+          tokens_limit?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          can_download_pdf?: boolean
+          can_generate_book?: boolean
+          can_record?: boolean
+          created_at?: string
+          id?: string
+          max_books?: number
+          minutes_limit?: number
+          minutes_used?: number
+          tokens_limit?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gift_invitations: {
         Row: {
           created_at: string
@@ -227,7 +269,9 @@ export type Database = {
       }
       profiles: {
         Row: {
+          approved: boolean
           avatar_url: string | null
+          beta_access_until: string | null
           created_at: string | null
           id: string
           name: string | null
@@ -235,7 +279,9 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          approved?: boolean
           avatar_url?: string | null
+          beta_access_until?: string | null
           created_at?: string | null
           id: string
           name?: string | null
@@ -243,7 +289,9 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          approved?: boolean
           avatar_url?: string | null
+          beta_access_until?: string | null
           created_at?: string | null
           id?: string
           name?: string | null
@@ -740,6 +788,7 @@ export type Database = {
           id: string
           metadata: Json | null
           referral_source: string | null
+          status: string
         }
         Insert: {
           created_at?: string
@@ -747,6 +796,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           referral_source?: string | null
+          status?: string
         }
         Update: {
           created_at?: string
@@ -754,6 +804,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           referral_source?: string | null
+          status?: string
         }
         Relationships: []
       }

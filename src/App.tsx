@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ApprovedRoute } from "@/components/auth/ApprovedRoute";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import Waitlist from "./pages/Waitlist";
 import Landing from "./pages/Landing";
@@ -75,30 +76,30 @@ const App = () => (
             <Route path="/pricing" element={<WaitlistGuard><Pricing /></WaitlistGuard>} />
             <Route path="/login" element={<WaitlistGuard><Login /></WaitlistGuard>} />
             <Route path="/signup" element={<WaitlistGuard><Signup /></WaitlistGuard>} />
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/session" element={<ProtectedRoute><Session /></ProtectedRoute>} />
-            <Route path="/books" element={<ProtectedRoute><DashboardLayout><Books /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/books/:id" element={<ProtectedRoute><BookDetail /></ProtectedRoute>} />
-            <Route path="/stories" element={<ProtectedRoute><DashboardLayout><Stories /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/stories/:id" element={<ProtectedRoute><StoryDetail /></ProtectedRoute>} />
-            <Route path="/chapters/:id" element={<ProtectedRoute><ChapterDetail /></ProtectedRoute>} />
-            <Route path="/book/preview/:storyId" element={<ProtectedRoute><BookPreview /></ProtectedRoute>} />
-            <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-            <Route path="/checkout/success" element={<ProtectedRoute><CheckoutSuccess /></ProtectedRoute>} />
-            <Route path="/checkout/cancel" element={<ProtectedRoute><CheckoutCancel /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><DashboardLayout><Settings /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ApprovedRoute><DashboardLayout><Dashboard /></DashboardLayout></ApprovedRoute>} />
+            <Route path="/session" element={<ApprovedRoute><Session /></ApprovedRoute>} />
+            <Route path="/books" element={<ApprovedRoute><DashboardLayout><Books /></DashboardLayout></ApprovedRoute>} />
+            <Route path="/books/:id" element={<ApprovedRoute><BookDetail /></ApprovedRoute>} />
+            <Route path="/stories" element={<ApprovedRoute><DashboardLayout><Stories /></DashboardLayout></ApprovedRoute>} />
+            <Route path="/stories/:id" element={<ApprovedRoute><StoryDetail /></ApprovedRoute>} />
+            <Route path="/chapters/:id" element={<ApprovedRoute><ChapterDetail /></ApprovedRoute>} />
+            <Route path="/book/preview/:storyId" element={<ApprovedRoute><BookPreview /></ApprovedRoute>} />
+            <Route path="/checkout" element={<ApprovedRoute><Checkout /></ApprovedRoute>} />
+            <Route path="/checkout/success" element={<ApprovedRoute><CheckoutSuccess /></ApprovedRoute>} />
+            <Route path="/checkout/cancel" element={<ApprovedRoute><CheckoutCancel /></ApprovedRoute>} />
+            <Route path="/settings" element={<ApprovedRoute><DashboardLayout><Settings /></DashboardLayout></ApprovedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/admin/questions" element={<ProtectedRoute><AdminQuestions /></ProtectedRoute>} />
             <Route path="/admin/import-questions" element={<ProtectedRoute><QuestionBankImport /></ProtectedRoute>} />
             <Route path="/admin/question-import" element={<ProtectedRoute><QuestionImport /></ProtectedRoute>} />
-            <Route path="/interview" element={<ProtectedRoute><Interview /></ProtectedRoute>} />
+            <Route path="/interview" element={<ApprovedRoute><Interview /></ApprovedRoute>} />
             <Route path="/terms" element={<WaitlistGuard><Terms /></WaitlistGuard>} />
             <Route path="/privacy" element={<WaitlistGuard><Privacy /></WaitlistGuard>} />
             <Route path="/cookies" element={<WaitlistGuard><Cookies /></WaitlistGuard>} />
             <Route path="/faq" element={<WaitlistGuard><FAQ /></WaitlistGuard>} />
             <Route path="/help" element={<WaitlistGuard><Help /></WaitlistGuard>} />
-            <Route path="/print-request" element={<ProtectedRoute><DashboardLayout><PrintRequest /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/print-success" element={<ProtectedRoute><DashboardLayout><PrintSuccess /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/print-request" element={<ApprovedRoute><DashboardLayout><PrintRequest /></DashboardLayout></ApprovedRoute>} />
+            <Route path="/print-success" element={<ApprovedRoute><DashboardLayout><PrintSuccess /></DashboardLayout></ApprovedRoute>} />
             <Route path="/gift" element={<WaitlistGuard><GiftFlow /></WaitlistGuard>} />
             <Route path="/gift/confirmation" element={<WaitlistGuard><GiftConfirmation /></WaitlistGuard>} />
             <Route path="/test-email" element={<ProtectedRoute><TestEmail /></ProtectedRoute>} />
