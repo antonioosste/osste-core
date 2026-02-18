@@ -8,6 +8,7 @@ import {
   Sparkles, 
   Edit,
   FileText,
+  Eye,
   Loader2,
   Printer,
   RotateCcw,
@@ -557,9 +558,15 @@ export default function BookDetail() {
                                 Chapter {index + 1}: {getChapterDisplayTitle(sessionItem, chapterData)}
                               </CardTitle>
                             </div>
-                            <Badge variant="secondary">
-                              {(chapterData!.polished_text || '').split(/\s+/).length} words
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary">
+                                {(chapterData!.polished_text || '').split(/\s+/).length} words
+                              </Badge>
+                              <Button variant="outline" size="sm" onClick={() => navigate(`/chapters/${chapterData!.id}`)}>
+                                <Eye className="w-4 h-4 mr-1.5" />
+                                View
+                              </Button>
+                            </div>
                           </div>
                         </CardHeader>
                         <CardContent>
@@ -591,9 +598,17 @@ export default function BookDetail() {
                                 Chapter {index + 1}: {displayTitle}
                               </CardTitle>
                             </div>
-                            <Badge variant="secondary">
-                              {chapter.content.split(/\s+/).length} words
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary">
+                                {chapter.content.split(/\s+/).length} words
+                              </Badge>
+                              {matchedPair?.chapter?.id && (
+                                <Button variant="outline" size="sm" onClick={() => navigate(`/chapters/${matchedPair.chapter!.id}`)}>
+                                  <Eye className="w-4 h-4 mr-1.5" />
+                                  View
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </CardHeader>
                         <CardContent>
