@@ -42,6 +42,8 @@ import PrintSuccess from "./pages/PrintSuccess";
 import GiftFlow from "./pages/GiftFlow";
 import GiftConfirmation from "./pages/GiftConfirmation";
 import TestEmail from "./pages/TestEmail";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -86,6 +88,8 @@ const App = () => (
             <Route path="/admin/import-questions" element={<ProtectedRoute><QuestionBankImport /></ProtectedRoute>} />
             <Route path="/admin/question-import" element={<ProtectedRoute><QuestionImport /></ProtectedRoute>} />
             <Route path="/interview" element={<ApprovedRoute><Interview /></ApprovedRoute>} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/cookies" element={<Cookies />} />
