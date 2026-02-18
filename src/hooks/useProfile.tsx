@@ -7,6 +7,8 @@ export interface Profile {
   id: string;
   name: string | null;
   plan: string | null;
+  approved: boolean;
+  beta_access_until: string | null;
   created_at: string | null;
 }
 
