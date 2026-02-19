@@ -44,6 +44,7 @@ import GiftConfirmation from "./pages/GiftConfirmation";
 import TestEmail from "./pages/TestEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import PendingApproval from "./pages/PendingApproval";
 
 const queryClient = new QueryClient();
 
@@ -89,6 +90,7 @@ const App = () => (
             <Route path="/admin/question-import" element={<ProtectedRoute><QuestionImport /></ProtectedRoute>} />
             <Route path="/interview" element={<ApprovedRoute><Interview /></ApprovedRoute>} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/pending-approval" element={<ProtectedRoute><PendingApproval /></ProtectedRoute>} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />

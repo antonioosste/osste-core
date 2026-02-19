@@ -247,3 +247,18 @@ export async function sendReactivationEmail(params: {
     ...params,
   });
 }
+
+/**
+ * Send beta approval notification email with login link
+ */
+export async function sendApprovedEmail(params: {
+  email: string;
+  firstName?: string;
+  loginUrl?: string;
+  betaAccessUntil?: string;
+}): Promise<EmailResponse> {
+  return sendEmail({
+    type: 'approved',
+    ...params,
+  });
+}

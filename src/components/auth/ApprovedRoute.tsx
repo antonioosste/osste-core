@@ -27,7 +27,7 @@ export function ApprovedRoute({ children }: ApprovedRouteProps) {
   }
 
   if (!approved) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/pending-approval" replace />;
   }
 
   return <>{children}</>;
