@@ -273,11 +273,11 @@ export type Database = {
           avatar_url: string | null
           beta_access_until: string | null
           created_at: string | null
+          display_role: string | null
           email: string | null
           id: string
           name: string | null
           plan: string | null
-          role: string | null
           updated_at: string | null
         }
         Insert: {
@@ -285,11 +285,11 @@ export type Database = {
           avatar_url?: string | null
           beta_access_until?: string | null
           created_at?: string | null
+          display_role?: string | null
           email?: string | null
           id: string
           name?: string | null
           plan?: string | null
-          role?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -297,11 +297,11 @@ export type Database = {
           avatar_url?: string | null
           beta_access_until?: string | null
           created_at?: string | null
+          display_role?: string | null
           email?: string | null
           id?: string
           name?: string | null
           plan?: string | null
-          role?: string | null
           updated_at?: string | null
         }
         Relationships: []
