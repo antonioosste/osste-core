@@ -136,26 +136,37 @@ function WaitlistTab() {
   const handleAction = async (entry: WaitlistEntry, newStatus: string) => {
     setActionLoading(entry.id);
     try {
-      // Update waitlist status
+      // Update waitlist signup status
       const { error } = await supabase
         .from("waitlist_signups")
         .update({ status: newStatus })
         .eq("id", entry.id);
       if (error) throw error;
 
-      // If approving, also approve the matching profile
+      // If approving, also set profiles.approved = true for any matching profile
       if (newStatus === "approved") {
-        // Find user by email via auth admin or profiles
-        // We need to update profiles where the auth email matches
-        // Since we can't query auth.users from client, we do a lookup via supabase
-        const { data: authUsers } = await supabase.rpc('has_role', { _user_id: '00000000-0000-0000-0000-000000000000', _role: 'admin' });
-        // Instead, update profiles that have a matching email in auth
-        // We'll use a simpler approach - the admin can approve via Users tab
+        const { data: matchingProfile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("email", entry.email)
+          .maybeSingle();
+
+        if (matchingProfile) {
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .update({ approved: true })
+            .eq("id", matchingProfile.id);
+          if (profileError) throw profileError;
+        }
+        // If no profile exists yet, the handle_new_user() trigger will
+        // auto-approve on signup since waitlist_signups.status = 'approved'
       }
 
       toast({
         title: newStatus === "approved" ? "Approved" : "Rejected",
-        description: `${entry.email} has been ${newStatus}.`,
+        description: `${entry.email} has been ${newStatus}.${
+          newStatus === "approved" ? " They can now sign up or log in." : ""
+        }`,
       });
       fetchEntries();
     } catch (err: any) {
