@@ -9,7 +9,7 @@ interface ApprovedRouteProps {
 
 export function ApprovedRoute({ children }: ApprovedRouteProps) {
   const { user, loading: authLoading } = useAuth();
-  const { approved, loading: approvalLoading } = useApproval();
+  const { approved, status, loading: approvalLoading } = useApproval();
 
   if (authLoading || approvalLoading) {
     return (
@@ -27,6 +27,9 @@ export function ApprovedRoute({ children }: ApprovedRouteProps) {
   }
 
   if (!approved) {
+    if (status === 'beta_expired') {
+      return <Navigate to="/beta-expired" replace />;
+    }
     return <Navigate to="/pending-approval" replace />;
   }
 

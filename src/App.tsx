@@ -45,6 +45,7 @@ import TestEmail from "./pages/TestEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import PendingApproval from "./pages/PendingApproval";
+import BetaExpired from "./pages/BetaExpired";
 
 const queryClient = new QueryClient();
 
@@ -91,6 +92,7 @@ const App = () => (
             <Route path="/interview" element={<ApprovedRoute><Interview /></ApprovedRoute>} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/pending-approval" element={<ProtectedRoute><PendingApproval /></ProtectedRoute>} />
+            <Route path="/beta-expired" element={<ProtectedRoute><BetaExpired /></ProtectedRoute>} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
