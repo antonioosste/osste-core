@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { sendApprovedEmail } from "@/lib/emails";
 import { format } from "date-fns";
 import { Lock, Users, ClipboardList, Loader2, Check, X, CalendarIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -147,7 +148,7 @@ function WaitlistTab() {
       if (newStatus === "approved") {
         const { data: matchingProfile } = await supabase
           .from("profiles")
-          .select("id")
+          .select("id, name, beta_access_until")
           .eq("email", entry.email)
           .maybeSingle();
 
@@ -158,8 +159,14 @@ function WaitlistTab() {
             .eq("id", matchingProfile.id);
           if (profileError) throw profileError;
         }
-        // If no profile exists yet, the handle_new_user() trigger will
-        // auto-approve on signup since waitlist_signups.status = 'approved'
+
+        // Send approval email (fire-and-forget, don't block on failure)
+        sendApprovedEmail({
+          email: entry.email,
+          firstName: matchingProfile?.name?.split(' ')[0] || undefined,
+          loginUrl: `${window.location.origin}/login`,
+          betaAccessUntil: matchingProfile?.beta_access_until || undefined,
+        });
       }
 
       toast({

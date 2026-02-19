@@ -57,7 +57,8 @@ export const FullScreenSignup = () => {
         return;
       }
 
-      // Success - redirect to dashboard or show confirmation
+      // Success - the user will be redirected by auth state change
+      // ApprovedRoute will handle sending to /dashboard or /pending-approval
       navigate("/dashboard");
     } catch (err) {
       setGeneralError("An unexpected error occurred. Please try again.");

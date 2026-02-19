@@ -38,6 +38,7 @@ const logStep = (step: string, details?: any) => {
 // Template type definitions
 type EmailType = 
   | 'welcome'
+  | 'approved'
   | 'accountCreation'
   | 'emailVerification'
   | 'passwordReset'
@@ -134,8 +135,15 @@ interface ReactivationParams extends BaseEmailParams {
   planName?: string;
 }
 
+interface ApprovedParams extends BaseEmailParams {
+  type: 'approved';
+  loginUrl?: string;
+  betaAccessUntil?: string;
+}
+
 type EmailParams = 
   | WelcomeParams
+  | ApprovedParams
   | AccountCreationParams
   | EmailVerificationParams
   | PasswordResetParams
@@ -153,6 +161,7 @@ type EmailParams =
 function getTemplateId(type: EmailType): string | null {
   const envMap: Record<EmailType, string> = {
     welcome: 'RESEND_TEMPLATE_WELCOME',
+    approved: 'RESEND_TEMPLATE_APPROVED',
     accountCreation: 'RESEND_TEMPLATE_ACCOUNT_CREATION',
     emailVerification: 'RESEND_TEMPLATE_EMAIL_VERIFICATION',
     passwordReset: 'RESEND_TEMPLATE_PASSWORD_RESET',
@@ -200,6 +209,35 @@ function buildFallbackHtml(params: EmailParams): { subject: string; html: string
             <p>${greeting}</p>
             <p>Thank you for joining OSSTE! We're excited to help you capture and preserve your most meaningful stories.</p>
             <p>Whether you're documenting family history, personal milestones, or treasured memories, OSSTE is here to guide you every step of the way.</p>
+            <p>Warm regards,<br>The OSSTE Team</p>
+          </div>
+        `
+      };
+
+    case 'approved':
+      const approvedParams = params as ApprovedParams;
+      const loginUrl = approvedParams.loginUrl || 'https://osste.com/login';
+      const betaNote = approvedParams.betaAccessUntil
+        ? `<p style="background-color: #f5f5f0; padding: 12px 16px; border-radius: 8px; margin: 16px 0;"><strong>Note:</strong> Your beta access is valid until <strong>${new Date(approvedParams.betaAccessUntil).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</strong>.</p>`
+        : '';
+      return {
+        subject: "🎉 You're in! Welcome to the OSSTE Beta",
+        html: `
+          <div style="${baseStyles}">
+            <h1 style="color: #1a1a1a;">🎉 You're In!</h1>
+            <p>${greeting}</p>
+            <p>Great news — your access to the <strong>OSSTE Beta</strong> has been approved!</p>
+            <p>Here's what to do next:</p>
+            <ol style="padding-left: 20px;">
+              <li><strong>Log in</strong> to your account using the button below</li>
+              <li><strong>Start a session</strong> — answer guided questions to capture your stories</li>
+              <li><strong>Build your book</strong> — we'll turn your recordings into a beautiful keepsake</li>
+            </ol>
+            ${betaNote}
+            <p style="margin: 24px 0;">
+              <a href="${loginUrl}" style="background-color: #1a1a1a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600;">Log In to OSSTE →</a>
+            </p>
+            <p>If you have any questions, just reply to this email. We're here to help.</p>
             <p>Warm regards,<br>The OSSTE Team</p>
           </div>
         `
@@ -455,6 +493,11 @@ serve(async (req) => {
       switch (params.type) {
         case 'welcome':
           dynamicData.source = (params as WelcomeParams).source || 'direct';
+          break;
+        case 'approved':
+          const ap = params as ApprovedParams;
+          dynamicData.loginUrl = ap.loginUrl || 'https://osste.com/login';
+          dynamicData.betaAccessUntil = ap.betaAccessUntil || '';
           break;
         case 'emailVerification':
           dynamicData.verificationUrl = (params as EmailVerificationParams).verificationUrl;
