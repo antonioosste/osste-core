@@ -345,6 +345,9 @@ serve(async (req) => {
         source: html,
         landscape: false,
         use_print: true,
+        format: "custom",
+        width: "5.75in",
+        height: "8.75in",
       }),
     });
 
