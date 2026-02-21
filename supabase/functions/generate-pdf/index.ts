@@ -85,7 +85,7 @@ function buildBookHtml(
 <meta charset="UTF-8"/>
 <style>
   @page {
-    size: 6in 9in;
+    size: 5.75in 8.75in;
     margin: 0.75in 0.85in 0.75in 0.85in;
   }
   body {
