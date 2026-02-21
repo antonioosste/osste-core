@@ -29,6 +29,39 @@ function textToHtml(text: string): string {
     .join("\n");
 }
 
+/** Estimate page count: ~250 words per 6x9 page */
+function estimatePages(chapters: { title: string; content: string }[]): number {
+  // Title page = 1, each chapter start = 1 page
+  let pages = 1;
+  for (const ch of chapters) {
+    pages += 1; // chapter title page
+    const words = ch.content.split(/\s+/).filter(Boolean).length;
+    pages += Math.max(1, Math.ceil(words / 250));
+  }
+  return pages;
+}
+
+function buildFillerPages(bookTitle: string, needed: number): string {
+  const pages: string[] = [];
+  for (let i = 0; i < needed; i++) {
+    if (i % 2 === 0) {
+      // "Notes" page
+      pages.push(`
+      <div class="filler-page">
+        <h2 class="filler-title">Notes</h2>
+        <div class="filler-lines"></div>
+      </div>`);
+    } else {
+      // Branded blank page
+      pages.push(`
+      <div class="filler-page filler-blank">
+        <p class="filler-book-title">${escapeHtml(bookTitle)}</p>
+      </div>`);
+    }
+  }
+  return pages.join("\n");
+}
+
 function buildBookHtml(
   bookTitle: string,
   chapters: { title: string; content: string }[],
@@ -119,6 +152,40 @@ function buildBookHtml(
   .chapter-body p:first-child {
     text-indent: 0;
   }
+  /* Filler pages */
+  .filler-page {
+    page-break-before: always;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 1.5in;
+  }
+  .filler-title {
+    font-size: 14pt;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: #888;
+    font-weight: 400;
+    margin-bottom: 0.5in;
+  }
+  .filler-lines {
+    width: 100%;
+    flex: 1;
+    background: repeating-linear-gradient(
+      transparent, transparent 28px, #e8e8e8 28px, #e8e8e8 29px
+    );
+  }
+  .filler-blank {
+    justify-content: center;
+    padding-top: 0;
+  }
+  .filler-book-title {
+    font-size: 10pt;
+    color: #ccc;
+    font-style: italic;
+    letter-spacing: 1px;
+  }
 </style>
 </head>
 <body>
@@ -128,6 +195,14 @@ function buildBookHtml(
     <p class="subtitle">A collection of memories</p>
   </div>
   ${chapterPages}
+  ${(() => {
+    const LULU_MIN = 32;
+    const estimated = estimatePages(chapters);
+    let needed = Math.max(0, LULU_MIN - estimated);
+    const total = estimated + needed;
+    if (total % 2 !== 0) needed += 1;
+    return needed > 0 ? buildFillerPages(bookTitle, needed) : "";
+  })()}
 </body>
 </html>`;
 }
@@ -252,7 +327,10 @@ serve(async (req) => {
       }
     }
 
-    log("Building HTML", { chapterCount: chapters.length });
+    const estimatedPageCount = estimatePages(chapters);
+    const fillerNeeded = Math.max(0, 32 - estimatedPageCount);
+    const finalEven = (estimatedPageCount + fillerNeeded) % 2 !== 0 ? fillerNeeded + 1 : fillerNeeded;
+    log("Building HTML", { chapterCount: chapters.length, estimatedPageCount, fillerPages: finalEven });
     const html = buildBookHtml(bookTitle, chapters);
 
     // Call PDFShift
