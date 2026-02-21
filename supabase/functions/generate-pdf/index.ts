@@ -47,14 +47,14 @@ function buildFillerPages(bookTitle: string, needed: number): string {
     if (i % 2 === 0) {
       // "Notes" page
       pages.push(`
-      <div class="page filler-page">
+      <div class="filler-page">
         <h2 class="filler-title">Notes</h2>
         <div class="filler-lines"></div>
       </div>`);
     } else {
       // Branded blank page
       pages.push(`
-      <div class="page filler-page filler-blank">
+      <div class="filler-page filler-blank">
         <p class="filler-book-title">${escapeHtml(bookTitle)}</p>
       </div>`);
     }
@@ -69,11 +69,11 @@ function buildBookHtml(
   const chapterPages = chapters
     .map(
       (ch, i) => `
-      <div class="page chapter-start">
+      <div class="chapter-start">
         <h2>Chapter ${i + 1}</h2>
         <h3>${escapeHtml(ch.title)}</h3>
       </div>
-      <div class="page chapter-body">
+      <div class="chapter-body">
         ${textToHtml(ch.content)}
       </div>`,
     )
@@ -85,23 +85,16 @@ function buildBookHtml(
 <meta charset="UTF-8"/>
 <style>
   @page {
-    size: 5.75in 8.75in;
-    margin: 0.6in 0.55in 0.6in 0.75in;
+    size: 6in 9in;
+    margin: 0.75in 0.85in 0.75in 0.85in;
   }
-  html, body {
-    width: 5.75in;
-    height: 8.75in;
-    margin: 0;
-    padding: 0;
+  body {
     font-family: 'Georgia', 'Times New Roman', serif;
     font-size: 11pt;
     line-height: 1.6;
     color: #1a1a1a;
-  }
-  .page {
-    width: 5.75in;
-    height: 8.75in;
-    page-break-after: always;
+    margin: 0;
+    padding: 0;
   }
   /* Title page */
   .title-page {
@@ -196,7 +189,7 @@ function buildBookHtml(
 </style>
 </head>
 <body>
-  <div class="page title-page">
+  <div class="title-page">
     <h1>${escapeHtml(bookTitle)}</h1>
     <div class="divider"></div>
     <p class="subtitle">A collection of memories</p>
@@ -352,16 +345,6 @@ serve(async (req) => {
         source: html,
         landscape: false,
         use_print: true,
-        format: {
-          width: "5.75in",
-          height: "8.75in",
-        },
-        margin: {
-          top: "0.6in",
-          bottom: "0.6in",
-          left: "0.75in",
-          right: "0.55in",
-        },
       }),
     });
 
