@@ -85,7 +85,7 @@ function buildBookHtml(
 <meta charset="UTF-8"/>
 <style>
   @page {
-    size: 5.75in 8.75in;
+    size: 6in 9in;
     margin: 0.75in 0.85in 0.75in 0.85in;
   }
   body {
@@ -345,9 +345,6 @@ serve(async (req) => {
         source: html,
         landscape: false,
         use_print: true,
-        format: "custom",
-        width: "5.75in",
-        height: "8.75in",
       }),
     });
 
