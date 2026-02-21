@@ -47,14 +47,14 @@ function buildFillerPages(bookTitle: string, needed: number): string {
     if (i % 2 === 0) {
       // "Notes" page
       pages.push(`
-      <div class="filler-page">
+      <div class="page filler-page">
         <h2 class="filler-title">Notes</h2>
         <div class="filler-lines"></div>
       </div>`);
     } else {
       // Branded blank page
       pages.push(`
-      <div class="filler-page filler-blank">
+      <div class="page filler-page filler-blank">
         <p class="filler-book-title">${escapeHtml(bookTitle)}</p>
       </div>`);
     }
@@ -69,11 +69,11 @@ function buildBookHtml(
   const chapterPages = chapters
     .map(
       (ch, i) => `
-      <div class="chapter-start">
+      <div class="page chapter-start">
         <h2>Chapter ${i + 1}</h2>
         <h3>${escapeHtml(ch.title)}</h3>
       </div>
-      <div class="chapter-body">
+      <div class="page chapter-body">
         ${textToHtml(ch.content)}
       </div>`,
     )
@@ -86,21 +86,22 @@ function buildBookHtml(
 <style>
   @page {
     size: 5.75in 8.75in;
-    margin: 0.5in 0.5in 0.5in 0.75in;
+    margin: 0.6in 0.55in 0.6in 0.75in;
   }
-  @page :left {
-    margin: 0.5in 0.75in 0.5in 0.5in;
-  }
-  @page :right {
-    margin: 0.5in 0.5in 0.5in 0.75in;
-  }
-  body {
+  html, body {
+    width: 5.75in;
+    height: 8.75in;
+    margin: 0;
+    padding: 0;
     font-family: 'Georgia', 'Times New Roman', serif;
     font-size: 11pt;
     line-height: 1.6;
     color: #1a1a1a;
-    margin: 0;
-    padding: 0;
+  }
+  .page {
+    width: 5.75in;
+    height: 8.75in;
+    page-break-after: always;
   }
   /* Title page */
   .title-page {
@@ -195,7 +196,7 @@ function buildBookHtml(
 </style>
 </head>
 <body>
-  <div class="title-page">
+  <div class="page title-page">
     <h1>${escapeHtml(bookTitle)}</h1>
     <div class="divider"></div>
     <p class="subtitle">A collection of memories</p>
@@ -356,10 +357,10 @@ serve(async (req) => {
           height: "8.75in",
         },
         margin: {
-          top: "0.5in",
-          bottom: "0.5in",
+          top: "0.6in",
+          bottom: "0.6in",
           left: "0.75in",
-          right: "0.5in",
+          right: "0.55in",
         },
       }),
     });
