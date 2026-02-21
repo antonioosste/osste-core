@@ -85,8 +85,14 @@ function buildBookHtml(
 <meta charset="UTF-8"/>
 <style>
   @page {
-    size: 6in 9in;
-    margin: 0.75in 0.85in 0.75in 0.85in;
+    size: 5.75in 8.75in;
+    margin: 0.5in 0.5in 0.5in 0.75in;
+  }
+  @page :left {
+    margin: 0.5in 0.75in 0.5in 0.5in;
+  }
+  @page :right {
+    margin: 0.5in 0.5in 0.5in 0.75in;
   }
   body {
     font-family: 'Georgia', 'Times New Roman', serif;
@@ -345,6 +351,16 @@ serve(async (req) => {
         source: html,
         landscape: false,
         use_print: true,
+        format: {
+          width: "5.75in",
+          height: "8.75in",
+        },
+        margin: {
+          top: "0.5in",
+          bottom: "0.5in",
+          left: "0.75in",
+          right: "0.5in",
+        },
       }),
     });
 
