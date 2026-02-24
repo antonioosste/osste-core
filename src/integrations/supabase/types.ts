@@ -197,8 +197,14 @@ export type Database = {
         Row: {
           book_title: string
           created_at: string | null
+          currency: string | null
+          external_id: string | null
           format: string
           id: string
+          lulu_cost_incl_tax: number | null
+          lulu_order_id: string | null
+          lulu_print_job_id: string | null
+          lulu_status: string | null
           quantity: number
           shipping_address: string
           shipping_city: string
@@ -218,8 +224,14 @@ export type Database = {
         Insert: {
           book_title: string
           created_at?: string | null
+          currency?: string | null
+          external_id?: string | null
           format: string
           id?: string
+          lulu_cost_incl_tax?: number | null
+          lulu_order_id?: string | null
+          lulu_print_job_id?: string | null
+          lulu_status?: string | null
           quantity?: number
           shipping_address: string
           shipping_city: string
@@ -239,8 +251,14 @@ export type Database = {
         Update: {
           book_title?: string
           created_at?: string | null
+          currency?: string | null
+          external_id?: string | null
           format?: string
           id?: string
+          lulu_cost_incl_tax?: number | null
+          lulu_order_id?: string | null
+          lulu_print_job_id?: string | null
+          lulu_status?: string | null
           quantity?: number
           shipping_address?: string
           shipping_city?: string
