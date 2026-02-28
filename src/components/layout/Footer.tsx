@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { Mic } from "lucide-react";
 
 const footerLinks = {
   product: [
@@ -21,27 +20,25 @@ const footerLinks = {
 
 export function Footer() {
   return (
-    <footer className="bg-muted/30 border-t">
-      <div className="container mx-auto px-4 py-8 md:py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
-          {/* Brand */}
-          <div className="col-span-1">
-            <Link to="/" className="flex items-center mb-4">
-              <img 
-                src="/brand/osste-logo-main.png" 
-                alt="OSSTE" 
-                className="h-10 w-auto"
-              />
-            </Link>
-            <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
-              Capture and preserve your stories through voice interviews. 
-              Create lasting memories for generations to come.
-            </p>
-          </div>
+    <footer className="bg-paper-alt border-t border-border/40">
+      <div className="container mx-auto px-6 py-12 md:py-16">
+        {/* Top: centered logo */}
+        <div className="flex justify-center mb-10">
+          <Link to="/">
+            <img
+              src="/brand/osste-logo-main.png"
+              alt="OSSTE"
+              className="h-10 w-auto opacity-70"
+            />
+          </Link>
+        </div>
 
-          {/* Links */}
+        {/* Links row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto text-center mb-10">
           <div>
-            <h3 className="font-semibold text-foreground mb-4">Product</h3>
+            <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4">
+              Product
+            </h3>
             <ul className="space-y-2">
               {footerLinks.product.map((link) => (
                 <li key={link.name}>
@@ -55,9 +52,10 @@ export function Footer() {
               ))}
             </ul>
           </div>
-
           <div>
-            <h3 className="font-semibold text-foreground mb-4">Support</h3>
+            <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4">
+              Support
+            </h3>
             <ul className="space-y-2">
               {footerLinks.support.map((link) => (
                 <li key={link.name}>
@@ -71,9 +69,10 @@ export function Footer() {
               ))}
             </ul>
           </div>
-
           <div>
-            <h3 className="font-semibold text-foreground mb-4">Legal</h3>
+            <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4">
+              Legal
+            </h3>
             <ul className="space-y-2">
               {footerLinks.legal.map((link) => (
                 <li key={link.name}>
@@ -89,32 +88,11 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t pt-6 md:pt-8 mt-6 md:mt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-sm text-muted-foreground">
-              © 2024 OSSTE. All rights reserved.
-            </p>
-            <div className="flex flex-wrap justify-center md:justify-end gap-4 md:gap-6">
-              <Link
-                to="/privacy"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Privacy
-              </Link>
-              <Link
-                to="/terms"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Terms
-              </Link>
-              <Link
-                to="/faq"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                FAQ
-              </Link>
-            </div>
-          </div>
+        {/* Divider */}
+        <div className="border-t border-border/40 pt-6">
+          <p className="text-center text-xs text-muted-foreground font-light">
+            © {new Date().getFullYear()} OSSTE. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>

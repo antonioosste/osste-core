@@ -20,25 +20,27 @@ export function TestimonialCard({ author, text, href, className }: TestimonialCa
     <Card
       {...(href ? { href, target: "_blank", rel: "noreferrer" } : {})}
       className={cn(
-        "flex flex-col rounded-lg border-t",
-        "bg-gradient-to-b from-muted/50 to-muted/10",
-        "p-4 text-start sm:p-6",
-        "hover:from-muted/60 hover:to-muted/20",
-        "max-w-[320px]",
-        "transition-colors duration-300",
+        "flex flex-col rounded-lg",
+        "bg-card border border-border/40",
+        "p-6 sm:p-8 text-start",
+        "shadow-sm hover:shadow-md",
+        "max-w-[340px]",
+        "transition-shadow duration-300",
         className
       )}
     >
-      <div className="flex items-center gap-3">
-        <Avatar className="h-12 w-12">
+      {/* Large quotation mark */}
+      <span className="font-display text-5xl text-primary/20 leading-none mb-2 select-none">"</span>
+      <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6 font-light">{text}</p>
+      <div className="flex items-center gap-3 mt-auto">
+        <Avatar className="h-10 w-10">
           <AvatarImage src={author.avatar} alt={author.name} />
         </Avatar>
         <div className="flex flex-col items-start">
-          <h3 className="text-md font-semibold leading-none">{author.name}</h3>
-          <p className="text-sm text-muted-foreground">{author.handle}</p>
+          <h3 className="text-sm font-medium leading-none text-foreground">{author.name}</h3>
+          <p className="text-xs text-muted-foreground mt-1">{author.handle}</p>
         </div>
       </div>
-      <p className="sm:text-md mt-4 text-sm text-muted-foreground">{text}</p>
     </Card>
   )
 }

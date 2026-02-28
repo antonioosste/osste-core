@@ -17,9 +17,11 @@ export default {
         container: "1280px",
       },
       colors: {
-        paper: "hsl(44, 56%, 94%)",
-        ink: "hsl(0, 0%, 10%)",
-        antique: "hsl(39, 58%, 60%)",
+        paper: "hsl(var(--paper))",
+        "paper-alt": "hsl(var(--paper-alt))",
+        ink: "hsl(var(--ink))",
+        antique: "hsl(var(--antique))",
+        "antique-hover": "hsl(var(--antique-hover))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -80,7 +82,8 @@ export default {
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
-        serif: ["Lora", "Georgia", "serif"],
+        serif: ["Cormorant Garamond", "Georgia", "serif"],
+        display: ["Cormorant Garamond", "Georgia", "serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -92,30 +95,27 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
         marquee: {
           from: { transform: "translateX(0)" },
           to: { transform: "translateX(calc(-100% - var(--gap)))" },
+        },
+        "fade-up": {
+          "0%": { opacity: "0", transform: "translateY(20px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         marquee: "marquee var(--duration) linear infinite",
+        "fade-up": "fade-up 0.6s ease-out forwards",
       },
     },
   },

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Mic, User, Settings, LogOut } from "lucide-react";
+import { Menu, X, User, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,35 +27,35 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
   const location = useLocation();
   const { user, signOut } = useAuth();
 
-  // Use auth state if available, otherwise fallback to prop
   const isUserAuthenticated = user !== null || isAuthenticated;
 
-  const isDashboard = location.pathname.startsWith("/dashboard") || 
-                     location.pathname.startsWith("/session") ||
-                     location.pathname.startsWith("/stories") ||
-                     location.pathname.startsWith("/settings");
+  const isDashboard =
+    location.pathname.startsWith("/dashboard") ||
+    location.pathname.startsWith("/session") ||
+    location.pathname.startsWith("/stories") ||
+    location.pathname.startsWith("/settings");
 
   return (
-    <header className="w-full border-b bg-background/80 backdrop-blur-sm">
-      <div className="max-w-screen-xl mx-auto px-4">
+    <header className="w-full border-b border-border/40 bg-background/90 backdrop-blur-sm">
+      <div className="max-w-screen-xl mx-auto px-6">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="shrink-0">
             <img
               src="/logo-v3.png?v=5"
               alt="OSSTE"
-              className="block h-[64px] md:h-[72px] w-auto shrink-0"
+              className="block h-[56px] md:h-[64px] w-auto shrink-0"
             />
           </Link>
 
           {/* Desktop Navigation */}
           {!isDashboard && (
-            <nav className="hidden md:flex items-center space-x-6">
+            <nav className="hidden md:flex items-center space-x-8">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors tracking-wide"
                 >
                   {item.name}
                 </Link>
@@ -87,7 +87,7 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     className="flex items-center text-destructive"
                     onClick={() => signOut()}
                   >
@@ -97,11 +97,11 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="hidden md:flex items-center space-x-2">
-                <Button variant="ghost" size="sm" asChild>
+              <div className="hidden md:flex items-center space-x-3">
+                <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
                   <Link to="/login">Sign In</Link>
                 </Button>
-                <Button size="sm" asChild>
+                <Button size="sm" className="bg-primary hover:bg-antique-hover text-primary-foreground" asChild>
                   <Link to="/signup">Get Started</Link>
                 </Button>
               </div>
@@ -127,13 +127,13 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
       {/* Mobile menu */}
       <div
         className={cn(
-          "md:hidden border-t bg-background",
+          "md:hidden border-t border-border/40 bg-background",
           mobileMenuOpen ? "block" : "hidden"
         )}
       >
-        <div className="container mx-auto px-4 py-4 space-y-4">
+        <div className="container mx-auto px-6 py-4 space-y-4">
           {!isDashboard && (
-            <nav className="space-y-2">
+            <nav className="space-y-3">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
@@ -146,15 +146,15 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
               ))}
             </nav>
           )}
-          
+
           {!isUserAuthenticated && (
-            <div className="flex flex-col space-y-2 pt-2 border-t">
+            <div className="flex flex-col space-y-2 pt-3 border-t border-border/40">
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
                   Sign In
                 </Link>
               </Button>
-              <Button size="sm" asChild>
+              <Button size="sm" className="bg-primary hover:bg-antique-hover text-primary-foreground" asChild>
                 <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
                   Get Started
                 </Link>
