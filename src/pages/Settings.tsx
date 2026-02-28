@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, CreditCard, Shield, LogOut, Download, Trash2, Sparkles, Star, Crown, ArrowRight } from "lucide-react";
+import { User, CreditCard, Shield, LogOut, Download, Trash2, Sparkles, Star, Crown, ArrowRight, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const PLAN_LABELS: Record<string, string> = {
   free: "Free",
@@ -64,6 +65,24 @@ export default function Settings() {
     }
   };
   
+  const handleManageSubscription = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+      if (error) throw new Error(error.message);
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No portal URL returned');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Unable to open billing portal",
+        description: error?.message || "Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleExportData = () => {
     toast({
       title: "Export started",
@@ -207,8 +226,8 @@ export default function Settings() {
                       </p>
                     </div>
 
-                    {/* Upgrade CTA for free users */}
-                    {planKey === "free" && (
+                    {/* Upgrade CTA for free users, Manage for paid */}
+                    {planKey === "free" ? (
                       <>
                         <Separator />
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -221,6 +240,22 @@ export default function Settings() {
                           <Button onClick={() => navigate("/pricing")} className="shrink-0">
                             View Plans
                             <ArrowRight className="w-4 h-4 ml-2" />
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <Separator />
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                          <div>
+                            <p className="font-medium text-foreground">Manage Billing</p>
+                            <p className="text-sm text-muted-foreground">
+                              View payment history, update payment method, or manage your plan.
+                            </p>
+                          </div>
+                          <Button variant="outline" onClick={handleManageSubscription} className="shrink-0">
+                            <Settings2 className="w-4 h-4 mr-2" />
+                            Manage Subscription
                           </Button>
                         </div>
                       </>
