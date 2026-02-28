@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { User, CreditCard, Shield, LogOut, Download, Trash2, Sparkles, Star, Crown } from "lucide-react";
+import { User, CreditCard, Shield, LogOut, Download, Trash2, Sparkles, Star, Crown, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
@@ -22,14 +23,26 @@ import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
-import { useStoryGroups } from "@/hooks/useStoryGroups";
+import { useEntitlements } from "@/hooks/useEntitlements";
 import { useNavigate } from "react-router-dom";
+
+const PLAN_LABELS: Record<string, string> = {
+  free: "Free",
+  digital: "Digital Memoir",
+  legacy: "Legacy Memoir",
+};
+
+const PLAN_ICONS: Record<string, typeof Sparkles> = {
+  free: Sparkles,
+  digital: Star,
+  legacy: Crown,
+};
 
 export default function Settings() {
   const { toast } = useToast();
   const { user, signOut } = useAuth();
   const { profile, loading, updateProfile } = useProfile();
-  const { storyGroups } = useStoryGroups();
+  const { accountUsage, loading: entLoading } = useEntitlements();
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -66,7 +79,6 @@ export default function Settings() {
     });
   };
 
-
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -74,6 +86,12 @@ export default function Settings() {
       console.error('Error signing out:', error);
     }
   };
+
+  const planKey = accountUsage?.accountPlan || "free";
+  const PlanIcon = PLAN_ICONS[planKey] || Sparkles;
+  const usagePercent = accountUsage
+    ? Math.min(100, Math.round((accountUsage.minutesUsed / accountUsage.minutesLimit) * 100))
+    : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -94,6 +112,7 @@ export default function Settings() {
             <TabsTrigger value="privacy">Privacy</TabsTrigger>
           </TabsList>
 
+          {/* ── Profile ── */}
           <TabsContent value="profile" className="space-y-6">
             <Card>
               <CardHeader>
@@ -128,57 +147,93 @@ export default function Settings() {
             </Card>
           </TabsContent>
 
+          {/* ── Billing ── */}
           <TabsContent value="billing" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <CreditCard className="w-5 h-5 mr-2" />
-                  Your Book Plans
+                  Account Plan &amp; Usage
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                {storyGroups && storyGroups.length > 0 ? (
-                  <div className="space-y-4">
-                    {storyGroups.map((book: any) => {
-                      const planLabel = book.plan === 'legacy' ? 'Legacy' : book.plan === 'digital' ? 'Digital' : 'Free';
-                      const PlanIcon = book.plan === 'legacy' ? Crown : book.plan === 'digital' ? Star : Sparkles;
-                      const minutesUsed = Math.round(Number(book.minutes_used || 0));
-                      const minutesLimit = book.minutes_limit;
-                      return (
-                        <div key={book.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <PlanIcon className="w-5 h-5 text-primary" />
-                            <div>
-                              <p className="font-medium text-foreground">{book.title}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {minutesUsed} / {minutesLimit ?? '∞'} min used
-                                {book.pdf_enabled && ' • PDF'}
-                                {book.printing_enabled && ' • Print'}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={book.plan === 'free' ? 'secondary' : 'default'}>
-                              {planLabel}
-                            </Badge>
-                            {book.plan === 'free' && (
-                              <Button size="sm" variant="outline" onClick={() => navigate(`/pricing`)}>
-                                Upgrade
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+              <CardContent className="space-y-6">
+                {entLoading ? (
+                  <div className="animate-pulse space-y-4">
+                    <div className="h-6 bg-muted rounded w-1/3" />
+                    <div className="h-4 bg-muted rounded w-full" />
+                    <div className="h-4 bg-muted rounded w-2/3" />
                   </div>
+                ) : accountUsage ? (
+                  <>
+                    {/* Plan badge */}
+                    <div className="flex items-center gap-3">
+                      <PlanIcon className="w-6 h-6 text-primary" />
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {PLAN_LABELS[planKey] || "Free"}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {planKey === "free"
+                            ? "Basic access — upgrade to unlock more recording time"
+                            : "One-time purchase — no recurring charges"}
+                        </p>
+                      </div>
+                      <Badge variant={planKey === "free" ? "secondary" : "default"} className="ml-auto">
+                        {PLAN_LABELS[planKey]}
+                      </Badge>
+                    </div>
+
+                    <Separator />
+
+                    {/* Usage stats */}
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Total Minutes Included</span>
+                        <span className="font-medium text-foreground">{accountUsage.minutesLimit} min</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Minutes Used</span>
+                        <span className="font-medium text-foreground">{accountUsage.minutesUsed} min</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Minutes Remaining</span>
+                        <span className={`font-medium ${accountUsage.minutesRemaining <= 5 ? "text-destructive" : "text-foreground"}`}>
+                          {accountUsage.minutesRemaining} min
+                        </span>
+                      </div>
+                      <Progress value={usagePercent} className="h-2" />
+                      <p className="text-xs text-muted-foreground">
+                        Recording time is shared across all your books.
+                      </p>
+                    </div>
+
+                    {/* Upgrade CTA for free users */}
+                    {planKey === "free" && (
+                      <>
+                        <Separator />
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                          <div>
+                            <p className="font-medium text-foreground">Want more recording time?</p>
+                            <p className="text-sm text-muted-foreground">
+                              Upgrade to Digital (60 min) or Legacy (120 min) to continue capturing memories.
+                            </p>
+                          </div>
+                          <Button onClick={() => navigate("/pricing")} className="shrink-0">
+                            View Plans
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </>
                 ) : (
-                  <p className="text-muted-foreground">No books yet. Create a book to see plan details.</p>
+                  <p className="text-muted-foreground">No usage data available.</p>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
 
-
+          {/* ── Privacy ── */}
           <TabsContent value="privacy" className="space-y-6">
             <Card>
               <CardHeader>
@@ -188,7 +243,7 @@ export default function Settings() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div>
                     <p className="font-medium">Export Your Data</p>
                     <p className="text-sm text-muted-foreground">Download all your stories and recordings</p>

@@ -30,6 +30,7 @@ import { useStories } from "@/hooks/useStories";
 import { useProfile } from "@/hooks/useProfile";
 import { useRecordings } from "@/hooks/useRecordings";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
+import { useEntitlements } from "@/hooks/useEntitlements";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -38,6 +39,7 @@ export default function Dashboard() {
   const { profile } = useProfile();
   const { recordings } = useRecordings();
   const { storyGroups, loading: groupsLoading, createStoryGroup, deleteStoryGroup, updateStoryGroup } = useStoryGroups();
+  const { accountUsage } = useEntitlements();
   
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newBookTitle, setNewBookTitle] = useState('');
@@ -55,10 +57,9 @@ export default function Dashboard() {
   const totalChapters = sessions.length;
   const totalStories = stories.length;
   
-  // Calculate total minutes recorded
-  const totalMinutesRecorded = recordings.reduce((acc, recording) => {
-    return acc + (recording.duration_seconds || 0);
-  }, 0) / 60;
+  // Use account-level minutes from entitlements (aggregated across all books)
+  const totalMinutesRecorded = accountUsage?.minutesUsed ?? 0;
+  const minutesLimit = accountUsage?.minutesLimit ?? 20;
   
   // Find active chapter (in-progress recording session)
   const activeChapter = sessions.find(s => s.status === 'active' || !s.ended_at);
@@ -266,13 +267,13 @@ export default function Dashboard() {
               <FileText className="h-8 w-8 text-primary/70" />
               <div className="text-right">
                 <span className="text-3xl font-bold text-foreground">
-                  {Math.round(totalMinutesRecorded)}
+                  {totalMinutesRecorded}
                 </span>
-              <span className="text-lg text-muted-foreground" />
+                <span className="text-lg text-muted-foreground"> / {minutesLimit}</span>
               </div>
             </div>
             <p className="text-sm font-medium text-muted-foreground">
-              Minutes Recorded
+              Minutes Recorded (account total)
             </p>
           </CardContent>
         </Card>

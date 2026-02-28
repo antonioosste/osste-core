@@ -15,9 +15,8 @@ const plans = [
     description: "Try OSSTE and capture your first memories",
     icon: Sparkles,
     features: [
-      "20 minutes of recording",
+      "20 minutes of recording (account total)",
       "Online reading only",
-      "Watermark on exports",
       "30-day project retention",
     ],
     notIncluded: [
@@ -37,11 +36,10 @@ const plans = [
     description: "Create a beautiful digital keepsake",
     icon: Star,
     features: [
-      "60 minutes of recording",
+      "60 minutes of recording (account total)",
       "PDF download",
       "Advanced rewrite (30,000 words)",
       "Permanent storage",
-      "No watermark",
     ],
     notIncluded: [
       "Print integration",
@@ -59,14 +57,13 @@ const plans = [
     description: "The complete heirloom experience",
     icon: Crown,
     features: [
-      "120 minutes of recording",
+      "60 minutes of recording (account total)",
       "Print integration",
       "1 physical copy included",
       "Custom cover design",
       "Photo uploads",
       "Unlimited rewrites",
       "Permanent storage",
-      "No watermark",
     ],
     notIncluded: [],
     cta: "Buy Now",
@@ -79,7 +76,7 @@ const plans = [
 const faqs = [
   {
     question: "Are these one-time payments?",
-    answer: "Yes! Digital and Legacy are one-time purchases per project. No subscriptions, no recurring charges.",
+    answer: "Yes! Digital and Legacy are one-time purchases per project. No subscriptions, no recurring charges. Recording time is shared across all your books at the account level.",
   },
   {
     question: "What happens to my Free project after 30 days?",
