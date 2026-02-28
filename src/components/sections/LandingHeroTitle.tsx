@@ -1,37 +1,30 @@
 "use client"
 
-import { Typewriter } from "@/components/ui/typewriter"
+import { motion } from "framer-motion"
 
 export function LandingHeroTitle() {
   return (
-    <div className="mx-auto max-w-5xl px-6 text-center">
-      <h1 className="text-4xl font-semibold leading-tight sm:text-6xl sm:leading-tight text-white">
-        Capture the stories your family{" "}
-        <span className="text-amber-400">never wants to lose</span>
-      </h1>
+    <div className="mx-auto max-w-4xl px-6 text-center">
+      <motion.h1
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="font-display text-5xl sm:text-7xl md:text-8xl font-semibold leading-[1.1] text-white tracking-tight"
+      >
+        Every life deserves
+        <br />
+        <span className="italic text-primary-soft">to be written.</span>
+      </motion.h1>
 
-      <p className="mt-4 text-lg text-white/90 sm:text-xl">
-        Record voices, add photos, and turn memories into a polished keepsake.
-      </p>
-
-      {/* Typewriter line */}
-      <div className="mt-6 text-2xl sm:text-3xl font-medium">
-        <span className="text-white/80">We help you </span>
-        <Typewriter
-          text={[
-            "record meaningful conversations",
-            "preserve voices with clarity",
-            "organize life into chapters",
-            "weave photos into the narrative",
-            "create a book they'll treasure",
-          ]}
-          speed={65}
-          waitTime={1400}
-          deleteSpeed={40}
-          cursorChar="_"
-          className="text-amber-400"
-        />
-      </div>
+      <motion.p
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+        className="mt-6 text-lg sm:text-xl text-white/80 max-w-2xl mx-auto font-light leading-relaxed"
+      >
+        An AI interviewer that turns your voice into a beautifully written book —
+        preserving the stories your family never wants to lose.
+      </motion.p>
     </div>
   )
 }

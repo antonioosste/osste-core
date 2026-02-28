@@ -2,80 +2,80 @@
 @tailwind components;
 @tailwind utilities;
 
-/* OSSTE Design System - Professional storytelling platform
-All colors MUST be HSL. 
+/* OSSTE Design System – Premium Literary Memoir Platform
+   All colors MUST be HSL.
 */
 
 @layer base {
   :root {
     /* ---------- Brand tokens ---------- */
-    --paper: 44 56% 94%;    /* warm paper #FAF4E8 */
-    --ink: 0 0% 10%;        /* dark text #1A1A1A */
-    --antique: 39 58% 60%;  /* gold accent #D4A55D */
-    --grain-opacity: 0.35;  /* tune 0.20–0.50 */
+    --paper: 36 33% 95%;        /* warm off-white #F6F3EE */
+    --paper-alt: 33 24% 91%;    /* soft beige #ECE7DF */
+    --ink: 0 0% 10%;            /* deep charcoal #1A1A1A */
+    --antique: 32 38% 64%;      /* muted tan CTA #C8A97E */
+    --antique-hover: 30 35% 55%; /* darker tan hover #B89363 */
+    --grain-opacity: 0.18;
 
-    /* Core Neutral Palette - Paper Theme */
-    --background: 44 56% 94%;
+    /* Core Neutral Palette */
+    --background: 36 33% 95%;
     --foreground: 0 0% 10%;
 
-    /* Card & Surface Colors */
-    --card: 44 56% 94%;
+    /* Card & Surface */
+    --card: 36 33% 97%;
     --card-foreground: 0 0% 10%;
 
-    /* Popover Colors */
-    --popover: 44 56% 96%;
+    /* Popover */
+    --popover: 36 33% 97%;
     --popover-foreground: 0 0% 10%;
 
-    /* Primary Brand - Antique Gold */
-    --primary: 39 58% 60%;
-    --primary-foreground: 0 0% 10%;
-    --primary-soft: 39 58% 90%;
-    --primary-muted: 39 58% 80%;
+    /* Primary – Muted Tan */
+    --primary: 32 38% 64%;
+    --primary-foreground: 0 0% 100%;
+    --primary-soft: 32 38% 90%;
+    --primary-muted: 32 38% 80%;
 
-    /* Secondary - Paper Tones */
-    --secondary: 44 40% 85%;
+    /* Secondary – Beige Tones */
+    --secondary: 33 24% 91%;
     --secondary-foreground: 0 0% 10%;
-    --secondary-soft: 44 40% 92%;
-    --secondary-muted: 44 40% 78%;
+    --secondary-soft: 33 24% 95%;
+    --secondary-muted: 33 24% 84%;
 
-    /* Success - Ocean Green */
-    --success: 158 64% 42%;
+    /* Success */
+    --success: 158 40% 42%;
     --success-foreground: 0 0% 100%;
-    --success-soft: 158 64% 94%;
+    --success-soft: 158 40% 94%;
 
-    /* Warning - Warm Amber */
-    --warning: 35 84% 62%;
+    /* Warning */
+    --warning: 35 60% 58%;
     --warning-foreground: 0 0% 100%;
-    --warning-soft: 35 84% 94%;
+    --warning-soft: 35 60% 94%;
 
-    /* Muted Grays */
-    --muted: 44 20% 90%;
-    --muted-foreground: 0 0% 40%;
+    /* Muted */
+    --muted: 33 18% 90%;
+    --muted-foreground: 0 0% 42%;
 
-    /* Accent - Antique Highlight */
-    --accent: 39 58% 88%;
+    /* Accent */
+    --accent: 33 24% 91%;
     --accent-foreground: 0 0% 10%;
 
-    /* Destructive - Warm Red */
-    --destructive: 0 72% 62%;
+    /* Destructive */
+    --destructive: 0 60% 50%;
     --destructive-foreground: 0 0% 100%;
 
     /* Borders & Inputs */
-    --border: 44 20% 85%;
-    --input: 44 20% 85%;
-    --ring: 39 58% 60%;
+    --border: 33 18% 85%;
+    --input: 33 18% 85%;
+    --ring: 32 38% 64%;
 
-    /* Design System Tokens */
-    --radius: 0.75rem;
-    --radius-sm: 0.5rem;
-    --radius-lg: 1rem;
-    
-    /* Spacing & Sizing */
+    /* Radius */
+    --radius: 0.5rem;
+
+    /* Spacing */
     --header-height: 4rem;
     --sidebar-width: 16rem;
     --sidebar-width-collapsed: 4rem;
-    
-    /* Typography */
+
+    /* Typography tokens */
     --font-size-xs: 0.75rem;
     --font-size-sm: 0.875rem;
     --font-size-base: 1rem;
@@ -84,58 +84,49 @@ All colors MUST be HSL.
     --font-size-2xl: 1.5rem;
     --font-size-3xl: 1.875rem;
     --font-size-4xl: 2.25rem;
-    
-    /* Animations */
+
+    /* Transitions */
     --transition-fast: 150ms ease-out;
     --transition-normal: 250ms ease-out;
     --transition-slow: 350ms ease-out;
-    
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(210 20% 15% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(210 20% 15% / 0.1), 0 2px 4px -1px hsl(210 20% 15% / 0.06);
-    --shadow-lg: 0 10px 15px -3px hsl(210 20% 15% / 0.1), 0 4px 6px -2px hsl(210 20% 15% / 0.05);
-    --shadow-xl: 0 20px 25px -5px hsl(210 20% 15% / 0.1), 0 10px 10px -5px hsl(210 20% 15% / 0.04);
 
-    /* Sidebar Variables */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Shadows – softer, more elegant */
+    --shadow-sm: 0 1px 3px 0 hsl(30 10% 20% / 0.04);
+    --shadow-md: 0 4px 12px -2px hsl(30 10% 20% / 0.08);
+    --shadow-lg: 0 12px 28px -6px hsl(30 10% 20% / 0.1);
+    --shadow-xl: 0 24px 48px -12px hsl(30 10% 20% / 0.12);
+
+    /* Sidebar */
+    --sidebar-background: 36 33% 97%;
+    --sidebar-foreground: 0 0% 20%;
+    --sidebar-primary: 0 0% 10%;
+    --sidebar-primary-foreground: 36 33% 97%;
+    --sidebar-accent: 33 24% 93%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 33 18% 88%;
+    --sidebar-ring: 32 38% 64%;
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
+    --primary: 32 38% 64%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    
+    --ring: 32 38% 64%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -152,25 +143,33 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
-  /* ---------- Site-wide base ---------- */
   html, body {
     height: 100%;
   }
 
   body {
-    background: hsl(var(--paper));
-    color: hsl(var(--ink));
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Typography */
+  /* Typography – Cormorant Garamond for headlines, Inter for body */
   h1, h2, h3 {
-    font-family: "Lora", serif;
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
   }
 
   body, p, a, button, input {
     font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    font-weight: 400;
   }
 
+  p {
+    line-height: 1.7;
+  }
 }
 
 /* ---------- Section helpers ---------- */
@@ -179,43 +178,37 @@ All colors MUST be HSL.
     color: hsl(var(--antique));
   }
 
-  /* Use on solid-color sections that would otherwise hide the body grain */
   .grain-surface {
     background-image: url('/textures/grain.png');
     background-repeat: repeat;
     background-size: auto;
   }
 
-  /* A simple warm overlay that DOES NOT bleed into next sections */
   .overlay-warm {
     position: absolute;
     inset: 0;
     background: linear-gradient(
-      rgba(20, 10, 0, 0.50),
-      rgba(20, 10, 0, 0.55)
+      rgba(20, 10, 0, 0.55),
+      rgba(20, 10, 0, 0.60)
     );
     pointer-events: none;
     z-index: 0;
   }
 
-  /* Grain control utilities */
   .subtle-grain::before {
-    opacity: 0.18;
+    opacity: 0.12;
   }
 
   .no-grain::before {
     opacity: 0 !important;
   }
 
-  /* Paper card styling */
   .paper-card {
-    background: color-mix(in srgb, hsl(var(--paper)) 92%, white 8%);
-    box-shadow: 0 1px 0 rgba(0,0,0,.06), 0 12px 32px rgba(0,0,0,.06);
-    border: 1px solid rgba(0,0,0,.06);
-    backdrop-filter: saturate(105%);
+    background: hsl(var(--card));
+    box-shadow: var(--shadow-md);
+    border: 1px solid hsl(var(--border));
   }
 
-  /* Custom scrollbar for conversation history */
   .conversation-history-scroll {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--primary) / 0.2) transparent;
@@ -233,7 +226,6 @@ All colors MUST be HSL.
   .conversation-history-scroll::-webkit-scrollbar-thumb {
     background: hsl(var(--primary) / 0.2);
     border-radius: 10px;
-    transition: background 0.2s ease;
   }
 
   .conversation-history-scroll::-webkit-scrollbar-thumb:hover {
@@ -245,17 +237,16 @@ All colors MUST be HSL.
    INTERACTIVE BOOK DESIGN SYSTEM
    ============================================ */
 
-/* Book Typography */
 .font-cinzel { font-family: 'Cinzel', 'Playfair Display', Georgia, serif; }
 .font-cormorant { font-family: 'Cormorant Garamond', 'EB Garamond', Georgia, serif; }
 .font-reenie { font-family: 'Reenie Beanie', 'Dancing Script', cursive; }
 
-/* Ambient Background */
+/* ... keep existing code (book-ambient-bg through print styles) ... */
+
 .book-ambient-bg {
   background: radial-gradient(ellipse at center, #1a1a2e 0%, #0d0d1a 50%, #000 100%);
 }
 
-/* Ambient Glow Effect */
 .book-ambient-glow {
   position: absolute;
   top: 50%;
@@ -268,7 +259,6 @@ All colors MUST be HSL.
   z-index: 1;
 }
 
-/* Vignette Effect */
 .book-vignette {
   position: absolute;
   inset: 0;
@@ -277,14 +267,12 @@ All colors MUST be HSL.
   z-index: 2;
 }
 
-/* Book Wrapper for Animation */
 .book-wrapper {
   perspective: 2500px;
   perspective-origin: center center;
   z-index: 10;
 }
 
-/* Book Container - Fluid Responsive Sizing */
 .book-container {
   --book-width: clamp(280px, 42vw, 480px);
   --book-height: clamp(380px, 58vh, 640px);
@@ -295,12 +283,10 @@ All colors MUST be HSL.
   transition: transform 0.4s ease;
 }
 
-/* Hover lift effect */
 .book-container:hover {
   transform: translateY(-4px) rotateX(2deg);
 }
 
-/* Portrait mode adjustments */
 @media (max-aspect-ratio: 3/4) {
   .book-container {
     --book-width: clamp(260px, 75vw, 360px);
@@ -308,7 +294,6 @@ All colors MUST be HSL.
   }
 }
 
-/* Small screens */
 @media (max-width: 480px) {
   .book-container {
     --book-width: clamp(240px, 85vw, 320px);
@@ -316,95 +301,41 @@ All colors MUST be HSL.
   }
 }
 
-/* Edge Gilding Effect */
 .book-edge-gilding {
   position: absolute;
-  background: linear-gradient(90deg, 
-    #8b6914 0%, 
-    #c5a059 20%, 
-    #f4d47c 50%, 
-    #c5a059 80%, 
-    #8b6914 100%
-  );
+  background: linear-gradient(90deg, #8b6914 0%, #c5a059 20%, #f4d47c 50%, #c5a059 80%, #8b6914 100%);
   pointer-events: none;
   z-index: 0;
 }
 
-.book-edge-top {
-  top: 0;
-  right: -3px;
-  width: 6px;
-  height: 3px;
-  border-radius: 0 2px 0 0;
-}
-
-.book-edge-bottom {
-  bottom: 0;
-  right: -3px;
-  width: 6px;
-  height: 3px;
-  border-radius: 0 0 2px 0;
-}
-
+.book-edge-top { top: 0; right: -3px; width: 6px; height: 3px; border-radius: 0 2px 0 0; }
+.book-edge-bottom { bottom: 0; right: -3px; width: 6px; height: 3px; border-radius: 0 0 2px 0; }
 .book-edge-right {
-  top: 3px;
-  right: -4px;
-  width: 5px;
-  height: calc(100% - 6px);
-  background: linear-gradient(180deg,
-    #f4d47c 0%,
-    #c5a059 10%,
-    #a88b3d 30%,
-    #c5a059 50%,
-    #a88b3d 70%,
-    #c5a059 90%,
-    #f4d47c 100%
-  );
+  top: 3px; right: -4px; width: 5px; height: calc(100% - 6px);
+  background: linear-gradient(180deg, #f4d47c 0%, #c5a059 10%, #a88b3d 30%, #c5a059 50%, #a88b3d 70%, #c5a059 90%, #f4d47c 100%);
 }
 
-/* Book Spine */
 .book-spine {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 8px;
-  background: linear-gradient(90deg, 
-    rgba(0,0,0,0.4) 0%, 
-    rgba(0,0,0,0.15) 30%,
-    rgba(255,255,255,0.05) 50%,
-    rgba(0,0,0,0.15) 70%,
-    rgba(0,0,0,0.4) 100%
-  );
-  transform: translateX(-50%);
-  pointer-events: none;
-  z-index: 50;
+  position: absolute; top: 0; left: 0; height: 100%; width: 8px;
+  background: linear-gradient(90deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.15) 30%, rgba(255,255,255,0.05) 50%, rgba(0,0,0,0.15) 70%, rgba(0,0,0,0.4) 100%);
+  transform: translateX(-50%); pointer-events: none; z-index: 50;
 }
 
-/* Cover Styling */
 .book-cover {
   background: linear-gradient(145deg, #2c1810 0%, #1a0f09 50%, #0d0805 100%);
-  border: 2px solid #c5a059;
-  border-left: none;
-  box-shadow:
-    inset 0 0 60px rgba(0,0,0,0.6),
-    inset 0 0 20px rgba(197, 160, 89, 0.1);
-  position: relative;
-  overflow: hidden;
+  border: 2px solid #c5a059; border-left: none;
+  box-shadow: inset 0 0 60px rgba(0,0,0,0.6), inset 0 0 20px rgba(197, 160, 89, 0.1);
+  position: relative; overflow: hidden;
 }
 
-/* Cover Texture */
 .book-cover-texture {
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E");
-  opacity: 0.3;
-  pointer-events: none;
+  opacity: 0.3; pointer-events: none;
 }
 
 .book-cover-ornament {
-  font-size: 1.25rem;
-  color: rgba(197, 160, 89, 0.5);
+  font-size: 1.25rem; color: rgba(197, 160, 89, 0.5);
   text-shadow: 0 0 10px rgba(197, 160, 89, 0.3);
   animation: ornament-pulse 3s ease-in-out infinite;
 }
@@ -414,126 +345,50 @@ All colors MUST be HSL.
   50% { opacity: 0.8; }
 }
 
-/* Page Paper Styling */
 .book-page-paper {
-  background: linear-gradient(135deg, 
-    #faf8f3 0%, 
-    #f5f0e6 30%,
-    #efe8db 70%,
-    #e8dfd0 100%
-  );
-  position: relative;
-  overflow: hidden;
+  background: linear-gradient(135deg, #faf8f3 0%, #f5f0e6 30%, #efe8db 70%, #e8dfd0 100%);
+  position: relative; overflow: hidden;
 }
 
-/* Paper Texture */
 .book-paper-texture {
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23paper)' opacity='0.08'/%3E%3C/svg%3E");
-  opacity: 0.6;
-  pointer-events: none;
+  opacity: 0.6; pointer-events: none;
 }
 
-/* Paper face defaults */
-.paper-face {
-  background-color: #fdfbf7;
-}
+.paper-face { background-color: #fdfbf7; }
+.page-flipping { filter: drop-shadow(0 0 20px rgba(0,0,0,0.3)); }
 
-/* Page flip animation enhancement */
-.page-flipping {
-  filter: drop-shadow(0 0 20px rgba(0,0,0,0.3));
-}
-
-/* Polaroid Frame */
 .polaroid-frame {
-  background: white;
-  padding: 8px 8px 24px 8px;
-  max-width: 70%;
-  box-shadow:
-    0 4px 15px rgba(0,0,0,0.15),
-    0 8px 30px rgba(0,0,0,0.1);
+  background: white; padding: 8px 8px 24px 8px; max-width: 70%;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15), 0 8px 30px rgba(0,0,0,0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 @media (min-width: 640px) {
-  .polaroid-frame {
-    padding: 12px 12px 32px 12px;
-  }
+  .polaroid-frame { padding: 12px 12px 32px 12px; }
 }
 
 .polaroid-frame:hover {
   transform: scale(1.02) !important;
-  box-shadow:
-    0 8px 25px rgba(0,0,0,0.2),
-    0 12px 40px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2), 0 12px 40px rgba(0,0,0,0.15);
 }
 
-/* Book cursor */
-.book .paper {
-  cursor: pointer;
-}
+.book .paper { cursor: pointer; }
 
-/* Print styles for PDF generation */
 @media print {
-  .book-ambient-bg {
-    background: white !important;
-    position: static !important;
-    padding: 0 !important;
-  }
-
-  .book-ambient-glow,
-  .book-vignette,
-  .book-edge-gilding,
-  .book-spine {
-    display: none !important;
-  }
-
-  .book-container {
-    perspective: none !important;
-    width: 100% !important;
-    height: auto !important;
-  }
-
-  .book {
-    transform-style: flat !important;
-    width: 100% !important;
-    height: auto !important;
-  }
-
-  .paper {
-    position: static !important;
-    transform: none !important;
-    page-break-after: always;
-    width: 100% !important;
-    height: auto !important;
-    min-height: 100vh;
-  }
-
-  .paper-face.back {
-    transform: none !important;
-  }
-
-  .paper-face {
-    position: static !important;
-    backface-visibility: visible !important;
-  }
-
-  button, [class*="text-white"] {
-    display: none !important;
-  }
+  .book-ambient-bg { background: white !important; position: static !important; padding: 0 !important; }
+  .book-ambient-glow, .book-vignette, .book-edge-gilding, .book-spine { display: none !important; }
+  .book-container { perspective: none !important; width: 100% !important; height: auto !important; }
+  .book { transform-style: flat !important; width: 100% !important; height: auto !important; }
+  .paper { position: static !important; transform: none !important; page-break-after: always; width: 100% !important; height: auto !important; min-height: 100vh; }
+  .paper-face.back { transform: none !important; }
+  .paper-face { position: static !important; backface-visibility: visible !important; }
+  button, [class*="text-white"] { display: none !important; }
 }
 
 @layer utilities {
-  .perspective-2000 {
-    perspective: 2000px;
-  }
-
-  .preserve-3d {
-    transform-style: preserve-3d;
-  }
-
-  .backface-hidden {
-    backface-visibility: hidden;
-  }
+  .perspective-2000 { perspective: 2000px; }
+  .preserve-3d { transform-style: preserve-3d; }
+  .backface-hidden { backface-visibility: hidden; }
 }
