@@ -9,36 +9,31 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const plans = {
-  basic: {
-    name: "Basic Plan",
-    price: "$9.99",
-    priceId: "price_basic",
+  digital: {
+    name: "Digital Memoir",
+    price: "$39",
+    priceLabel: "$39 one-time",
+    priceId: "price_digital",
     features: [
-      "Up to 10 stories per month",
-      "Basic PDF generation",
-      "Standard templates"
+      "60 minutes of recording (account total)",
+      "PDF download",
+      "Advanced rewrite (30,000 words)",
+      "Permanent storage",
     ]
   },
-  premium: {
-    name: "Premium Plan", 
-    price: "$19.99",
-    priceId: "price_premium",
+  legacy: {
+    name: "Legacy Memoir",
+    price: "$129",
+    priceLabel: "$129 one-time",
+    priceId: "price_legacy",
     features: [
-      "Unlimited stories",
-      "Premium PDF generation",
-      "Custom templates",
-      "Priority support"
-    ]
-  },
-  family: {
-    name: "Family Plan",
-    price: "$29.99", 
-    priceId: "price_family",
-    features: [
-      "Everything in Premium",
-      "Multiple family accounts",
-      "Shared story collections",
-      "Family tree integration"
+      "60 minutes of recording (account total)",
+      "Print integration",
+      "1 physical copy included",
+      "Custom cover design",
+      "Photo uploads",
+      "Unlimited rewrites",
+      "Permanent storage",
     ]
   }
 };
@@ -215,7 +210,7 @@ export default function Checkout() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center text-lg font-semibold">
                   <span>{selectedPlan.name}</span>
-                  <span>{selectedPlan.price}/month</span>
+                  <span>{selectedPlan.priceLabel}</span>
                 </div>
                 
                 <div className="space-y-2">
@@ -236,7 +231,7 @@ export default function Checkout() {
 
                 <div className="flex justify-between items-center text-xl font-bold">
                   <span>Total</span>
-                  <span>{selectedPlan.price}/month</span>
+                  <span>{selectedPlan.priceLabel}</span>
                 </div>
               </div>
             </CardContent>
