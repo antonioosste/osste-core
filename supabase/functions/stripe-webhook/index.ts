@@ -99,10 +99,37 @@ serve(async (req) => {
 
         log("Story group upgraded successfully", { storyGroupId, plan });
       } else if (userId) {
-        // No story_group_id — this is an account-level purchase from Pricing page
-        // Update the user's profile plan for reference
+        // No story_group_id — account-level purchase from Pricing page
+        // Upgrade ALL free story groups for this user to the purchased plan
         log("Account-level plan purchase", { userId, plan });
 
+        const { data: freeGroups, error: fetchErr } = await supabaseAdmin
+          .from("story_groups")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("plan", "free");
+
+        if (fetchErr) {
+          log("Failed to fetch free story groups", { error: fetchErr.message });
+        } else if (freeGroups && freeGroups.length > 0) {
+          const groupIds = freeGroups.map((g: { id: string }) => g.id);
+          log("Upgrading free story groups", { count: groupIds.length, groupIds });
+
+          const { error: upgradeErr } = await supabaseAdmin
+            .from("story_groups")
+            .update({ plan })
+            .in("id", groupIds);
+
+          if (upgradeErr) {
+            log("Failed to upgrade story groups", { error: upgradeErr.message });
+          } else {
+            log("Story groups upgraded successfully", { count: groupIds.length, plan });
+          }
+        } else {
+          log("No free story groups found to upgrade", { userId });
+        }
+
+        // Also update the user's profile plan for reference
         const { error: profileErr } = await supabaseAdmin
           .from("profiles")
           .update({ plan })
