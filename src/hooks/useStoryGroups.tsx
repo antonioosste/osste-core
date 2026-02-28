@@ -24,8 +24,13 @@ export interface StoryGroup {
   plan: string;
   minutes_limit: number | null;
   minutes_used: number;
+  words_limit: number | null;
+  words_used: number;
+  watermark: boolean;
   pdf_enabled: boolean;
   printing_enabled: boolean;
+  photo_uploads_enabled: boolean;
+  archive_at: string | null;
 }
 
 export interface DeleteBookResult {
