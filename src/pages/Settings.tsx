@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, CreditCard, Shield, LogOut, Download, Trash2 } from "lucide-react";
+import { User, CreditCard, Shield, LogOut, Download, Trash2, Sparkles, Star, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,11 +22,15 @@ import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
+import { useStoryGroups } from "@/hooks/useStoryGroups";
+import { useNavigate } from "react-router-dom";
 
 export default function Settings() {
   const { toast } = useToast();
   const { user, signOut } = useAuth();
   const { profile, loading, updateProfile } = useProfile();
+  const { storyGroups } = useStoryGroups();
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
@@ -62,12 +66,6 @@ export default function Settings() {
     });
   };
 
-  const handleManageBilling = () => {
-    toast({
-      title: "Redirecting to billing portal",
-      description: "Opening Stripe customer portal...",
-    });
-  };
 
   const handleSignOut = async () => {
     try {
@@ -135,60 +133,47 @@ export default function Settings() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <CreditCard className="w-5 h-5 mr-2" />
-                  Current Plan
+                  Your Book Plans
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold">
-                      {profile?.plan === 'free' ? 'Free Plan' : 
-                       profile?.plan === 'starter' ? 'Starter Plan' :
-                       profile?.plan === 'standard' ? 'Standard Plan' :
-                       profile?.plan === 'premium' ? 'Premium Plan' : 'Current Plan'}
-                    </h3>
-                    <p className="text-muted-foreground">
-                      {profile?.plan === 'free' ? 'Limited features' : 'Full features'}
-                    </p>
+                {storyGroups && storyGroups.length > 0 ? (
+                  <div className="space-y-4">
+                    {storyGroups.map((book: any) => {
+                      const planLabel = book.plan === 'legacy' ? 'Legacy' : book.plan === 'digital' ? 'Digital' : 'Free';
+                      const PlanIcon = book.plan === 'legacy' ? Crown : book.plan === 'digital' ? Star : Sparkles;
+                      const minutesUsed = Math.round(Number(book.minutes_used || 0));
+                      const minutesLimit = book.minutes_limit;
+                      return (
+                        <div key={book.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <PlanIcon className="w-5 h-5 text-primary" />
+                            <div>
+                              <p className="font-medium text-foreground">{book.title}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {minutesUsed} / {minutesLimit ?? '∞'} min used
+                                {book.pdf_enabled && ' • PDF'}
+                                {book.printing_enabled && ' • Print'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={book.plan === 'free' ? 'secondary' : 'default'}>
+                              {planLabel}
+                            </Badge>
+                            {book.plan === 'free' && (
+                              <Button size="sm" variant="outline" onClick={() => navigate(`/pricing`)}>
+                                Upgrade
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold">
-                      {profile?.plan === 'free' ? '$0' : 
-                       profile?.plan === 'starter' ? '$19' :
-                       profile?.plan === 'standard' ? '$29' :
-                       profile?.plan === 'premium' ? '$49' : '$0'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">one-time</p>
-                  </div>
-                </div>
-                <div className="flex gap-2 mb-4">
-                  <Badge>{profile?.plan || 'free'}</Badge>
-                </div>
-                <Button onClick={handleManageBilling} className="w-full">
-                  Manage Subscription
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Usage This Month</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span>Interview Sessions</span>
-                    <span className="font-medium">8 / 15</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Stories Generated</span>
-                    <span className="font-medium">8</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Books Created</span>
-                    <span className="font-medium">1 / 3</span>
-                  </div>
-                </div>
+                ) : (
+                  <p className="text-muted-foreground">No books yet. Create a book to see plan details.</p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

@@ -47,7 +47,8 @@ export default function Dashboard() {
   const [editBookId, setEditBookId] = useState<string | null>(null);
   const [editBookTitle, setEditBookTitle] = useState('');
   
-  const userPaid = profile?.plan !== 'free';
+  // Check if user has any paid project
+  const hasAnyPaidProject = storyGroups?.some((g: any) => g.plan === 'digital' || g.plan === 'legacy') ?? false;
   
   // Calculate stats
   const totalBooks = storyGroups?.length || 0;
@@ -58,9 +59,6 @@ export default function Dashboard() {
   const totalMinutesRecorded = recordings.reduce((acc, recording) => {
     return acc + (recording.duration_seconds || 0);
   }, 0) / 60;
-  
-  // Define total minutes available based on plan
-  const totalMinutesAvailable = userPaid ? 999999 : 30;
   
   // Find active chapter (in-progress recording session)
   const activeChapter = sessions.find(s => s.status === 'active' || !s.ended_at);
@@ -212,7 +210,7 @@ export default function Dashboard() {
       </div>
 
       {/* Paywall Card for Unpaid Users */}
-      {!userPaid && (
+      {!hasAnyPaidProject && (
         <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 mb-8">
           <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6">
             <div className="flex items-center space-x-4">
@@ -270,13 +268,11 @@ export default function Dashboard() {
                 <span className="text-3xl font-bold text-foreground">
                   {Math.round(totalMinutesRecorded)}
                 </span>
-                <span className="text-lg text-muted-foreground">
-                  {userPaid ? '' : ` / ${totalMinutesAvailable}`}
-                </span>
+              <span className="text-lg text-muted-foreground" />
               </div>
             </div>
             <p className="text-sm font-medium text-muted-foreground">
-              Minutes Recorded {userPaid ? '(Unlimited)' : ''}
+              Minutes Recorded
             </p>
           </CardContent>
         </Card>
