@@ -868,6 +868,15 @@ export type Database = {
     }
     Functions: {
       get_session_owner: { Args: { p_session_id: string }; Returns: string }
+      get_user_account_plan: { Args: { p_user_id: string }; Returns: string }
+      get_user_recording_limit_seconds: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
+      get_user_total_recorded_seconds: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
