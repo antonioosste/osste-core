@@ -21,6 +21,11 @@ export interface StoryGroup {
   title: string;
   description: string | null;
   created_at: string | null;
+  plan: string;
+  minutes_limit: number | null;
+  minutes_used: number;
+  pdf_enabled: boolean;
+  printing_enabled: boolean;
 }
 
 export interface DeleteBookResult {

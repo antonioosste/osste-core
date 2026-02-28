@@ -6,13 +6,12 @@ const log = (step: string, details?: unknown) =>
   console.log(`[STRIPE-WEBHOOK] ${step}${details ? ` – ${JSON.stringify(details)}` : ""}`);
 
 // Plan config keyed by Stripe price ID
-const PLAN_CONFIG: Record<string, { plan: string; minutes_limit: number; words_limit: number | null; watermark: boolean; pdf_enabled: boolean; printing_enabled: boolean; photo_uploads_enabled: boolean }> = {
+const PLAN_CONFIG: Record<string, { plan: string; minutes_limit: number; words_limit: number | null; pdf_enabled: boolean; printing_enabled: boolean; photo_uploads_enabled: boolean }> = {
   // TODO: Replace with actual Stripe price IDs
   "price_digital": {
     plan: "digital",
     minutes_limit: 60,
     words_limit: 30000,
-    watermark: false,
     pdf_enabled: true,
     printing_enabled: false,
     photo_uploads_enabled: false,
@@ -21,7 +20,6 @@ const PLAN_CONFIG: Record<string, { plan: string; minutes_limit: number; words_l
     plan: "legacy",
     minutes_limit: 120,
     words_limit: null,
-    watermark: false,
     pdf_enabled: true,
     printing_enabled: true,
     photo_uploads_enabled: true,
@@ -93,7 +91,7 @@ serve(async (req) => {
           plan: planConfig.plan,
           minutes_limit: planConfig.minutes_limit,
           words_limit: planConfig.words_limit,
-          watermark: planConfig.watermark,
+          watermark: false,
           pdf_enabled: planConfig.pdf_enabled,
           printing_enabled: planConfig.printing_enabled,
           photo_uploads_enabled: planConfig.photo_uploads_enabled,

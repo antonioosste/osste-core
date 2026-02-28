@@ -9,7 +9,6 @@ export interface ProjectPlan {
   minutes_used: number;
   words_limit: number | null;
   words_used: number;
-  watermark: boolean;
   archive_at: string | null;
   pdf_enabled: boolean;
   printing_enabled: boolean;
@@ -22,7 +21,7 @@ export function useProjectPlan() {
   const getProjectPlan = async (storyGroupId: string): Promise<ProjectPlan | null> => {
     const { data, error } = await supabase
       .from('story_groups')
-      .select('plan, minutes_limit, minutes_used, words_limit, words_used, watermark, archive_at, pdf_enabled, printing_enabled, photo_uploads_enabled')
+      .select('plan, minutes_limit, minutes_used, words_limit, words_used, archive_at, pdf_enabled, printing_enabled, photo_uploads_enabled')
       .eq('id', storyGroupId)
       .maybeSingle();
 
