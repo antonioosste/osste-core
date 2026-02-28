@@ -13,7 +13,6 @@ const plans = {
     name: "Digital Memoir",
     price: "$39",
     priceLabel: "$39 one-time",
-    priceId: "price_digital",
     features: [
       "60 minutes of recording (account total)",
       "PDF download",
@@ -25,7 +24,6 @@ const plans = {
     name: "Legacy Memoir",
     price: "$129",
     priceLabel: "$129 one-time",
-    priceId: "price_legacy",
     features: [
       "60 minutes of recording (account total)",
       "Print integration",
@@ -54,6 +52,7 @@ export default function Checkout() {
   
   const planKey = searchParams.get("plan") as keyof typeof plans;
   const flow = searchParams.get("flow"); // 'self' or 'gift'
+  const storyGroupId = searchParams.get("story_group_id");
   const selectedPlan = plans[planKey];
   const isGiftFlow = flow === 'gift';
 
@@ -68,7 +67,6 @@ export default function Checkout() {
       return;
     }
 
-    // Load gift data if this is a gift flow
     if (isGiftFlow) {
       const storedGiftData = sessionStorage.getItem('giftData');
       if (storedGiftData) {
@@ -90,11 +88,8 @@ export default function Checkout() {
     setIsLoading(true);
     
     try {
-      // For demo purposes, simulate a successful checkout
-      // In production, this would call your Stripe checkout endpoint
-      
       if (isGiftFlow && giftData) {
-        // Create gift invitation record
+        // Gift flow — create invitation and send email
         const { data: invitation, error: invitationError } = await supabase
           .from('gift_invitations')
           .insert({
@@ -111,8 +106,7 @@ export default function Checkout() {
           throw new Error(`Failed to create gift invitation: ${invitationError.message}`);
         }
 
-        // Send gift invitation email
-        const { error: emailError } = await supabase.functions.invoke('send-gift-invitation', {
+        await supabase.functions.invoke('send-gift-invitation', {
           body: {
             giftId: invitation.id,
             recipientEmail: giftData.recipientEmail,
@@ -122,26 +116,34 @@ export default function Checkout() {
           }
         });
 
-        if (emailError) {
-          console.error('Error sending gift invitation:', emailError);
-          // Don't fail the checkout, just log the error
-        }
-
-        // Navigate to gift confirmation
         navigate('/gift/confirmation');
       } else {
-        // Self flow - redirect to signup to create account
-        toast({
-          title: "Checkout successful!",
-          description: "Create your account to start your story journey.",
+        // Self flow — call create-plan-checkout edge function for Stripe
+        const body: Record<string, string> = { plan: planKey };
+        if (storyGroupId) {
+          body.story_group_id = storyGroupId;
+        }
+
+        const { data, error } = await supabase.functions.invoke('create-plan-checkout', {
+          body,
         });
-        navigate('/signup');
+
+        if (error) {
+          throw new Error(error.message || 'Failed to create checkout session');
+        }
+
+        if (data?.url) {
+          // Redirect to Stripe Checkout
+          window.location.href = data.url;
+        } else {
+          throw new Error('No checkout URL returned from Stripe');
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Checkout error:", error);
       toast({
         title: "Checkout Error",
-        description: "Unable to proceed to payment. Please try again.",
+        description: error?.message || "Unable to proceed to payment. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -220,7 +222,7 @@ export default function Checkout() {
                   <ul className="space-y-2">
                     {selectedPlan.features.map((feature, index) => (
                       <li key={index} className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-600" />
+                        <CheckCircle className="w-4 h-4 text-primary" />
                         <span className="text-sm">{feature}</span>
                       </li>
                     ))}
@@ -250,7 +252,7 @@ export default function Checkout() {
                 <p className="text-sm text-muted-foreground">
                   {isGiftFlow 
                     ? "Complete your purchase and we'll send a beautiful invitation to your gift recipient."
-                    : "You'll be redirected to Stripe's secure checkout to complete your payment. Your subscription will begin immediately after successful payment."}
+                    : "You'll be redirected to Stripe's secure checkout to complete your one-time payment."}
                 </p>
                 
                 <Button 
@@ -268,7 +270,7 @@ export default function Checkout() {
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground">
-                  Secure payment processed by Stripe. Cancel anytime.
+                  Secure one-time payment processed by Stripe.
                 </p>
               </div>
             </CardContent>

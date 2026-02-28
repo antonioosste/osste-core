@@ -11,12 +11,6 @@ const corsHeaders = {
 const log = (step: string, details?: unknown) =>
   console.log(`[CREATE-PLAN-CHECKOUT] ${step}${details ? ` – ${JSON.stringify(details)}` : ""}`);
 
-// Price IDs for each plan — TODO: replace with actual Stripe price IDs
-const PLAN_PRICES: Record<string, { priceId: string; amount: number }> = {
-  digital: { priceId: "price_digital", amount: 3900 },
-  legacy: { priceId: "price_legacy", amount: 12900 },
-};
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -25,17 +19,23 @@ serve(async (req) => {
   try {
     const { plan, story_group_id } = await req.json();
 
-    if (!plan || !story_group_id) {
+    if (!plan) {
       return new Response(
-        JSON.stringify({ error: "Missing plan or story_group_id" }),
+        JSON.stringify({ error: "Missing plan" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
+    // Resolve price IDs from environment secrets
+    const PLAN_PRICES: Record<string, { priceId: string; amount: number }> = {
+      digital: { priceId: Deno.env.get("STRIPE_PRICE_DIGITAL") || "", amount: 3900 },
+      legacy: { priceId: Deno.env.get("STRIPE_PRICE_LEGACY") || "", amount: 12900 },
+    };
+
     const planConfig = PLAN_PRICES[plan];
-    if (!planConfig) {
+    if (!planConfig || !planConfig.priceId) {
       return new Response(
-        JSON.stringify({ error: `Invalid plan: ${plan}. Must be 'digital' or 'legacy'.` }),
+        JSON.stringify({ error: `Invalid plan or missing price ID for: ${plan}` }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -66,40 +66,42 @@ serve(async (req) => {
     const user = userData.user;
     log("User authenticated", { userId: user.id, email: user.email });
 
-    // Verify story_group belongs to user
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { data: sg, error: sgErr } = await supabaseAdmin
-      .from("story_groups")
-      .select("id, user_id, plan")
-      .eq("id", story_group_id)
-      .single();
+    // If story_group_id provided, verify ownership
+    if (story_group_id) {
+      const { data: sg, error: sgErr } = await supabaseAdmin
+        .from("story_groups")
+        .select("id, user_id, plan")
+        .eq("id", story_group_id)
+        .single();
 
-    if (sgErr || !sg) {
-      return new Response(
-        JSON.stringify({ error: "Story group not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      if (sgErr || !sg) {
+        return new Response(
+          JSON.stringify({ error: "Story group not found" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      if (sg.user_id !== user.id) {
+        return new Response(
+          JSON.stringify({ error: "Not authorized for this story group" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      if (sg.plan === plan) {
+        return new Response(
+          JSON.stringify({ error: `Story group is already on the ${plan} plan` }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     }
 
-    if (sg.user_id !== user.id) {
-      return new Response(
-        JSON.stringify({ error: "Not authorized for this story group" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
-    if (sg.plan === plan) {
-      return new Response(
-        JSON.stringify({ error: `Story group is already on the ${plan} plan` }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
-    log("Creating checkout session", { plan, storyGroupId: story_group_id });
+    log("Creating checkout session", { plan, storyGroupId: story_group_id || "none" });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
       apiVersion: "2024-06-20",
@@ -111,6 +113,22 @@ serve(async (req) => {
 
     const siteUrl = Deno.env.get("SITE_URL") || req.headers.get("origin") || "https://example.com";
 
+    const metadata: Record<string, string> = {
+      price_id: planConfig.priceId,
+      plan,
+      user_id: user.id,
+    };
+    if (story_group_id) {
+      metadata.story_group_id = story_group_id;
+    }
+
+    const successParams = new URLSearchParams({ plan });
+    if (story_group_id) successParams.set("story_group_id", story_group_id);
+    successParams.set("session_id", "{CHECKOUT_SESSION_ID}");
+
+    const cancelParams = new URLSearchParams({ plan });
+    if (story_group_id) cancelParams.set("story_group_id", story_group_id);
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -121,14 +139,9 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      success_url: `${siteUrl}/checkout/success?plan=${plan}&story_group_id=${story_group_id}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/checkout/cancel?plan=${plan}&story_group_id=${story_group_id}`,
-      metadata: {
-        story_group_id,
-        price_id: planConfig.priceId,
-        plan,
-        user_id: user.id,
-      },
+      success_url: `${siteUrl}/checkout/success?${successParams.toString()}`,
+      cancel_url: `${siteUrl}/checkout/cancel?${cancelParams.toString()}`,
+      metadata,
     });
 
     log("Checkout session created", { sessionId: session.id, url: session.url });

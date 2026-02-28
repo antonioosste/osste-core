@@ -5,19 +5,16 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 const log = (step: string, details?: unknown) =>
   console.log(`[STRIPE-WEBHOOK] ${step}${details ? ` – ${JSON.stringify(details)}` : ""}`);
 
-// Plan config keyed by Stripe price ID
-const PLAN_CONFIG: Record<string, { plan: string; minutes_limit: number; words_limit: number | null; pdf_enabled: boolean; printing_enabled: boolean; photo_uploads_enabled: boolean }> = {
-  // TODO: Replace with actual Stripe price IDs
-  "price_digital": {
-    plan: "digital",
+// Plan config keyed by plan name
+const PLAN_DEFAULTS: Record<string, { minutes_limit: number; words_limit: number | null; pdf_enabled: boolean; printing_enabled: boolean; photo_uploads_enabled: boolean }> = {
+  digital: {
     minutes_limit: 60,
     words_limit: 30000,
     pdf_enabled: true,
     printing_enabled: false,
     photo_uploads_enabled: false,
   },
-  "price_legacy": {
-    plan: "legacy",
+  legacy: {
     minutes_limit: 120,
     words_limit: null,
     pdf_enabled: true,
@@ -50,7 +47,6 @@ serve(async (req) => {
       return new Response("Webhook secret not configured", { status: 500 });
     }
 
-    // Verify webhook signature
     let event: Stripe.Event;
     try {
       event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
@@ -64,47 +60,62 @@ serve(async (req) => {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const storyGroupId = session.metadata?.story_group_id;
-      const priceId = session.metadata?.price_id;
+      const plan = session.metadata?.plan; // 'digital' or 'legacy'
+      const userId = session.metadata?.user_id;
 
-      if (!storyGroupId) {
-        log("No story_group_id in metadata, skipping (may be print order)");
+      if (!plan || !PLAN_DEFAULTS[plan]) {
+        log("No valid plan in metadata, skipping (may be print order)", { plan });
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
-      const planConfig = priceId ? PLAN_CONFIG[priceId] : null;
-      if (!planConfig) {
-        log("Unknown price_id, skipping", { priceId });
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
-      }
-
-      log("Upgrading story_group", { storyGroupId, plan: planConfig.plan });
-
+      const planConfig = PLAN_DEFAULTS[plan];
       const supabaseAdmin = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       );
 
-      // Update the story_group plan (trigger will apply defaults, but we set explicitly for safety)
-      const { error: updateErr } = await supabaseAdmin
-        .from("story_groups")
-        .update({
-          plan: planConfig.plan,
-          minutes_limit: planConfig.minutes_limit,
-          words_limit: planConfig.words_limit,
-          watermark: false,
-          pdf_enabled: planConfig.pdf_enabled,
-          printing_enabled: planConfig.printing_enabled,
-          photo_uploads_enabled: planConfig.photo_uploads_enabled,
-          archive_at: null,
-        })
-        .eq("id", storyGroupId);
+      if (storyGroupId) {
+        // Upgrade a specific story group
+        log("Upgrading story_group", { storyGroupId, plan });
 
-      if (updateErr) {
-        log("Failed to update story_group", { error: updateErr.message });
-        return new Response(JSON.stringify({ error: "DB update failed" }), { status: 500 });
+        const { error: updateErr } = await supabaseAdmin
+          .from("story_groups")
+          .update({
+            plan,
+            minutes_limit: planConfig.minutes_limit,
+            words_limit: planConfig.words_limit,
+            watermark: false,
+            pdf_enabled: planConfig.pdf_enabled,
+            printing_enabled: planConfig.printing_enabled,
+            photo_uploads_enabled: planConfig.photo_uploads_enabled,
+            archive_at: null,
+          })
+          .eq("id", storyGroupId);
+
+        if (updateErr) {
+          log("Failed to update story_group", { error: updateErr.message });
+          return new Response(JSON.stringify({ error: "DB update failed" }), { status: 500 });
+        }
+
+        log("Story group upgraded successfully", { storyGroupId, plan });
+      } else if (userId) {
+        // No story_group_id — this is an account-level purchase from Pricing page
+        // Update the user's profile plan for reference
+        log("Account-level plan purchase", { userId, plan });
+
+        const { error: profileErr } = await supabaseAdmin
+          .from("profiles")
+          .update({ plan })
+          .eq("id", userId);
+
+        if (profileErr) {
+          log("Failed to update profile plan", { error: profileErr.message });
+        }
+
+        log("Profile plan updated", { userId, plan });
+      } else {
+        log("No story_group_id or user_id in metadata, skipping");
       }
-
-      log("Story group upgraded successfully", { storyGroupId, plan: planConfig.plan });
     }
 
     return new Response(JSON.stringify({ received: true }), {
