@@ -1,4 +1,4 @@
-import { Check, ArrowRight } from "lucide-react";
+import { Check, ArrowRight, Star, Crown, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,120 +6,92 @@ import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { useAuth } from "@/hooks/useAuth";
-import { useProfile } from "@/hooks/useProfile";
 
-const oneTimePlans = [
+const plans = [
   {
-    name: "Starter",
-    price: 89,
-    description: "Perfect for capturing your first family stories",
+    name: "Free",
+    price: 0,
+    priceLabel: "Free",
+    description: "Try OSSTE and capture your first memories",
+    icon: Sparkles,
     features: [
-      "60 minutes of interviews",
-      "Up to 3 chapters",
-      "Basic PDF export",
-      "Email support",
+      "20 minutes of recording",
+      "Online reading only",
+      "Watermark on exports",
+      "30-day project retention",
+    ],
+    notIncluded: [
+      "PDF download",
+      "Printing",
+      "Photo uploads",
+    ],
+    cta: "Get Started",
+    planId: "free",
+    popular: false,
+    stripePriceId: null,
+  },
+  {
+    name: "Digital",
+    price: 39,
+    priceLabel: "$39",
+    description: "Create a beautiful digital keepsake",
+    icon: Star,
+    features: [
+      "60 minutes of recording",
+      "PDF download",
+      "Advanced rewrite (30,000 words)",
+      "Permanent storage",
+      "No watermark",
+    ],
+    notIncluded: [
+      "Print integration",
+      "Photo uploads",
     ],
     cta: "Buy Now",
-    popular: false,
-    planId: "starter",
+    planId: "digital",
+    popular: true,
+    stripePriceId: "price_digital", // TODO: Replace with actual Stripe price ID
   },
   {
-    name: "Standard", 
-    price: 149,
-    description: "Ideal for comprehensive family histories",
+    name: "Legacy",
+    price: 129,
+    priceLabel: "$129",
+    description: "The complete heirloom experience",
+    icon: Crown,
     features: [
-      "180 minutes of interviews",
-      "Up to 8 chapters", 
-      "Premium PDF + audio exports",
-      "Priority support",
+      "120 minutes of recording",
+      "Print integration",
+      "1 physical copy included",
+      "Custom cover design",
+      "Photo uploads",
+      "Unlimited rewrites",
+      "Permanent storage",
+      "No watermark",
     ],
+    notIncluded: [],
     cta: "Buy Now",
-    popular: true,
-    planId: "standard",
-  },
-  {
-    name: "Premium",
-    price: 249,
-    description: "For complete multi-generational collections",
-    features: [
-      "Unlimited interview minutes",
-      "Unlimited chapters",
-      "All export formats + hardcover",
-      "Dedicated support specialist",
-    ],
-    cta: "Buy Now", 
+    planId: "legacy",
     popular: false,
-    planId: "premium",
-  },
-];
-
-const subscriptionPlans = [
-  {
-    name: "Basic",
-    price: 19,
-    period: "month",
-    description: "Ongoing story capture for busy families",
-    features: [
-      "45 minutes per month",
-      "Up to 2 chapters monthly",
-      "PDF exports",
-      "Email support",
-    ],
-    cta: "Coming Soon",
-    popular: false,
-    planId: "basic-monthly",
-    comingSoon: true,
-  },
-  {
-    name: "Plus",
-    price: 39, 
-    period: "month",
-    description: "Enhanced monthly storytelling package",
-    features: [
-      "120 minutes per month",
-      "Up to 5 chapters monthly",
-      "PDF + audio exports",
-      "Priority support",
-    ],
-    cta: "Coming Soon",
-    popular: true,
-    planId: "plus-monthly", 
-    comingSoon: true,
-  },
-  {
-    name: "Pro",
-    price: 79,
-    period: "month", 
-    description: "Professional monthly story documentation",
-    features: [
-      "Unlimited monthly minutes",
-      "Unlimited chapters",
-      "All export formats",
-      "Dedicated support",
-    ],
-    cta: "Coming Soon",
-    popular: false,
-    planId: "pro-monthly",
-    comingSoon: true,
+    stripePriceId: "price_legacy", // TODO: Replace with actual Stripe price ID
   },
 ];
 
 const faqs = [
   {
-    question: "Can I cancel my subscription anytime?",
-    answer: "Yes, you can cancel your subscription at any time. You'll continue to have access to your features until the end of your billing period.",
+    question: "Are these one-time payments?",
+    answer: "Yes! Digital and Legacy are one-time purchases per project. No subscriptions, no recurring charges.",
   },
   {
-    question: "Is there a free trial?",
-    answer: "Yes! All plans come with a 14-day free trial. No credit card required to start.",
+    question: "What happens to my Free project after 30 days?",
+    answer: "Free projects are archived after 30 days — your data is preserved but editing is locked. Upgrade anytime to restore full access.",
   },
   {
-    question: "What happens to my stories if I cancel?",
-    answer: "Your stories remain yours forever. You can export them at any time, and they'll stay accessible even after cancellation.",
+    question: "Can I upgrade a Free project later?",
+    answer: "Absolutely! You can upgrade any project from Free to Digital or Legacy at any time. Your existing recordings and content are preserved.",
   },
   {
-    question: "Can I upgrade or downgrade my plan?",
-    answer: "Absolutely! You can change your plan at any time. Changes take effect at your next billing cycle.",
+    question: "What's included in the physical copy?",
+    answer: "The Legacy plan includes one professionally printed paperback book shipped to your address, with a custom cover design.",
   },
   {
     question: "Is my data secure?",
@@ -129,162 +101,117 @@ const faqs = [
 
 export default function Pricing() {
   const { user } = useAuth();
-  const { updatePlan } = useProfile();
   const navigate = useNavigate();
 
-  const handleSelectPlan = async (planId: string) => {
-    if (!user) {
-      navigate('/login');
+  const handleSelectPlan = (planId: string) => {
+    if (planId === "free") {
+      if (!user) {
+        navigate("/signup");
+      } else {
+        navigate("/dashboard");
+      }
       return;
     }
 
-    try {
-      await updatePlan(planId);
-      navigate('/dashboard');
-    } catch (error) {
-      console.error('Error selecting plan:', error);
+    if (!user) {
+      navigate("/login");
+      return;
     }
+
+    // For paid plans, navigate to checkout with plan info
+    navigate(`/checkout?plan=${planId}&flow=self`);
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       {/* Hero Section */}
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Choose Your Plan
+              Preserve Your Stories
             </h1>
-            <p className="text-xl text-muted-foreground mb-8">
-              One-time purchases for complete story collections, or monthly subscriptions for ongoing capture.
+            <p className="text-xl text-muted-foreground mb-4">
+              One-time purchases. No subscriptions. Your memories, forever.
             </p>
           </div>
         </div>
       </section>
 
-      {/* One-Time Plans */}
-      <section className="pb-12">
+      {/* Plan Cards */}
+      <section className="pb-20">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-foreground mb-4">One-Time Purchases</h2>
-            <p className="text-lg text-muted-foreground">Complete story packages - pay once, keep forever</p>
-          </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {oneTimePlans.map((plan, index) => (
-              <Card 
-                key={index} 
-                className={`relative ${plan.popular ? 'border-primary border-2 shadow-lg' : ''}`}
-              >
-                {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
-                    Most Popular
-                  </Badge>
-                )}
-                
-                <CardHeader className="text-center">
-                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <div className="mt-4">
-                    <span className="text-4xl font-bold text-foreground">${plan.price}</span>
-                    <span className="text-muted-foreground"> one-time</span>
-                  </div>
-                  <p className="text-muted-foreground mt-2">{plan.description}</p>
-                </CardHeader>
-                
-                <CardContent>
-                  <ul className="space-y-3 mb-6">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center">
-                        <Check className="w-4 h-4 text-success mr-3 flex-shrink-0" />
-                        <span className="text-sm text-foreground">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  
-                  <Button 
-                    className="w-full" 
-                    variant={plan.popular ? "default" : "outline"}
-                    onClick={() => handleSelectPlan(plan.planId)}
-                    data-action="select-plan"
-                    data-plan-id={plan.planId}
-                  >
-                    {plan.cta} <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+            {plans.map((plan) => {
+              const Icon = plan.icon;
+              return (
+                <Card
+                  key={plan.planId}
+                  className={`relative ${plan.popular ? "border-primary border-2 shadow-lg scale-105" : ""}`}
+                >
+                  {plan.popular && (
+                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
+                      Most Popular
+                    </Badge>
+                  )}
 
-      {/* Subscription Plans */}
-      <section className="pb-20 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-foreground mb-4">Monthly Subscriptions</h2>
-            <p className="text-lg text-muted-foreground">Ongoing story capture for active families</p>
-            <Badge variant="secondary" className="mt-4">Coming Soon</Badge>
+                  <CardHeader className="text-center">
+                    <div className="flex justify-center mb-3">
+                      <Icon className="w-8 h-8 text-primary" />
+                    </div>
+                    <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                    <div className="mt-4">
+                      <span className="text-4xl font-bold text-foreground">
+                        {plan.priceLabel}
+                      </span>
+                      {plan.price > 0 && (
+                        <span className="text-muted-foreground"> one-time</span>
+                      )}
+                    </div>
+                    <p className="text-muted-foreground mt-2">{plan.description}</p>
+                  </CardHeader>
+
+                  <CardContent>
+                    <ul className="space-y-3 mb-6">
+                      {plan.features.map((feature, i) => (
+                        <li key={i} className="flex items-center">
+                          <Check className="w-4 h-4 text-primary mr-3 flex-shrink-0" />
+                          <span className="text-sm text-foreground">{feature}</span>
+                        </li>
+                      ))}
+                      {plan.notIncluded.map((feature, i) => (
+                        <li key={`no-${i}`} className="flex items-center opacity-40">
+                          <span className="w-4 h-4 mr-3 flex-shrink-0 text-center text-xs">—</span>
+                          <span className="text-sm text-muted-foreground line-through">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <Button
+                      className="w-full"
+                      variant={plan.popular ? "default" : "outline"}
+                      onClick={() => handleSelectPlan(plan.planId)}
+                      data-action="select-plan"
+                      data-plan-id={plan.planId}
+                    >
+                      {plan.cta} <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {subscriptionPlans.map((plan, index) => (
-              <Card 
-                key={index} 
-                className={`relative opacity-75 ${plan.popular ? 'border-primary border-2 shadow-lg' : ''}`}
-              >
-                {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
-                    Most Popular
-                  </Badge>
-                )}
-                
-                <CardHeader className="text-center">
-                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <div className="mt-4">
-                    <span className="text-4xl font-bold text-foreground">${plan.price}</span>
-                    <span className="text-muted-foreground">/{plan.period}</span>
-                  </div>
-                  <p className="text-muted-foreground mt-2">{plan.description}</p>
-                </CardHeader>
-                
-                <CardContent>
-                  <ul className="space-y-3 mb-6">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center">
-                        <Check className="w-4 h-4 text-muted-foreground mr-3 flex-shrink-0" />
-                        <span className="text-sm text-muted-foreground">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  
-                  <Button 
-                    className="w-full" 
-                    variant="outline"
-                    disabled
-                  >
-                    {plan.cta}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          
+
           {/* Small Print */}
           <div className="max-w-4xl mx-auto mt-12 text-center">
             <div className="text-sm text-muted-foreground space-y-2">
               <p>
-                <strong>Usage Caps:</strong> Interview minutes reset monthly for subscriptions. 
-                One-time plans include specified limits with no recurring charges.
+                <strong>One-Time Payments:</strong> Digital and Legacy are per-project purchases. No recurring charges.
               </p>
               <p>
-                <strong>Payment Processing:</strong> All payments are securely processed by Stripe. 
-                A small processing fee (2.9% + $0.30) applies to all transactions.
-              </p>
-              <p>
-                <strong>Exports:</strong> PDF exports are unlimited on all plans. 
-                Premium plans include additional formats and printing options.
+                <strong>Payment Processing:</strong> All payments are securely processed by Stripe.
               </p>
             </div>
           </div>
@@ -298,11 +225,8 @@ export default function Pricing() {
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Frequently Asked Questions
             </h2>
-            <p className="text-lg text-muted-foreground">
-              Everything you need to know about our pricing and plans.
-            </p>
           </div>
-          
+
           <div className="max-w-3xl mx-auto">
             <div className="space-y-6">
               {faqs.map((faq, index) => (
@@ -323,14 +247,14 @@ export default function Pricing() {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Ready to Start Your Story Collection?
+              Ready to Preserve Your Family Stories?
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Join thousands of families preserving their precious memories with OSSTE.
+              Start for free, upgrade when you're ready.
             </p>
             <Button size="lg" asChild>
               <Link to="/signup">
-                Start Free Trial <ArrowRight className="w-4 h-4 ml-2" />
+                Start Free <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </Button>
           </div>

@@ -573,25 +573,55 @@ export type Database = {
       }
       story_groups: {
         Row: {
+          archive_at: string | null
           created_at: string | null
           description: string | null
           id: string
+          minutes_limit: number | null
+          minutes_used: number
+          pdf_enabled: boolean
+          photo_uploads_enabled: boolean
+          plan: string
+          printing_enabled: boolean
           title: string
           user_id: string
+          watermark: boolean
+          words_limit: number | null
+          words_used: number
         }
         Insert: {
+          archive_at?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
+          minutes_limit?: number | null
+          minutes_used?: number
+          pdf_enabled?: boolean
+          photo_uploads_enabled?: boolean
+          plan?: string
+          printing_enabled?: boolean
           title: string
           user_id: string
+          watermark?: boolean
+          words_limit?: number | null
+          words_used?: number
         }
         Update: {
+          archive_at?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
+          minutes_limit?: number | null
+          minutes_used?: number
+          pdf_enabled?: boolean
+          photo_uploads_enabled?: boolean
+          plan?: string
+          printing_enabled?: boolean
           title?: string
           user_id?: string
+          watermark?: boolean
+          words_limit?: number | null
+          words_used?: number
         }
         Relationships: []
       }
