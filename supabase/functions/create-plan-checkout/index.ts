@@ -111,7 +111,8 @@ serve(async (req) => {
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     const customerId = customers.data.length > 0 ? customers.data[0].id : undefined;
 
-    const siteUrl = Deno.env.get("SITE_URL") || req.headers.get("origin") || "https://example.com";
+    const rawSiteUrl = Deno.env.get("SITE_URL") || req.headers.get("origin") || "https://example.com";
+    const siteUrl = rawSiteUrl.replace(/\/+$/, ""); // strip trailing slashes
 
     const metadata: Record<string, string> = {
       price_id: planConfig.priceId,
@@ -122,12 +123,13 @@ serve(async (req) => {
       metadata.story_group_id = story_group_id;
     }
 
-    const successParams = new URLSearchParams({ plan });
-    if (story_group_id) successParams.set("story_group_id", story_group_id);
-    successParams.set("session_id", "{CHECKOUT_SESSION_ID}");
+    // Build URLs manually to avoid URLSearchParams encoding {CHECKOUT_SESSION_ID}
+    const successParts = [`plan=${encodeURIComponent(plan)}`];
+    if (story_group_id) successParts.push(`story_group_id=${encodeURIComponent(story_group_id)}`);
+    successParts.push("session_id={CHECKOUT_SESSION_ID}");
 
-    const cancelParams = new URLSearchParams({ plan });
-    if (story_group_id) cancelParams.set("story_group_id", story_group_id);
+    const cancelParts = [`plan=${encodeURIComponent(plan)}`];
+    if (story_group_id) cancelParts.push(`story_group_id=${encodeURIComponent(story_group_id)}`);
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -139,8 +141,8 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      success_url: `${siteUrl}/checkout/success?${successParams.toString()}`,
-      cancel_url: `${siteUrl}/checkout/cancel?${cancelParams.toString()}`,
+      success_url: `${siteUrl}/checkout/success?${successParts.join("&")}`,
+      cancel_url: `${siteUrl}/checkout/cancel?${cancelParts.join("&")}`,
       metadata,
     });
 
