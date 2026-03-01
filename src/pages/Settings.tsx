@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, CreditCard, Shield, LogOut, Download, Trash2, Sparkles, Star, Crown, ArrowRight, Settings2 } from "lucide-react";
+import { User, CreditCard, Shield, LogOut, Download, Trash2, Sparkles, Star, Crown, ArrowRight, Settings2, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useEntitlements } from "@/hooks/useEntitlements";
+import { useBilling } from "@/hooks/useBilling";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -44,6 +45,7 @@ export default function Settings() {
   const { user, signOut } = useAuth();
   const { profile, loading, updateProfile } = useProfile();
   const { accountUsage, loading: entLoading } = useEntitlements();
+  const { billing, isManual, isStripe, loading: billingLoading } = useBilling();
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -72,7 +74,14 @@ export default function Settings() {
       if (data?.error === "no_stripe_customer") {
         toast({
           title: "No billing record found",
-          description: "Your plan was activated manually. There is no Stripe billing record to manage.",
+          description: "No Stripe payment history was found for your account.",
+        });
+        return;
+      }
+      if (data?.error === "manual_billing") {
+        toast({
+          title: "Manually activated plan",
+          description: "Your plan was activated manually. There is no Stripe billing to manage.",
         });
         return;
       }
@@ -119,6 +128,8 @@ export default function Settings() {
   const usagePercent = accountUsage
     ? Math.min(100, Math.round((accountUsage.minutesUsed / accountUsage.minutesLimit) * 100))
     : 0;
+
+  const isPaidPlan = planKey !== "free";
 
   return (
     <div className="min-h-screen bg-background">
@@ -184,7 +195,7 @@ export default function Settings() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {entLoading ? (
+                {entLoading || billingLoading ? (
                   <div className="animate-pulse space-y-4">
                     <div className="h-6 bg-muted rounded w-1/3" />
                     <div className="h-4 bg-muted rounded w-full" />
@@ -205,9 +216,17 @@ export default function Settings() {
                             : "One-time purchase — no recurring charges"}
                         </p>
                       </div>
-                      <Badge variant={planKey === "free" ? "secondary" : "default"} className="ml-auto">
-                        {PLAN_LABELS[planKey]}
-                      </Badge>
+                      <div className="ml-auto flex items-center gap-2">
+                        <Badge variant={planKey === "free" ? "secondary" : "default"}>
+                          {PLAN_LABELS[planKey]}
+                        </Badge>
+                        {isManual && isPaidPlan && (
+                          <Badge variant="outline" className="gap-1">
+                            <BadgeCheck className="w-3 h-3" />
+                            Beta Access
+                          </Badge>
+                        )}
+                      </div>
                     </div>
 
                     <Separator />
@@ -234,7 +253,7 @@ export default function Settings() {
                       </p>
                     </div>
 
-                    {/* Upgrade CTA for free users, Manage for paid */}
+                    {/* Actions based on plan + billing provider */}
                     {planKey === "free" ? (
                       <>
                         <Separator />
@@ -251,6 +270,18 @@ export default function Settings() {
                           </Button>
                         </div>
                       </>
+                    ) : isManual ? (
+                      <>
+                        <Separator />
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                          <div>
+                            <p className="font-medium text-foreground">Beta Access — Manually Activated</p>
+                            <p className="text-sm text-muted-foreground">
+                              Your plan was activated by an administrator. No billing record to manage.
+                            </p>
+                          </div>
+                        </div>
+                      </>
                     ) : (
                       <>
                         <Separator />
@@ -258,12 +289,12 @@ export default function Settings() {
                           <div>
                             <p className="font-medium text-foreground">Manage Billing</p>
                             <p className="text-sm text-muted-foreground">
-                              View payment history, update payment method, or manage your plan.
+                              View payment history or update payment method.
                             </p>
                           </div>
                           <Button variant="outline" onClick={handleManageSubscription} className="shrink-0">
                             <Settings2 className="w-4 h-4 mr-2" />
-                            Manage Subscription
+                            Manage Billing
                           </Button>
                         </div>
                       </>

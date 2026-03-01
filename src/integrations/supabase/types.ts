@@ -814,6 +814,42 @@ export type Database = {
           },
         ]
       }
+      user_billing: {
+        Row: {
+          activated_at: string | null
+          billing_provider: string
+          created_at: string
+          id: string
+          plan_type: string
+          stripe_customer_id: string | null
+          subscription_status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string | null
+          billing_provider?: string
+          created_at?: string
+          id?: string
+          plan_type?: string
+          stripe_customer_id?: string | null
+          subscription_status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activated_at?: string | null
+          billing_provider?: string
+          created_at?: string
+          id?: string
+          plan_type?: string
+          stripe_customer_id?: string | null
+          subscription_status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
