@@ -1,6 +1,6 @@
-import { useEffect } from "react";
-import { Check, ArrowRight } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
+import { Check, ArrowRight, Loader2 } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,34 +8,96 @@ import { Header } from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { sendPaymentSuccessEmail } from "@/lib/emails";
+import { supabase } from "@/integrations/supabase/client";
+
+const POLL_INTERVAL = 3000;
+const MAX_POLLS = 20; // 60 seconds max
 
 export default function CheckoutSuccess() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const [planReady, setPlanReady] = useState(false);
+  const [pollCount, setPollCount] = useState(0);
 
+  const expectedPlan = searchParams.get("plan");
+
+  // Poll user_billing to confirm webhook has processed
+  const checkBillingReady = useCallback(async () => {
+    if (!user) return false;
+    try {
+      const { data } = await (supabase as any)
+        .from("user_billing")
+        .select("plan")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (data && data.plan && data.plan !== "free") {
+        // If we know the expected plan, match it; otherwise any paid plan is fine
+        if (!expectedPlan || data.plan === expectedPlan) {
+          return true;
+        }
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }, [user, expectedPlan]);
+
+  // Send confirmation email once
   useEffect(() => {
     if (user?.email) {
       sendPaymentSuccessEmail({
         email: user.email,
         firstName: user.user_metadata?.name || undefined,
         amount: 0,
-        currency: 'usd',
-        planName: 'OSSTE Plan',
+        currency: "usd",
+        planName: expectedPlan || "OSSTE Plan",
       });
     }
 
     toast({
       title: "Payment successful!",
-      description: "Your plan is now active. Start creating beautiful family stories.",
+      description: "Activating your plan — this may take a moment...",
     });
+  }, [user, expectedPlan, toast]);
 
-    const timer = setTimeout(() => {
+  // Poll for webhook completion
+  useEffect(() => {
+    if (planReady) return;
+
+    const interval = setInterval(async () => {
+      const ready = await checkBillingReady();
+      setPollCount((c) => c + 1);
+
+      if (ready) {
+        setPlanReady(true);
+        clearInterval(interval);
+        toast({
+          title: "Plan activated!",
+          description: "Your plan is now active. Redirecting to dashboard...",
+        });
+        // Short delay so user sees the confirmation
+        setTimeout(() => navigate("/dashboard"), 1500);
+      }
+    }, POLL_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [planReady, checkBillingReady, navigate, toast]);
+
+  // Timeout fallback: redirect anyway after max polls
+  useEffect(() => {
+    if (pollCount >= MAX_POLLS && !planReady) {
+      toast({
+        title: "Taking longer than expected",
+        description: "Redirecting to dashboard. Your plan should be active shortly.",
+      });
       navigate("/dashboard");
-    }, 5000);
-
-    return () => clearTimeout(timer);
-  }, [navigate, toast, user]);
+    }
+  }, [pollCount, planReady, navigate, toast]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -51,21 +113,32 @@ export default function CheckoutSuccess() {
             Payment Successful!
           </h1>
           <p className="text-lg text-muted-foreground mb-8">
-            Thank you for your purchase! Your plan is now active and you can start creating beautiful family stories.
+            Thank you for your purchase! Your plan is being activated.
           </p>
 
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="flex items-center justify-center gap-2">
-                <Badge className="bg-green-600">Active</Badge>
+                <Badge className="bg-green-600">
+                  {planReady ? "Active" : "Processing"}
+                </Badge>
                 Purchase Confirmed
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-center space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  Your plan has been activated and you now have access to all included features.
-                </p>
+                {!planReady ? (
+                  <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <p className="text-sm">
+                      Activating your plan — this usually takes a few seconds...
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Your plan is active! Redirecting to dashboard...
+                  </p>
+                )}
                 <p className="text-sm text-muted-foreground">
                   A confirmation email has been sent to your registered email address.
                 </p>
@@ -112,7 +185,9 @@ export default function CheckoutSuccess() {
               </Link>
             </Button>
             <p className="text-sm text-muted-foreground">
-              Redirecting automatically in 5 seconds...
+              {planReady
+                ? "Redirecting automatically..."
+                : "Will redirect once your plan is activated..."}
             </p>
           </div>
 
