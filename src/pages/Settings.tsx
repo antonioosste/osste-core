@@ -69,16 +69,21 @@ export default function Settings() {
     try {
       const { data, error } = await supabase.functions.invoke('customer-portal');
       if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
       if (data?.url) {
         window.location.href = data.url;
       } else {
         throw new Error('No portal URL returned');
       }
     } catch (error: any) {
+      const msg = error?.message || "";
+      const isNoCustomer = msg.toLowerCase().includes("no stripe customer");
       toast({
-        title: "Unable to open billing portal",
-        description: error?.message || "Please try again later.",
-        variant: "destructive",
+        title: isNoCustomer ? "No billing record found" : "Unable to open billing portal",
+        description: isNoCustomer
+          ? "Your plan was activated manually. There is no Stripe billing record to manage."
+          : msg || "Please try again later.",
+        variant: isNoCustomer ? "default" : "destructive",
       });
     }
   };
