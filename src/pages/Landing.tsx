@@ -23,9 +23,9 @@ export default function Landing() {
         <section
           className="relative overflow-hidden bg-cover bg-center"
           style={{
-            backgroundImage: "url('/images/backgrounds/library-hero.jpg')",
-          }}
-        >
+            backgroundImage: "url('/images/backgrounds/library-hero.jpg')"
+          }}>
+
           <div className="overlay-warm" />
 
           <div className="relative z-10 py-24 sm:py-32 md:py-40">
@@ -35,15 +35,15 @@ export default function Landing() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center mt-10"
-            >
+              className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
+
               <Button size="lg" className="bg-primary hover:bg-antique-hover text-primary-foreground px-8 py-6 text-base" asChild>
                 <Link to="/session">
                   Start Your Story <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
               <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10 px-8 py-6 text-base" asChild>
-                <Link to="/pricing">See Pricing</Link>
+                <Link to="/pricing" className="bg-primary">See Pricing</Link>
               </Button>
             </motion.div>
           </div>
@@ -69,6 +69,6 @@ export default function Landing() {
 
         <Footer />
       </div>
-    </ReactLenis>
-  );
+    </ReactLenis>);
+
 }
