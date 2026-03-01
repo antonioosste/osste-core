@@ -23,6 +23,36 @@ const PLAN_DEFAULTS: Record<string, { minutes_limit: number; words_limit: number
   },
 };
 
+/**
+ * Upsert the user_billing row to track Stripe customer + plan state.
+ */
+async function upsertBilling(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  userId: string,
+  stripeCustomerId: string,
+  plan: string,
+) {
+  const { error } = await supabaseAdmin
+    .from("user_billing")
+    .upsert(
+      {
+        user_id: userId,
+        billing_provider: "stripe",
+        stripe_customer_id: stripeCustomerId,
+        plan_type: plan,
+        subscription_status: "active",
+        activated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" },
+    );
+
+  if (error) {
+    log("Failed to upsert user_billing", { error: error.message });
+  } else {
+    log("user_billing upserted", { userId, plan, stripeCustomerId });
+  }
+}
+
 serve(async (req) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
@@ -62,6 +92,7 @@ serve(async (req) => {
       const storyGroupId = session.metadata?.story_group_id;
       const plan = session.metadata?.plan; // 'digital' or 'legacy'
       const userId = session.metadata?.user_id;
+      const stripeCustomerId = typeof session.customer === "string" ? session.customer : session.customer?.id;
 
       if (!plan || !PLAN_DEFAULTS[plan]) {
         log("No valid plan in metadata, skipping (may be print order)", { plan });
@@ -73,6 +104,11 @@ serve(async (req) => {
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       );
+
+      // ── Update user_billing with Stripe customer info ──
+      if (userId && stripeCustomerId) {
+        await upsertBilling(supabaseAdmin, userId, stripeCustomerId, plan);
+      }
 
       if (storyGroupId) {
         // Upgrade a specific story group
@@ -100,7 +136,6 @@ serve(async (req) => {
         log("Story group upgraded successfully", { storyGroupId, plan });
       } else if (userId) {
         // No story_group_id — account-level purchase from Pricing page
-        // Upgrade ALL free story groups for this user to the purchased plan
         log("Account-level plan purchase", { userId, plan });
 
         const { data: freeGroups, error: fetchErr } = await supabaseAdmin
