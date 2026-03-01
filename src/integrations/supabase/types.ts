@@ -814,6 +814,57 @@ export type Database = {
           },
         ]
       }
+      user_billing: {
+        Row: {
+          amount_paid: number | null
+          created_at: string | null
+          currency: string | null
+          id: string
+          is_manual: boolean
+          metadata: Json | null
+          payment_status: string | null
+          plan: string
+          provider: string
+          stripe_checkout_session_id: string | null
+          stripe_customer_id: string | null
+          stripe_payment_intent_id: string | null
+          stripe_price_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_paid?: number | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          is_manual?: boolean
+          metadata?: Json | null
+          payment_status?: string | null
+          plan: string
+          provider?: string
+          stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_price_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          is_manual?: boolean
+          metadata?: Json | null
+          payment_status?: string | null
+          plan?: string
+          provider?: string
+          stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_price_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
