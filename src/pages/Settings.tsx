@@ -71,6 +71,13 @@ export default function Settings() {
     try {
       const { data, error } = await supabase.functions.invoke('customer-portal');
       if (error) throw new Error(error.message);
+      if (data?.error === "no_billing_record") {
+        toast({
+          title: "No billing record",
+          description: "You're on the free plan. Upgrade to access billing management.",
+        });
+        return;
+      }
       if (data?.error === "no_stripe_customer") {
         toast({
           title: "No billing record found",
