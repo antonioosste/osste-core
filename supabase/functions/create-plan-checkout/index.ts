@@ -42,6 +42,27 @@ serve(async (req) => {
 
     const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
+    // ── PART 2: Prevent duplicate / downgrade purchases ──
+    const { data: effectivePlanData, error: rpcErr } = await supabaseAdmin.rpc("get_user_account_plan", { p_user_id: user.id });
+    const effectivePlan = rpcErr ? "free" : (effectivePlanData || "free");
+    log("Effective plan from RPC", { effectivePlan, requestedPlan: plan });
+
+    if (effectivePlan === "legacy") {
+      // Legacy is highest tier — block everything
+      return new Response(
+        JSON.stringify({ error: "already_on_highest_plan", message: "You already have the Legacy plan, which includes everything." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (effectivePlan === "digital" && plan === "digital") {
+      return new Response(
+        JSON.stringify({ error: "already_on_plan", message: "You already have the Digital plan." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    // effectivePlan === "digital" && plan === "legacy" → allowed (upgrade)
+    // effectivePlan === "free" → allowed for any plan
+
     // Verify story_group ownership
     if (story_group_id) {
       const { data: sg, error: sgErr } = await supabaseAdmin.from("story_groups").select("id, user_id, plan").eq("id", story_group_id).single();
