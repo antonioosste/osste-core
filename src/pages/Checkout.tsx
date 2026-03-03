@@ -129,11 +129,24 @@ export default function Checkout() {
         });
 
         if (error) {
-          throw new Error(error.message || 'Failed to create checkout session');
+          // Parse structured error from edge function 400 responses
+          let parsed: any = null;
+          try { parsed = typeof error === 'object' ? error : JSON.parse(String(error)); } catch {}
+          const errorCode = parsed?.error || data?.error;
+          const msg = parsed?.message || data?.message || error.message || 'Failed to create checkout session';
+          const err = new Error(msg) as any;
+          err.errorCode = errorCode || data?.error;
+          throw err;
+        }
+
+        if (data?.error) {
+          // Edge function returned 400 with JSON body (some SDK versions put it in data)
+          const err = new Error(data.message || 'Failed to create checkout session') as any;
+          err.errorCode = data.error;
+          throw err;
         }
 
         if (data?.url) {
-          // Redirect to Stripe Checkout
           window.location.href = data.url;
         } else {
           throw new Error('No checkout URL returned from Stripe');
@@ -141,11 +154,19 @@ export default function Checkout() {
       }
     } catch (error: any) {
       console.error("Checkout error:", error);
-      toast({
-        title: "Checkout Error",
-        description: error?.message || "Unable to proceed to payment. Please try again.",
-        variant: "destructive"
-      });
+      const errorCode = error?.errorCode;
+      let title = "Checkout Error";
+      let description = error?.message || "Unable to proceed to payment. Please try again.";
+
+      if (errorCode === "already_on_highest_plan") {
+        title = "Plan Already Active";
+        description = "You are already on the highest available plan.";
+      } else if (errorCode === "already_on_plan") {
+        title = "Plan Already Active";
+        description = "You are already on this plan.";
+      }
+
+      toast({ title, description, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
