@@ -272,7 +272,7 @@ export default function Settings() {
                             </p>
                           </div>
                           <Button onClick={() => navigate("/pricing")} className="shrink-0">
-                            View Plans
+                            Upgrade Plan
                             <ArrowRight className="w-4 h-4 ml-2" />
                           </Button>
                         </div>
@@ -288,6 +288,29 @@ export default function Settings() {
                             </p>
                           </div>
                         </div>
+                        {planKey === "digital" && (
+                          <>
+                            <Separator />
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                              <div>
+                                <p className="font-medium text-foreground">Upgrade Available</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Get the complete heirloom experience with printing, custom covers, and more.
+                                </p>
+                              </div>
+                              <Button onClick={() => navigate("/checkout?plan=legacy&flow=self")} className="shrink-0">
+                                Upgrade to Legacy
+                                <ArrowRight className="w-4 h-4 ml-2" />
+                              </Button>
+                            </div>
+                          </>
+                        )}
+                        {planKey === "legacy" && (
+                          <div className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
+                            <Crown className="w-4 h-4 text-primary" />
+                            You are on the highest plan.
+                          </div>
+                        )}
                       </>
                     ) : (
                       <>
@@ -304,6 +327,29 @@ export default function Settings() {
                             Manage Billing
                           </Button>
                         </div>
+                        {planKey === "digital" && (
+                          <>
+                            <Separator />
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                              <div>
+                                <p className="font-medium text-foreground">Upgrade Available</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Get the complete heirloom experience with printing, custom covers, and more.
+                                </p>
+                              </div>
+                              <Button onClick={() => navigate("/checkout?plan=legacy&flow=self")} className="shrink-0">
+                                Upgrade to Legacy
+                                <ArrowRight className="w-4 h-4 ml-2" />
+                              </Button>
+                            </div>
+                          </>
+                        )}
+                        {planKey === "legacy" && (
+                          <div className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
+                            <Crown className="w-4 h-4 text-primary" />
+                            You are on the highest plan.
+                          </div>
+                        )}
                       </>
                     )}
                   </>
