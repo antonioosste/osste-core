@@ -6,6 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { useAuth } from "@/hooks/useAuth";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const plans = [
   {
@@ -48,7 +55,7 @@ const plans = [
     cta: "Buy Now",
     planId: "digital",
     popular: true,
-    stripePriceId: "price_digital", // TODO: Replace with actual Stripe price ID
+    stripePriceId: "price_digital",
   },
   {
     name: "Legacy",
@@ -69,7 +76,7 @@ const plans = [
     cta: "Buy Now",
     planId: "legacy",
     popular: false,
-    stripePriceId: "price_legacy", // TODO: Replace with actual Stripe price ID
+    stripePriceId: "price_legacy",
   },
 ];
 
@@ -96,26 +103,48 @@ const faqs = [
   },
 ];
 
+const PLAN_PRIORITY: Record<string, number> = { free: 0, digital: 1, legacy: 2 };
+
+function getPlanButtonState(planId: string, effectivePlan: string) {
+  const ePriority = PLAN_PRIORITY[effectivePlan] ?? 0;
+  const pPriority = PLAN_PRIORITY[planId] ?? 0;
+
+  if (planId === "free") {
+    if (effectivePlan === "free") return { disabled: false, label: "Get Started", tooltip: "" };
+    return { disabled: true, label: "Current Baseline", tooltip: "" };
+  }
+
+  if (planId === effectivePlan) {
+    return { disabled: true, label: "Current Plan", tooltip: "You are already on this plan." };
+  }
+
+  if (pPriority < ePriority) {
+    return { disabled: true, label: "Included in " + (effectivePlan === "legacy" ? "Legacy" : "Your Plan"), tooltip: "You are already on the highest plan." };
+  }
+
+  if (pPriority > ePriority) {
+    return { disabled: false, label: effectivePlan === "free" ? "Buy Now" : "Upgrade to " + (planId === "legacy" ? "Legacy" : "Digital"), tooltip: "" };
+  }
+
+  return { disabled: false, label: "Buy Now", tooltip: "" };
+}
+
 export default function Pricing() {
   const { user } = useAuth();
+  const { accountUsage, loading: entLoading } = useEntitlements();
   const navigate = useNavigate();
+
+  const effectivePlan = accountUsage?.accountPlan || "free";
 
   const handleSelectPlan = (planId: string) => {
     if (planId === "free") {
-      if (!user) {
-        navigate("/signup");
-      } else {
-        navigate("/dashboard");
-      }
+      navigate(user ? "/dashboard" : "/signup");
       return;
     }
-
     if (!user) {
       navigate("/login");
       return;
     }
-
-    // For paid plans, navigate to checkout with plan info
     navigate(`/checkout?plan=${planId}&flow=self`);
   };
 
@@ -140,66 +169,113 @@ export default function Pricing() {
       {/* Plan Cards */}
       <section className="pb-20">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {plans.map((plan) => {
-              const Icon = plan.icon;
-              return (
-                <Card
-                  key={plan.planId}
-                  className={`relative ${plan.popular ? "border-primary border-2 shadow-lg scale-105" : ""}`}
-                >
-                  {plan.popular && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
-                      Most Popular
-                    </Badge>
-                  )}
+          <TooltipProvider>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              {plans.map((plan) => {
+                const Icon = plan.icon;
+                const isActivePlan = user && plan.planId === effectivePlan && plan.planId !== "free";
+                const isHighestTier = user && effectivePlan === "legacy" && plan.planId === "legacy";
+                const btnState = user ? getPlanButtonState(plan.planId, effectivePlan) : { disabled: false, label: plan.cta, tooltip: "" };
 
-                  <CardHeader className="text-center">
-                    <div className="flex justify-center mb-3">
-                      <Icon className="w-8 h-8 text-primary" />
-                    </div>
-                    <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                    <div className="mt-4">
-                      <span className="text-4xl font-bold text-foreground">
-                        {plan.priceLabel}
-                      </span>
-                      {plan.price > 0 && (
-                        <span className="text-muted-foreground"> one-time</span>
+                return (
+                  <Card
+                    key={plan.planId}
+                    className={`relative transition-all ${
+                      isActivePlan
+                        ? "border-primary border-2 shadow-lg ring-1 ring-primary/20"
+                        : plan.popular && !user
+                          ? "border-primary border-2 shadow-lg scale-105"
+                          : ""
+                    }`}
+                  >
+                    {/* Badges */}
+                    {isActivePlan && (
+                      <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
+                        {isHighestTier ? "Highest Tier" : "Active"}
+                      </Badge>
+                    )}
+                    {!isActivePlan && plan.popular && !user && (
+                      <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
+                        Most Popular
+                      </Badge>
+                    )}
+
+                    <CardHeader className="text-center">
+                      <div className="flex justify-center mb-3">
+                        <Icon className="w-8 h-8 text-primary" />
+                      </div>
+                      <CardTitle className="text-2xl flex items-center justify-center gap-2">
+                        {plan.name}
+                        {isActivePlan && (
+                          <Badge variant="outline" className="text-xs font-normal">
+                            Current Plan
+                          </Badge>
+                        )}
+                      </CardTitle>
+                      <div className="mt-4">
+                        <span className="text-4xl font-bold text-foreground">
+                          {plan.priceLabel}
+                        </span>
+                        {plan.price > 0 && (
+                          <span className="text-muted-foreground"> one-time</span>
+                        )}
+                      </div>
+                      <p className="text-muted-foreground mt-2">{plan.description}</p>
+                    </CardHeader>
+
+                    <CardContent>
+                      <ul className="space-y-3 mb-6">
+                        {plan.features.map((feature, i) => (
+                          <li key={i} className="flex items-center">
+                            <Check className="w-4 h-4 text-primary mr-3 flex-shrink-0" />
+                            <span className="text-sm text-foreground">{feature}</span>
+                          </li>
+                        ))}
+                        {plan.notIncluded.map((feature, i) => (
+                          <li key={`no-${i}`} className="flex items-center opacity-40">
+                            <span className="w-4 h-4 mr-3 flex-shrink-0 text-center text-xs">—</span>
+                            <span className="text-sm text-muted-foreground line-through">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      {btnState.tooltip ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="w-full block">
+                              <Button
+                                className="w-full opacity-50 cursor-not-allowed"
+                                variant={isActivePlan ? "default" : "outline"}
+                                disabled
+                                data-action="select-plan"
+                                data-plan-id={plan.planId}
+                              >
+                                {btnState.label}
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{btnState.tooltip}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <Button
+                          className="w-full"
+                          variant={plan.popular || isActivePlan ? "default" : "outline"}
+                          disabled={btnState.disabled || entLoading}
+                          onClick={() => !btnState.disabled && handleSelectPlan(plan.planId)}
+                          data-action="select-plan"
+                          data-plan-id={plan.planId}
+                        >
+                          {btnState.label} {!btnState.disabled && <ArrowRight className="w-4 h-4 ml-2" />}
+                        </Button>
                       )}
-                    </div>
-                    <p className="text-muted-foreground mt-2">{plan.description}</p>
-                  </CardHeader>
-
-                  <CardContent>
-                    <ul className="space-y-3 mb-6">
-                      {plan.features.map((feature, i) => (
-                        <li key={i} className="flex items-center">
-                          <Check className="w-4 h-4 text-primary mr-3 flex-shrink-0" />
-                          <span className="text-sm text-foreground">{feature}</span>
-                        </li>
-                      ))}
-                      {plan.notIncluded.map((feature, i) => (
-                        <li key={`no-${i}`} className="flex items-center opacity-40">
-                          <span className="w-4 h-4 mr-3 flex-shrink-0 text-center text-xs">—</span>
-                          <span className="text-sm text-muted-foreground line-through">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <Button
-                      className="w-full"
-                      variant={plan.popular ? "default" : "outline"}
-                      onClick={() => handleSelectPlan(plan.planId)}
-                      data-action="select-plan"
-                      data-plan-id={plan.planId}
-                    >
-                      {plan.cta} <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </TooltipProvider>
 
           {/* Small Print */}
           <div className="max-w-4xl mx-auto mt-12 text-center">
@@ -223,7 +299,6 @@ export default function Pricing() {
               Frequently Asked Questions
             </h2>
           </div>
-
           <div className="max-w-3xl mx-auto">
             <div className="space-y-6">
               {faqs.map((faq, index) => (
