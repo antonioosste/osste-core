@@ -25,6 +25,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const { profile } = useProfile();
+  const { isAdmin } = useAdminRole();
   
   const collapsed = state === "collapsed";
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
