@@ -268,7 +268,7 @@ export default function Settings() {
                           <div>
                             <p className="font-medium text-foreground">Want more recording time?</p>
                             <p className="text-sm text-muted-foreground">
-                              Upgrade to Digital (60 min) or Legacy (120 min) to continue capturing memories.
+                              Upgrade to Digital (60 min, PDF, photo uploads) or Legacy (120 min, printed hardcover) to preserve your memories forever.
                             </p>
                           </div>
                           <Button onClick={() => navigate("/pricing")} className="shrink-0">
@@ -295,7 +295,7 @@ export default function Settings() {
                               <div>
                                 <p className="font-medium text-foreground">Upgrade Available</p>
                                 <p className="text-sm text-muted-foreground">
-                                  Get the complete heirloom experience with printing, custom covers, and more.
+                                  Get 120 minutes of recording, a printed hardcover book, professional formatting, and priority AI processing.
                                 </p>
                               </div>
                               <Button onClick={() => navigate("/checkout?plan=legacy&flow=self")} className="shrink-0">
@@ -334,7 +334,7 @@ export default function Settings() {
                               <div>
                                 <p className="font-medium text-foreground">Upgrade Available</p>
                                 <p className="text-sm text-muted-foreground">
-                                  Get the complete heirloom experience with printing, custom covers, and more.
+                                  Get 120 minutes of recording, a printed hardcover book, professional formatting, and priority AI processing.
                                 </p>
                               </div>
                               <Button onClick={() => navigate("/checkout?plan=legacy&flow=self")} className="shrink-0">

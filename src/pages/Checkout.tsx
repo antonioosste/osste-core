@@ -14,10 +14,12 @@ const plans = {
     price: "$39",
     priceLabel: "$39 one-time",
     features: [
-      "60 minutes of recording (account total)",
-      "PDF download",
-      "Advanced rewrite (30,000 words)",
+      "60 minutes of recording",
+      "AI-polished memoir (up to 30,000 words)",
+      "Downloadable PDF book",
+      "Unlimited rewrites",
       "Permanent storage",
+      "Photo uploads",
     ]
   },
   legacy: {
@@ -25,13 +27,13 @@ const plans = {
     price: "$129",
     priceLabel: "$129 one-time",
     features: [
-      "60 minutes of recording (account total)",
-      "Print integration",
-      "1 physical copy included",
+      "120 minutes of recording",
+      "Everything in Digital",
+      "1 printed hardcover book included",
+      "Professional book formatting",
       "Custom cover design",
-      "Photo uploads",
-      "Unlimited rewrites",
-      "Permanent storage",
+      "Print-on-demand reorders anytime",
+      "Priority AI processing",
     ]
   }
 };

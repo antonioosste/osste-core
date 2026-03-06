@@ -19,7 +19,7 @@ export interface AccountUsage {
   accountPlan: string;
   /** Total seconds recorded across ALL books */
   totalRecordedSeconds: number;
-  /** Account-level limit in seconds (Free=1200, Paid=3600) */
+  /** Account-level limit in seconds (Free=1200, Digital=3600, Legacy=7200) */
   recordingLimitSeconds: number;
   /** Minutes used (derived) */
   minutesUsed: number;
