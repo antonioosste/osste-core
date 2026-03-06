@@ -149,6 +149,10 @@ export default function Session() {
         return;
       }
 
+      // If loading an existing session, don't auto-set targetBookId here.
+      // Let the session loader set it from session.story_group_id instead.
+      if (existingSessionId) return;
+
       // Only auto-select/create if user has no books AND came without a bookId
       // If user has books, don't auto-create - they should select one explicitly
       if (storyGroups.length > 0) {
@@ -160,7 +164,7 @@ export default function Session() {
     };
 
     getOrCreateTargetBook();
-  }, [user, storyGroups, storyGroupsLoading, targetBookId, bookIdParam]);
+  }, [user, storyGroups, storyGroupsLoading, targetBookId, bookIdParam, existingSessionId]);
 
   // Start non-guided session automatically
   useEffect(() => {
