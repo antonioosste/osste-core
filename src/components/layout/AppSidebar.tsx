@@ -1,4 +1,4 @@
-import { Library, BookOpen, Settings, HelpCircle, LogOut } from "lucide-react";
+import { Library, BookOpen, Settings, HelpCircle, LogOut, ShieldCheck } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfile } from "@/hooks/useProfile";
+import { useAdminRole } from "@/hooks/useAdminRole";
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -24,6 +25,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const { profile } = useProfile();
+  const { isAdmin } = useAdminRole();
   
   const collapsed = state === "collapsed";
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
@@ -68,6 +70,16 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              {isAdmin && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <Link to="/admin" className={`flex items-center gap-3 px-3 py-2.5 rounded-md ${isActive('/admin') ? 'bg-accent' : ''}`}>
+                      <ShieldCheck className={`h-5 w-5 ${isActive('/admin') ? 'text-primary' : 'text-muted-foreground'}`} />
+                      {!collapsed && <span className={isActive('/admin') ? 'font-semibold text-foreground' : 'text-muted-foreground'}>Admin</span>}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
