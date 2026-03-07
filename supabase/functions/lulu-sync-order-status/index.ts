@@ -84,6 +84,8 @@ serve(async (req) => {
         const trackingUrl = firstItem?.tracking_urls?.[0] || null;
         const carrierName = firstItem?.carrier_name || null;
 
+        const statusChanged = mappedStatus !== order.status;
+
         const updatePayload: Record<string, unknown> = {
           lulu_status: statusName,
           status: mappedStatus,
@@ -92,6 +94,11 @@ serve(async (req) => {
           sync_attempts: (order.sync_attempts ?? 0) + 1,
           last_sync_error: null,
         };
+
+        // Track status transitions
+        if (statusChanged) {
+          updatePayload.last_status_change_at = now;
+        }
 
         if (job.order_id) updatePayload.lulu_order_id = String(job.order_id);
         if (job.costs?.total_cost_incl_tax != null)
@@ -108,7 +115,7 @@ serve(async (req) => {
 
         if (updateErr) throw new Error(`DB update failed: ${updateErr.message}`);
 
-        log("Synced order", { id: order.id, status: mappedStatus, trackingId });
+        log("Synced order", { id: order.id, status: mappedStatus, changed: statusChanged, trackingId });
         updatedCount++;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
