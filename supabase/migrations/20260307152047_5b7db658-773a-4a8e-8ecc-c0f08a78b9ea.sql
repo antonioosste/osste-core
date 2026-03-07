@@ -1,0 +1,1 @@
+ALTER TABLE public.gift_invitations ADD COLUMN IF NOT EXISTS plan text, ADD COLUMN IF NOT EXISTS amount_paid integer;

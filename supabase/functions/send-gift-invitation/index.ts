@@ -60,12 +60,14 @@ serve(async (req) => {
 
     logStep("Gift invitation updated successfully");
 
-    // Send the gift invitation email using Resend
     const recipientDisplayName = recipientName || "there";
     const senderDisplayName = senderName || "Someone special";
 
+    const rawSiteUrl = Deno.env.get("SITE_URL") || "https://osste.com";
+    const siteUrl = rawSiteUrl.replace(/\/+$/, "");
+
     const emailResponse = await resend.emails.send({
-      from: "OSSTE <onboarding@resend.dev>",
+      from: "OSSTE <stories@osste.com>",
       to: [recipientEmail],
       subject: `${senderDisplayName} sent you a gift: Your story awaits!`,
       html: `
@@ -91,7 +93,7 @@ serve(async (req) => {
           </p>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="https://osste.com/redeem?gift=${giftId}" 
+            <a href="${siteUrl}/redeem/${giftId}" 
                style="background-color: #1a1a1a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 500; display: inline-block;">
               Redeem Your Gift
             </a>

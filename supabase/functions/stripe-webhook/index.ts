@@ -33,16 +33,89 @@ serve(async (req) => {
       const plan = session.metadata?.plan;
       const userId = session.metadata?.user_id;
       const storyGroupId = session.metadata?.story_group_id;
+      const metadataType = session.metadata?.type;
       const stripeCustomerId = typeof session.customer === "string" ? session.customer : session.customer?.id;
       const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
 
+      const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+      // ── GIFT PURCHASE FLOW ──
+      if (metadataType === "gift") {
+        const giftPlan = plan || "digital";
+        const recipientEmail = session.metadata?.recipient_email || "";
+        const recipientName = session.metadata?.recipient_name || "";
+        const senderEmail = session.metadata?.sender_email || "";
+        const senderName = session.metadata?.sender_name || "";
+
+        log("Processing gift purchase", { giftPlan, recipientEmail, senderEmail });
+
+        // Idempotent: check if already inserted by stripe_session_id
+        const { data: existing } = await supabaseAdmin
+          .from("gift_invitations")
+          .select("id")
+          .eq("stripe_session_id", session.id)
+          .maybeSingle();
+
+        if (existing) {
+          log("Gift invitation already exists for this session, skipping", { id: existing.id });
+          return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
+        }
+
+        const { data: invitation, error: insertErr } = await supabaseAdmin
+          .from("gift_invitations")
+          .insert({
+            status: "paid",
+            plan: giftPlan,
+            recipient_email: recipientEmail,
+            recipient_name: recipientName || null,
+            sender_email: senderEmail,
+            sender_name: senderName || null,
+            stripe_session_id: session.id,
+            stripe_payment_intent: paymentIntentId || null,
+            amount_paid: session.amount_total,
+          })
+          .select("id")
+          .single();
+
+        if (insertErr) {
+          log("Failed to insert gift invitation", { error: insertErr.message });
+          return new Response(JSON.stringify({ error: "Failed to create gift invitation" }), { status: 500 });
+        }
+
+        log("Gift invitation created", { id: invitation.id });
+
+        // Trigger send-gift-invitation email
+        try {
+          const fnUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-gift-invitation`;
+          const resp = await fetch(fnUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+            },
+            body: JSON.stringify({
+              giftId: invitation.id,
+              recipientEmail,
+              recipientName,
+              senderEmail,
+              senderName,
+            }),
+          });
+          log("Gift invitation email triggered", { status: resp.status });
+        } catch (emailErr) {
+          log("Failed to trigger gift email (non-fatal)", { error: (emailErr as Error).message });
+        }
+
+        return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
+      }
+
+      // ── SELF-PURCHASE FLOW (existing logic preserved) ──
       if (!plan || !PLAN_DEFAULTS[plan]) {
         log("No valid plan in metadata, skipping (may be print order)", { plan });
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       const planConfig = PLAN_DEFAULTS[plan];
-      const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
       // ── Idempotent billing upsert (keyed on stripe_payment_intent_id) ──
       if (userId && paymentIntentId) {

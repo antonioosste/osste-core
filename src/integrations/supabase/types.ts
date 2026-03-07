@@ -111,9 +111,11 @@ export type Database = {
       }
       gift_invitations: {
         Row: {
+          amount_paid: number | null
           created_at: string
           id: string
           invitation_sent_at: string | null
+          plan: string | null
           recipient_email: string
           recipient_name: string | null
           redeemed_at: string | null
@@ -126,9 +128,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          amount_paid?: number | null
           created_at?: string
           id?: string
           invitation_sent_at?: string | null
+          plan?: string | null
           recipient_email: string
           recipient_name?: string | null
           redeemed_at?: string | null
@@ -141,9 +145,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          amount_paid?: number | null
           created_at?: string
           id?: string
           invitation_sent_at?: string | null
+          plan?: string | null
           recipient_email?: string
           recipient_name?: string | null
           redeemed_at?: string | null
