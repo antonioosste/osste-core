@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { logAuditEvent } from "../_shared/audit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,27 +20,23 @@ serve(async (req) => {
   try {
     log("Function started");
 
-    // ── Auth ──
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
+      Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
     );
 
     const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsErr } = await supabaseClient.auth.getClaims(token);
     if (claimsErr || !claimsData?.claims) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -48,29 +45,24 @@ serve(async (req) => {
     if (!userId || !userEmail) throw new Error("User not authenticated or email not available");
     log("User authenticated", { userId, email: userEmail });
 
-    // ── Parse payload ──
     const { orderData } = await req.json();
     log("Order data received", { orderData });
 
     if (!orderData?.story_group_id || !orderData?.format || !orderData?.size) {
       return new Response(JSON.stringify({ error: "Invalid order data: missing required fields" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // ── Calculate price ──
-    const basePrice = orderData.format === "hardcover" ? 4999 : 2999; // cents
+    const basePrice = orderData.format === "hardcover" ? 4999 : 2999;
     const sizeMultiplier = orderData.size === "large" ? 1.5 : orderData.size === "small" ? 0.8 : 1;
     const unitPrice = Math.round(basePrice * sizeMultiplier);
     const quantity = Math.max(1, Math.min(10, orderData.quantity || 1));
     const totalPrice = unitPrice * quantity;
     log("Price calculated", { unitPrice, totalPrice, quantity });
 
-    // ── Insert print_orders row ──
     const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
     const { data: order, error: insertErr } = await supabaseAdmin
@@ -98,68 +90,59 @@ serve(async (req) => {
     if (insertErr || !order) {
       log("Failed to insert print_orders", { error: insertErr?.message });
       return new Response(JSON.stringify({ error: "Failed to create order record" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     log("print_orders row created", { id: order.id });
 
-    // ── Stripe ──
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-      apiVersion: "2025-08-27.basil",
+    // Audit: order created
+    await logAuditEvent(supabaseAdmin, {
+      print_order_id: order.id,
+      actor_type: "user",
+      actor_id: userId,
+      event_type: "order_created",
+      new_values: { status: "checkout_created", format: orderData.format, size: orderData.size, quantity },
     });
 
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
     const customerId = customers.data.length > 0 ? customers.data[0].id : undefined;
-
     const siteUrl = (Deno.env.get("SITE_URL") || req.headers.get("origin") || "").replace(/\/+$/, "");
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : userEmail,
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            unit_amount: unitPrice,
-            product_data: {
-              name: `${orderData.format === "hardcover" ? "Hardcover" : "Paperback"} Book – ${orderData.size} size`,
-              description: `Physical copy of: ${orderData.book_title || "Untitled"}`,
-            },
+      line_items: [{
+        price_data: {
+          currency: "usd",
+          unit_amount: unitPrice,
+          product_data: {
+            name: `${orderData.format === "hardcover" ? "Hardcover" : "Paperback"} Book – ${orderData.size} size`,
+            description: `Physical copy of: ${orderData.book_title || "Untitled"}`,
           },
-          quantity,
         },
-      ],
+        quantity,
+      }],
       mode: "payment",
       success_url: siteUrl + "/print-success?session_id={CHECKOUT_SESSION_ID}",
       cancel_url: siteUrl + "/dashboard",
-      metadata: {
-        type: "print",
-        print_order_id: order.id,
-        user_id: userId,
-        story_group_id: orderData.story_group_id,
-      },
+      metadata: { type: "print", print_order_id: order.id, user_id: userId, story_group_id: orderData.story_group_id },
     });
 
     log("Stripe session created", { sessionId: session.id });
 
-    // ── Save stripe_session_id back to row ──
-    await supabaseAdmin
-      .from("print_orders")
-      .update({ stripe_session_id: session.id })
-      .eq("id", order.id);
+    await supabaseAdmin.from("print_orders").update({ stripe_session_id: session.id }).eq("id", order.id);
 
     return new Response(
       JSON.stringify({ url: session.url, sessionId: session.id, print_order_id: order.id }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log("ERROR", { message });
     return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { getLuluAccessToken, fetchWithRetry } from "../_shared/lulu.ts";
+import { logAuditEvent } from "../_shared/audit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,49 +18,23 @@ serve(async (req) => {
   }
 
   const json = (body: unknown, status = 200) =>
-    new Response(JSON.stringify(body), {
-      status,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   try {
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
-
+    const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const useSandbox = Deno.env.get("LULU_USE_SANDBOX") === "true";
-    const apiBase = useSandbox
-      ? "https://api.sandbox.lulu.com"
-      : "https://api.lulu.com";
+    const apiBase = useSandbox ? "https://api.sandbox.lulu.com" : "https://api.lulu.com";
 
-    const activeStatuses = [
-      "lulu_created",
-      "lulu_unpaid",
-      "lulu_accepted",
-      "lulu_in_production",
-      "paid",
-      "awaiting_pdfs",
-    ];
+    const activeStatuses = ["lulu_created", "lulu_unpaid", "lulu_accepted", "lulu_in_production", "paid", "awaiting_pdfs"];
 
     const { data: orders, error: fetchErr } = await supabaseAdmin
-      .from("print_orders")
-      .select("id, lulu_print_job_id, status, sync_attempts")
-      .not("lulu_print_job_id", "is", null)
-      .in("status", activeStatuses);
+      .from("print_orders").select("id, lulu_print_job_id, status, sync_attempts")
+      .not("lulu_print_job_id", "is", null).in("status", activeStatuses);
 
-    if (fetchErr) {
-      log("Failed to fetch orders", { error: fetchErr.message });
-      return json({ error: fetchErr.message }, 500);
-    }
-
-    if (!orders || orders.length === 0) {
-      log("No active orders to sync");
-      return json({ processed_count: 0, updated_count: 0, error_count: 0, errors: [] });
-    }
+    if (fetchErr) return json({ error: fetchErr.message }, 500);
+    if (!orders || orders.length === 0) return json({ processed_count: 0, updated_count: 0, error_count: 0, errors: [] });
 
     log("Orders to sync", { count: orders.length });
-
     const accessToken = await getLuluAccessToken();
 
     let updatedCount = 0;
@@ -71,77 +46,56 @@ serve(async (req) => {
       try {
         const resp = await fetchWithRetry(
           `${apiBase}/print-jobs/${order.lulu_print_job_id}/`,
-          { headers: { Authorization: `Bearer ${accessToken}` } },
-          log,
+          { headers: { Authorization: `Bearer ${accessToken}` } }, log,
         );
-
         const job = await resp.json();
         const statusName = job.status?.name || "UNKNOWN";
         const mappedStatus = "lulu_" + statusName.toLowerCase();
-
-        const firstItem = job.line_items?.[0];
-        const trackingId = firstItem?.tracking_id || null;
-        const trackingUrl = firstItem?.tracking_urls?.[0] || null;
-        const carrierName = firstItem?.carrier_name || null;
-
         const statusChanged = mappedStatus !== order.status;
+        const firstItem = job.line_items?.[0];
 
         const updatePayload: Record<string, unknown> = {
-          lulu_status: statusName,
-          status: mappedStatus,
-          error_message: null,
-          last_synced_at: now,
-          sync_attempts: (order.sync_attempts ?? 0) + 1,
-          last_sync_error: null,
+          lulu_status: statusName, status: mappedStatus, error_message: null,
+          last_synced_at: now, sync_attempts: (order.sync_attempts ?? 0) + 1, last_sync_error: null,
         };
+        if (statusChanged) updatePayload.last_status_change_at = now;
+        if (job.order_id) updatePayload.lulu_order_id = String(job.order_id);
+        if (job.costs?.total_cost_incl_tax != null) updatePayload.lulu_cost_incl_tax = Number(job.costs.total_cost_incl_tax);
+        if (job.costs?.currency) updatePayload.currency = job.costs.currency;
+        if (firstItem?.tracking_id) updatePayload.tracking_id = firstItem.tracking_id;
+        if (firstItem?.tracking_urls?.[0]) updatePayload.tracking_url = firstItem.tracking_urls[0];
+        if (firstItem?.carrier_name) updatePayload.carrier_name = firstItem.carrier_name;
 
-        // Track status transitions
+        await supabaseAdmin.from("print_orders").update(updatePayload).eq("id", order.id);
+
         if (statusChanged) {
-          updatePayload.last_status_change_at = now;
+          await logAuditEvent(supabaseAdmin, {
+            print_order_id: order.id, actor_type: "system", event_type: "lulu_sync",
+            old_values: { status: order.status },
+            new_values: { status: mappedStatus, lulu_status: statusName },
+            meta: { tracking_id: firstItem?.tracking_id || null },
+          });
         }
 
-        if (job.order_id) updatePayload.lulu_order_id = String(job.order_id);
-        if (job.costs?.total_cost_incl_tax != null)
-          updatePayload.lulu_cost_incl_tax = Number(job.costs.total_cost_incl_tax);
-        if (job.costs?.currency) updatePayload.currency = job.costs.currency;
-        if (trackingId) updatePayload.tracking_id = trackingId;
-        if (trackingUrl) updatePayload.tracking_url = trackingUrl;
-        if (carrierName) updatePayload.carrier_name = carrierName;
-
-        const { error: updateErr } = await supabaseAdmin
-          .from("print_orders")
-          .update(updatePayload)
-          .eq("id", order.id);
-
-        if (updateErr) throw new Error(`DB update failed: ${updateErr.message}`);
-
-        log("Synced order", { id: order.id, status: mappedStatus, changed: statusChanged, trackingId });
         updatedCount++;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        log("Error syncing order", { id: order.id, error: msg });
         errorCount++;
         errors.push({ print_order_id: order.id, error: msg });
 
-        await supabaseAdmin
-          .from("print_orders")
-          .update({
-            error_message: msg,
-            last_synced_at: now,
-            sync_attempts: (order.sync_attempts ?? 0) + 1,
-            last_sync_error: msg,
-          })
-          .eq("id", order.id);
+        await supabaseAdmin.from("print_orders").update({
+          error_message: msg, last_synced_at: now,
+          sync_attempts: (order.sync_attempts ?? 0) + 1, last_sync_error: msg,
+        }).eq("id", order.id);
+
+        await logAuditEvent(supabaseAdmin, {
+          print_order_id: order.id, actor_type: "system", event_type: "error",
+          meta: { error: msg, step: "lulu_sync" },
+        });
       }
     }
 
-    const summary = {
-      processed_count: orders.length,
-      updated_count: updatedCount,
-      error_count: errorCount,
-      errors,
-    };
-
+    const summary = { processed_count: orders.length, updated_count: updatedCount, error_count: errorCount, errors };
     log("Sync complete", summary);
     return json(summary);
   } catch (err) {
