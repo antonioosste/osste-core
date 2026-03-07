@@ -201,6 +201,7 @@ export type Database = {
       }
       print_orders: {
         Row: {
+          alert_state: string
           book_title: string
           carrier_name: string | null
           cover_pdf_url: string | null
@@ -211,6 +212,7 @@ export type Database = {
           format: string
           id: string
           interior_pdf_url: string | null
+          last_status_change_at: string | null
           last_submit_at: string | null
           last_sync_error: string | null
           last_synced_at: string | null
@@ -239,6 +241,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          alert_state?: string
           book_title: string
           carrier_name?: string | null
           cover_pdf_url?: string | null
@@ -249,6 +252,7 @@ export type Database = {
           format: string
           id?: string
           interior_pdf_url?: string | null
+          last_status_change_at?: string | null
           last_submit_at?: string | null
           last_sync_error?: string | null
           last_synced_at?: string | null
@@ -277,6 +281,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          alert_state?: string
           book_title?: string
           carrier_name?: string | null
           cover_pdf_url?: string | null
@@ -287,6 +292,7 @@ export type Database = {
           format?: string
           id?: string
           interior_pdf_url?: string | null
+          last_status_change_at?: string | null
           last_submit_at?: string | null
           last_sync_error?: string | null
           last_synced_at?: string | null
