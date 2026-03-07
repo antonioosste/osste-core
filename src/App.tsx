@@ -27,6 +27,7 @@ import CheckoutCancel from "./pages/CheckoutCancel";
 import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
 import AdminQuestions from "./pages/AdminQuestions";
+import AdminPrintOrders from "./pages/AdminPrintOrders";
 import QuestionBankImport from "./pages/QuestionBankImport";
 import QuestionImport from "./pages/QuestionImport";
 import Interview from "./pages/Interview";
@@ -88,6 +89,7 @@ const App = () => (
             <Route path="/settings" element={<ApprovedRoute><DashboardLayout><Settings /></DashboardLayout></ApprovedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/admin/questions" element={<ProtectedRoute><AdminQuestions /></ProtectedRoute>} />
+            <Route path="/admin/print-orders" element={<ProtectedRoute><AdminPrintOrders /></ProtectedRoute>} />
             <Route path="/admin/import-questions" element={<ProtectedRoute><QuestionBankImport /></ProtectedRoute>} />
             <Route path="/admin/question-import" element={<ProtectedRoute><QuestionImport /></ProtectedRoute>} />
             <Route path="/interview" element={<ApprovedRoute><Interview /></ApprovedRoute>} />
