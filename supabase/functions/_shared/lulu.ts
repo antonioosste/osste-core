@@ -1,4 +1,4 @@
-// Shared Lulu API helper — used by stripe-webhook and submit-print-order-to-lulu
+// Shared Lulu API helper — used by stripe-webhook, submit-print-order-to-lulu, lulu-sync-order-status
 
 export interface LuluResult {
   print_job_id: string;
@@ -7,6 +7,81 @@ export interface LuluResult {
   total_cost_incl_tax: number | null;
   currency: string | null;
 }
+
+/** Error subclass for classifiable Lulu API errors */
+export class LuluApiError extends Error {
+  constructor(
+    message: string,
+    public readonly statusCode: number,
+    public readonly retryable: boolean,
+  ) {
+    super(message);
+    this.name = "LuluApiError";
+  }
+}
+
+// ── Retry utility ──────────────────────────────────────────────────────
+
+const RETRY_DELAYS = [1000, 2000, 4000, 8000]; // 4 retries
+
+function isRetryable(err: unknown): boolean {
+  if (err instanceof LuluApiError) return err.retryable;
+  // Network / TypeError (fetch failures) are retryable
+  if (err instanceof TypeError) return true;
+  return false;
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Fetch with exponential-backoff retry.
+ * Retries on network errors, 429, and 5xx.
+ * Does NOT retry 4xx validation errors.
+ */
+export async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  log: (step: string, details?: unknown) => void = console.log,
+): Promise<Response> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
+    try {
+      const resp = await fetch(url, init);
+
+      if (resp.ok) return resp;
+
+      const text = await resp.text();
+
+      // Classify
+      const retryable = resp.status === 429 || resp.status >= 500;
+      const err = new LuluApiError(
+        `Lulu API ${resp.status}: ${text}`,
+        resp.status,
+        retryable,
+      );
+
+      if (!retryable) throw err; // non-retryable 4xx → fail immediately
+
+      lastError = err;
+    } catch (e) {
+      if (!isRetryable(e)) throw e;
+      lastError = e;
+    }
+
+    // If we have retries left, wait
+    if (attempt < RETRY_DELAYS.length) {
+      const delay = RETRY_DELAYS[attempt];
+      log("Retry", { attempt: attempt + 1, delay });
+      await sleep(delay);
+    }
+  }
+
+  // Exhausted retries
+  throw lastError;
+}
+
+// ── Auth ───────────────────────────────────────────────────────────────
 
 export async function getLuluAccessToken(): Promise<string> {
   const clientKey = Deno.env.get("LULU_CLIENT_KEY")!;
@@ -35,6 +110,8 @@ export async function getLuluAccessToken(): Promise<string> {
   return data.access_token;
 }
 
+// ── Create print job (with retry) ──────────────────────────────────────
+
 export async function createLuluPrintJob(
   order: Record<string, unknown>,
   log: (step: string, details?: unknown) => void = console.log,
@@ -44,7 +121,7 @@ export async function createLuluPrintJob(
   const podPackageId = Deno.env.get("LULU_POD_PACKAGE_ID");
 
   if (!podPackageId) {
-    throw new Error("Missing LULU_POD_PACKAGE_ID secret");
+    throw new LuluApiError("Missing LULU_POD_PACKAGE_ID secret", 400, false);
   }
 
   const accessToken = await getLuluAccessToken();
@@ -53,14 +130,13 @@ export async function createLuluPrintJob(
   const coverUrl = order.cover_pdf_url as string;
 
   if (!interiorUrl || !coverUrl) {
-    throw new Error("Missing interior_pdf_url or cover_pdf_url on print_orders row");
+    throw new LuluApiError("Missing interior_pdf_url or cover_pdf_url on print_orders row", 400, false);
   }
 
   // Normalize and validate shipping codes
   const countryCode = ((order.shipping_country as string) || "US").trim().toUpperCase();
   let stateCode = ((order.shipping_state as string) || "").trim().toUpperCase();
 
-  // If US and state is a full name, convert to 2-letter code
   if (countryCode === "US" && stateCode.length > 2) {
     const US_STATES: Record<string, string> = {
       ALABAMA:"AL",ALASKA:"AK",ARIZONA:"AZ",ARKANSAS:"AR",CALIFORNIA:"CA",
@@ -78,13 +154,11 @@ export async function createLuluPrintJob(
       "U.S. VIRGIN ISLANDS":"VI","NORTHERN MARIANA ISLANDS":"MP",
     };
     const mapped = US_STATES[stateCode];
-    if (mapped) {
-      stateCode = mapped;
-    }
+    if (mapped) stateCode = mapped;
   }
 
-  if (countryCode === "US" && (!/^[A-Z]{2}$/.test(stateCode))) {
-    throw new Error(`Invalid shipping_state: must be valid US state, got '${stateCode}'`);
+  if (countryCode === "US" && !/^[A-Z]{2}$/.test(stateCode)) {
+    throw new LuluApiError(`Invalid shipping_state: must be valid US state, got '${stateCode}'`, 400, false);
   }
 
   const contactEmail = (order.contact_email as string) || "stories@osste.com";
@@ -121,20 +195,20 @@ export async function createLuluPrintJob(
 
   log("Lulu payload", payload);
 
-  const resp = await fetch(`${apiBase}/print-jobs/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
+  const resp = await fetchWithRetry(
+    `${apiBase}/print-jobs/`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(payload),
     },
-    body: JSON.stringify(payload),
-  });
+    log,
+  );
 
   const text = await resp.text();
-  if (!resp.ok) {
-    throw new Error(`Lulu API error (${resp.status}): ${text}`);
-  }
-
   const job = JSON.parse(text);
   log("Lulu print job created", { id: job.id, status: job.status?.name });
 

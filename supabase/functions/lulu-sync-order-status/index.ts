@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { getLuluAccessToken } from "../_shared/lulu.ts";
+import { getLuluAccessToken, fetchWithRetry } from "../_shared/lulu.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,7 +33,6 @@ serve(async (req) => {
       ? "https://api.sandbox.lulu.com"
       : "https://api.lulu.com";
 
-    // Fetch active print orders with Lulu jobs
     const activeStatuses = [
       "lulu_created",
       "lulu_unpaid",
@@ -45,7 +44,7 @@ serve(async (req) => {
 
     const { data: orders, error: fetchErr } = await supabaseAdmin
       .from("print_orders")
-      .select("id, lulu_print_job_id, status")
+      .select("id, lulu_print_job_id, status, sync_attempts")
       .not("lulu_print_job_id", "is", null)
       .in("status", activeStatuses);
 
@@ -66,26 +65,20 @@ serve(async (req) => {
     let updatedCount = 0;
     let errorCount = 0;
     const errors: { print_order_id: string; error: string }[] = [];
+    const now = new Date().toISOString();
 
     for (const order of orders) {
       try {
-        const resp = await fetch(
+        const resp = await fetchWithRetry(
           `${apiBase}/print-jobs/${order.lulu_print_job_id}/`,
-          {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          },
+          { headers: { Authorization: `Bearer ${accessToken}` } },
+          log,
         );
-
-        if (!resp.ok) {
-          const text = await resp.text();
-          throw new Error(`Lulu API ${resp.status}: ${text}`);
-        }
 
         const job = await resp.json();
         const statusName = job.status?.name || "UNKNOWN";
         const mappedStatus = "lulu_" + statusName.toLowerCase();
 
-        // Extract tracking from first line item
         const firstItem = job.line_items?.[0];
         const trackingId = firstItem?.tracking_id || null;
         const trackingUrl = firstItem?.tracking_urls?.[0] || null;
@@ -95,6 +88,9 @@ serve(async (req) => {
           lulu_status: statusName,
           status: mappedStatus,
           error_message: null,
+          last_synced_at: now,
+          sync_attempts: (order.sync_attempts ?? 0) + 1,
+          last_sync_error: null,
         };
 
         if (job.order_id) updatePayload.lulu_order_id = String(job.order_id);
@@ -110,9 +106,7 @@ serve(async (req) => {
           .update(updatePayload)
           .eq("id", order.id);
 
-        if (updateErr) {
-          throw new Error(`DB update failed: ${updateErr.message}`);
-        }
+        if (updateErr) throw new Error(`DB update failed: ${updateErr.message}`);
 
         log("Synced order", { id: order.id, status: mappedStatus, trackingId });
         updatedCount++;
@@ -122,10 +116,14 @@ serve(async (req) => {
         errorCount++;
         errors.push({ print_order_id: order.id, error: msg });
 
-        // Write error to the row but don't stop processing
         await supabaseAdmin
           .from("print_orders")
-          .update({ error_message: msg })
+          .update({
+            error_message: msg,
+            last_synced_at: now,
+            sync_attempts: (order.sync_attempts ?? 0) + 1,
+            last_sync_error: msg,
+          })
           .eq("id", order.id);
       }
     }
