@@ -208,7 +208,16 @@ export default function PrintRequest() {
                 <div><Label htmlFor="city">City</Label>
                   <Input id="city" value={shippingCity} onChange={(e) => setShippingCity(e.target.value)} placeholder="New York" className="mt-2" /></div>
                 <div><Label htmlFor="state">State</Label>
-                  <Input id="state" value={shippingState} onChange={(e) => setShippingState(e.target.value)} placeholder="NY" className="mt-2" /></div>
+                  <Select value={shippingState} onValueChange={setShippingState}>
+                    <SelectTrigger className="mt-2" id="state">
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {US_STATES.map(s => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select></div>
               </div>
               <div><Label htmlFor="zip">ZIP Code</Label>
                 <Input id="zip" value={shippingZip} onChange={(e) => setShippingZip(e.target.value)} placeholder="10001" className="mt-2" /></div>
