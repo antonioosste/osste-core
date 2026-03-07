@@ -51,3 +51,6 @@ verify_jwt = false
 
 [functions.print-order-health-check]
 verify_jwt = false
+
+[functions.admin-print-order-action]
+verify_jwt = false

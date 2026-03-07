@@ -199,6 +199,36 @@ export type Database = {
         }
         Relationships: []
       }
+      print_order_admin_actions: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string
+          id: number
+          payload: Json | null
+          print_order_id: string
+          result: Json | null
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string
+          id?: number
+          payload?: Json | null
+          print_order_id: string
+          result?: Json | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string
+          id?: number
+          payload?: Json | null
+          print_order_id?: string
+          result?: Json | null
+        }
+        Relationships: []
+      }
       print_order_alerts: {
         Row: {
           alert_state: string
