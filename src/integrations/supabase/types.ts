@@ -202,6 +202,7 @@ export type Database = {
       print_orders: {
         Row: {
           book_title: string
+          carrier_name: string | null
           cover_pdf_url: string | null
           created_at: string | null
           currency: string | null
@@ -227,11 +228,14 @@ export type Database = {
           stripe_payment_intent: string | null
           stripe_session_id: string | null
           total_price: number
+          tracking_id: string | null
+          tracking_url: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           book_title: string
+          carrier_name?: string | null
           cover_pdf_url?: string | null
           created_at?: string | null
           currency?: string | null
@@ -257,11 +261,14 @@ export type Database = {
           stripe_payment_intent?: string | null
           stripe_session_id?: string | null
           total_price: number
+          tracking_id?: string | null
+          tracking_url?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           book_title?: string
+          carrier_name?: string | null
           cover_pdf_url?: string | null
           created_at?: string | null
           currency?: string | null
@@ -287,6 +294,8 @@ export type Database = {
           stripe_payment_intent?: string | null
           stripe_session_id?: string | null
           total_price?: number
+          tracking_id?: string | null
+          tracking_url?: string | null
           updated_at?: string | null
           user_id?: string
         }
