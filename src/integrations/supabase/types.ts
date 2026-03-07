@@ -211,6 +211,9 @@ export type Database = {
           format: string
           id: string
           interior_pdf_url: string | null
+          last_submit_at: string | null
+          last_sync_error: string | null
+          last_synced_at: string | null
           lulu_cost_incl_tax: number | null
           lulu_order_id: string | null
           lulu_print_job_id: string | null
@@ -227,6 +230,8 @@ export type Database = {
           story_group_id: string
           stripe_payment_intent: string | null
           stripe_session_id: string | null
+          submit_attempts: number
+          sync_attempts: number
           total_price: number
           tracking_id: string | null
           tracking_url: string | null
@@ -244,6 +249,9 @@ export type Database = {
           format: string
           id?: string
           interior_pdf_url?: string | null
+          last_submit_at?: string | null
+          last_sync_error?: string | null
+          last_synced_at?: string | null
           lulu_cost_incl_tax?: number | null
           lulu_order_id?: string | null
           lulu_print_job_id?: string | null
@@ -260,6 +268,8 @@ export type Database = {
           story_group_id: string
           stripe_payment_intent?: string | null
           stripe_session_id?: string | null
+          submit_attempts?: number
+          sync_attempts?: number
           total_price: number
           tracking_id?: string | null
           tracking_url?: string | null
@@ -277,6 +287,9 @@ export type Database = {
           format?: string
           id?: string
           interior_pdf_url?: string | null
+          last_submit_at?: string | null
+          last_sync_error?: string | null
+          last_synced_at?: string | null
           lulu_cost_incl_tax?: number | null
           lulu_order_id?: string | null
           lulu_print_job_id?: string | null
@@ -293,6 +306,8 @@ export type Database = {
           story_group_id?: string
           stripe_payment_intent?: string | null
           stripe_session_id?: string | null
+          submit_attempts?: number
+          sync_attempts?: number
           total_price?: number
           tracking_id?: string | null
           tracking_url?: string | null
