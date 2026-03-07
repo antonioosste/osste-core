@@ -56,8 +56,19 @@ export async function createLuluPrintJob(
     throw new Error("Missing interior_pdf_url or cover_pdf_url on print_orders row");
   }
 
+  // Normalize and validate shipping codes
+  const stateCode = ((order.shipping_state as string) || "").trim().toUpperCase();
+  const countryCode = ((order.shipping_country as string) || "US").trim().toUpperCase();
+
+  if (!stateCode || stateCode.length !== 2) {
+    throw new Error(`Invalid shipping_state: must be 2-letter US code, got '${stateCode}'`);
+  }
+
+  const contactEmail = (order.contact_email as string) || "stories@osste.com";
+  const phoneNumber = (order.shipping_phone as string) || "+17135551234";
+
   const payload = {
-    contact_email: "stories@osste.com",
+    contact_email: contactEmail,
     external_id: order.id as string,
     line_items: [
       {
@@ -73,13 +84,14 @@ export async function createLuluPrintJob(
     ],
     production_delay: 120,
     shipping_address: {
-      city: order.shipping_city as string,
-      country_code: (order.shipping_country as string) || "US",
       name: order.shipping_name as string,
-      phone_number: "",
-      postcode: order.shipping_zip as string,
-      state_code: order.shipping_state as string,
       street1: order.shipping_address as string,
+      city: order.shipping_city as string,
+      state_code: stateCode,
+      postcode: order.shipping_zip as string,
+      country_code: countryCode,
+      phone_number: phoneNumber,
+      email: contactEmail,
     },
     shipping_level: "MAIL",
   };
