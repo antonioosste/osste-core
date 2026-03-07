@@ -202,11 +202,14 @@ export type Database = {
       print_orders: {
         Row: {
           book_title: string
+          cover_pdf_url: string | null
           created_at: string | null
           currency: string | null
+          error_message: string | null
           external_id: string | null
           format: string
           id: string
+          interior_pdf_url: string | null
           lulu_cost_incl_tax: number | null
           lulu_order_id: string | null
           lulu_print_job_id: string | null
@@ -229,11 +232,14 @@ export type Database = {
         }
         Insert: {
           book_title: string
+          cover_pdf_url?: string | null
           created_at?: string | null
           currency?: string | null
+          error_message?: string | null
           external_id?: string | null
           format: string
           id?: string
+          interior_pdf_url?: string | null
           lulu_cost_incl_tax?: number | null
           lulu_order_id?: string | null
           lulu_print_job_id?: string | null
@@ -256,11 +262,14 @@ export type Database = {
         }
         Update: {
           book_title?: string
+          cover_pdf_url?: string | null
           created_at?: string | null
           currency?: string | null
+          error_message?: string | null
           external_id?: string | null
           format?: string
           id?: string
+          interior_pdf_url?: string | null
           lulu_cost_incl_tax?: number | null
           lulu_order_id?: string | null
           lulu_print_job_id?: string | null
