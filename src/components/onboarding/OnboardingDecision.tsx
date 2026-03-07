@@ -81,7 +81,7 @@ export function OnboardingDecision() {
 
   const handleContinue = () => {
     if (selected === "self") {
-      navigate("/checkout?plan=basic&flow=self");
+      navigate("/checkout?plan=digital&flow=self");
     } else if (selected === "gift") {
       navigate("/gift");
     }
