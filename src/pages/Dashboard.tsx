@@ -31,6 +31,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useRecordings } from "@/hooks/useRecordings";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
 import { useEntitlements } from "@/hooks/useEntitlements";
+import { PrintOrdersList } from "@/components/dashboard/PrintOrdersList";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -457,6 +458,11 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* Print Orders */}
+      <div className="mb-12">
+        <PrintOrdersList />
+      </div>
 
       {/* Edit Book Dialog */}
       <Dialog open={!!editBookId} onOpenChange={() => setEditBookId(null)}>
