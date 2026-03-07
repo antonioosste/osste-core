@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { createLuluPrintJob } from "../_shared/lulu.ts";
+import { createLuluPrintJob, LuluApiError } from "../_shared/lulu.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,12 +35,10 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsErr } = await supabaseClient.auth.getClaims(token);
 
-    // If getClaims fails, allow service-role calls (token = service role key)
     let callerUserId: string | null = null;
     let isServiceRole = false;
 
     if (claimsErr || !claimsData?.claims) {
-      // Check if this is a service-role call
       const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
       if (token === serviceRoleKey) {
         isServiceRole = true;
@@ -77,7 +75,7 @@ serve(async (req) => {
       return json({ error: "print_order not found" }, 404);
     }
 
-    // ── Authorization: caller must own the order (unless service role) ──
+    // ── Authorization ──
     if (!isServiceRole && order.user_id !== callerUserId) {
       log("Unauthorized: caller does not own order", { callerUserId, orderUserId: order.user_id });
       return json({ error: "Forbidden" }, 403);
@@ -99,26 +97,41 @@ serve(async (req) => {
       });
     }
 
-    // ── Guard: only process paid / awaiting_pdfs / lulu_error orders ──
+    // ── Optimistic guard: set status='lulu_submitting' only if in allowed state ──
     const allowedStatuses = ["paid", "awaiting_pdfs", "lulu_error"];
-    log("Status guard check", { status: order.status, allowed: allowedStatuses });
-    if (!allowedStatuses.includes(order.status)) {
-      log("Order not in submittable status", { status: order.status });
-      return json({ error: `Order status is '${order.status}', expected one of: ${allowedStatuses.join(", ")}` }, 400);
+    log("Optimistic guard", { currentStatus: order.status, allowed: allowedStatuses });
+
+    const { data: guardRows, error: guardErr } = await supabaseAdmin
+      .from("print_orders")
+      .update({
+        status: "lulu_submitting",
+        last_submit_at: new Date().toISOString(),
+        submit_attempts: (order.submit_attempts ?? 0) + 1,
+      })
+      .eq("id", print_order_id)
+      .in("status", allowedStatuses)
+      .select("id");
+
+    if (guardErr) {
+      log("Guard update failed", { error: guardErr.message });
+      return json({ error: "Guard update failed" }, 500);
+    }
+
+    if (!guardRows || guardRows.length === 0) {
+      log("Optimistic guard failed – concurrent submit or invalid status", { status: order.status });
+      return json({
+        ok: false,
+        error: "conflict",
+        message: `Order is currently '${order.status}' and cannot be submitted. Another submission may be in progress.`,
+      }, 409);
     }
 
     // ── Update PDF URLs ──
-    const { error: pdfUpdateErr } = await supabaseAdmin
+    await supabaseAdmin
       .from("print_orders")
       .update({ interior_pdf_url, cover_pdf_url })
       .eq("id", print_order_id);
 
-    if (pdfUpdateErr) {
-      log("Failed to update PDF URLs", { error: pdfUpdateErr.message });
-      return json({ error: "Failed to update PDF URLs" }, 500);
-    }
-
-    // Merge URLs into order object for the Lulu helper
     const orderWithPdfs = { ...order, interior_pdf_url, cover_pdf_url };
 
     // ── Create Lulu print job ──
@@ -129,7 +142,7 @@ serve(async (req) => {
         ? "lulu_created"
         : "lulu_" + lulu.status_name.toLowerCase();
 
-      const { error: luluUpdateErr } = await supabaseAdmin
+      await supabaseAdmin
         .from("print_orders")
         .update({
           lulu_print_job_id: lulu.print_job_id,
@@ -138,13 +151,9 @@ serve(async (req) => {
           lulu_cost_incl_tax: lulu.total_cost_incl_tax,
           currency: lulu.currency || "usd",
           status: mappedStatus,
-          error_message: null, // clear any previous error
+          error_message: null,
         })
         .eq("id", print_order_id);
-
-      if (luluUpdateErr) {
-        log("Failed to save Lulu result to DB", { error: luluUpdateErr.message });
-      }
 
       log("Lulu job created successfully", { print_order_id, lulu_print_job_id: lulu.print_job_id });
 
@@ -162,14 +171,22 @@ serve(async (req) => {
       });
     } catch (luluErr) {
       const errMsg = luluErr instanceof Error ? luluErr.message : String(luluErr);
-      log("Lulu job creation failed", { error: errMsg });
+      const isRetryable = luluErr instanceof LuluApiError ? luluErr.retryable : (luluErr instanceof TypeError);
+
+      const errorPrefix = isRetryable ? "transient:" : "validation:";
+      const failStatus = isRetryable ? "lulu_retry_exhausted" : "lulu_error";
+
+      log("Lulu job creation failed", { error: errMsg, retryable: isRetryable, failStatus });
 
       await supabaseAdmin
         .from("print_orders")
-        .update({ status: "lulu_error", error_message: errMsg })
+        .update({
+          status: failStatus,
+          error_message: `${errorPrefix} ${errMsg}`,
+        })
         .eq("id", print_order_id);
 
-      return json({ error: errMsg, status: "lulu_error" }, 500);
+      return json({ error: `${errorPrefix} ${errMsg}`, status: failStatus }, 500);
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
