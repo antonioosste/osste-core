@@ -41,6 +41,7 @@ import PrintRequest from "./pages/PrintRequest";
 import PrintSuccess from "./pages/PrintSuccess";
 import GiftFlow from "./pages/GiftFlow";
 import GiftConfirmation from "./pages/GiftConfirmation";
+import RedeemGift from "./pages/RedeemGift";
 import TestEmail from "./pages/TestEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -103,6 +104,7 @@ const App = () => (
             <Route path="/print-success" element={<ApprovedRoute><DashboardLayout><PrintSuccess /></DashboardLayout></ApprovedRoute>} />
             <Route path="/gift" element={<GiftFlow />} />
             <Route path="/gift/confirmation" element={<GiftConfirmation />} />
+            <Route path="/redeem/:gift_id" element={<RedeemGift />} />
             <Route path="/test-email" element={<ProtectedRoute><TestEmail /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
