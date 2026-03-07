@@ -48,3 +48,6 @@ verify_jwt = false
 
 [functions.lulu-sync-order-status]
 verify_jwt = false
+
+[functions.print-order-health-check]
+verify_jwt = false
