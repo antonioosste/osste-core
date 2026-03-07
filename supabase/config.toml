@@ -42,3 +42,6 @@ verify_jwt = false
 
 [functions.create-gift-checkout]
 verify_jwt = false
+
+[functions.submit-print-order-to-lulu]
+verify_jwt = false
