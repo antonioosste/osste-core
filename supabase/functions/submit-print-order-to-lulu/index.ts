@@ -99,10 +99,12 @@ serve(async (req) => {
       });
     }
 
-    // ── Guard: only process paid / awaiting_pdfs orders ──
-    if (order.status !== "paid" && order.status !== "awaiting_pdfs") {
+    // ── Guard: only process paid / awaiting_pdfs / lulu_error orders ──
+    const allowedStatuses = ["paid", "awaiting_pdfs", "lulu_error"];
+    log("Status guard check", { status: order.status, allowed: allowedStatuses });
+    if (!allowedStatuses.includes(order.status)) {
       log("Order not in submittable status", { status: order.status });
-      return json({ error: `Order status is '${order.status}', expected 'paid' or 'awaiting_pdfs'` }, 400);
+      return json({ error: `Order status is '${order.status}', expected one of: ${allowedStatuses.join(", ")}` }, 400);
     }
 
     // ── Update PDF URLs ──
