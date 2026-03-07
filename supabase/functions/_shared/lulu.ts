@@ -57,11 +57,34 @@ export async function createLuluPrintJob(
   }
 
   // Normalize and validate shipping codes
-  const stateCode = ((order.shipping_state as string) || "").trim().toUpperCase();
   const countryCode = ((order.shipping_country as string) || "US").trim().toUpperCase();
+  let stateCode = ((order.shipping_state as string) || "").trim().toUpperCase();
 
-  if (!stateCode || stateCode.length !== 2) {
-    throw new Error(`Invalid shipping_state: must be 2-letter US code, got '${stateCode}'`);
+  // If US and state is a full name, convert to 2-letter code
+  if (countryCode === "US" && stateCode.length > 2) {
+    const US_STATES: Record<string, string> = {
+      ALABAMA:"AL",ALASKA:"AK",ARIZONA:"AZ",ARKANSAS:"AR",CALIFORNIA:"CA",
+      COLORADO:"CO",CONNECTICUT:"CT",DELAWARE:"DE",FLORIDA:"FL",GEORGIA:"GA",
+      HAWAII:"HI",IDAHO:"ID",ILLINOIS:"IL",INDIANA:"IN",IOWA:"IA",KANSAS:"KS",
+      KENTUCKY:"KY",LOUISIANA:"LA",MAINE:"ME",MARYLAND:"MD",MASSACHUSETTS:"MA",
+      MICHIGAN:"MI",MINNESOTA:"MN",MISSISSIPPI:"MS",MISSOURI:"MO",MONTANA:"MT",
+      NEBRASKA:"NE",NEVADA:"NV","NEW HAMPSHIRE":"NH","NEW JERSEY":"NJ",
+      "NEW MEXICO":"NM","NEW YORK":"NY","NORTH CAROLINA":"NC","NORTH DAKOTA":"ND",
+      OHIO:"OH",OKLAHOMA:"OK",OREGON:"OR",PENNSYLVANIA:"PA","RHODE ISLAND":"RI",
+      "SOUTH CAROLINA":"SC","SOUTH DAKOTA":"SD",TENNESSEE:"TN",TEXAS:"TX",
+      UTAH:"UT",VERMONT:"VT",VIRGINIA:"VA",WASHINGTON:"WA","WEST VIRGINIA":"WV",
+      WISCONSIN:"WI",WYOMING:"WY","DISTRICT OF COLUMBIA":"DC",
+      "PUERTO RICO":"PR","GUAM":"GU","AMERICAN SAMOA":"AS",
+      "U.S. VIRGIN ISLANDS":"VI","NORTHERN MARIANA ISLANDS":"MP",
+    };
+    const mapped = US_STATES[stateCode];
+    if (mapped) {
+      stateCode = mapped;
+    }
+  }
+
+  if (countryCode === "US" && (!/^[A-Z]{2}$/.test(stateCode))) {
+    throw new Error(`Invalid shipping_state: must be valid US state, got '${stateCode}'`);
   }
 
   const contactEmail = (order.contact_email as string) || "stories@osste.com";

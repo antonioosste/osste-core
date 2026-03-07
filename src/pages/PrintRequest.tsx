@@ -8,8 +8,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ArrowRight, Package, CreditCard } from "lucide-react";
+
+const US_STATES = [
+  "AL","AK","AZ","AR","CA","CO","CT","DE","DC","FL","GA","HI","ID","IL","IN",
+  "IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH",
+  "NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT",
+  "VT","VA","WA","WV","WI","WY",
+] as const;
 
 export default function PrintRequest() {
   const [searchParams] = useSearchParams();
@@ -200,7 +208,16 @@ export default function PrintRequest() {
                 <div><Label htmlFor="city">City</Label>
                   <Input id="city" value={shippingCity} onChange={(e) => setShippingCity(e.target.value)} placeholder="New York" className="mt-2" /></div>
                 <div><Label htmlFor="state">State</Label>
-                  <Input id="state" value={shippingState} onChange={(e) => setShippingState(e.target.value)} placeholder="NY" className="mt-2" /></div>
+                  <Select value={shippingState} onValueChange={setShippingState}>
+                    <SelectTrigger className="mt-2" id="state">
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {US_STATES.map(s => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select></div>
               </div>
               <div><Label htmlFor="zip">ZIP Code</Label>
                 <Input id="zip" value={shippingZip} onChange={(e) => setShippingZip(e.target.value)} placeholder="10001" className="mt-2" /></div>
