@@ -41,7 +41,11 @@ export async function createLuluPrintJob(
 ): Promise<LuluResult> {
   const useSandbox = Deno.env.get("LULU_USE_SANDBOX") === "true";
   const apiBase = useSandbox ? "https://api.sandbox.lulu.com" : "https://api.lulu.com";
-  const podPackageId = Deno.env.get("LULU_POD_PACKAGE_ID") || "0600X0900BWSTDPB060UW444MXX";
+  const podPackageId = Deno.env.get("LULU_POD_PACKAGE_ID");
+
+  if (!podPackageId) {
+    throw new Error("Missing LULU_POD_PACKAGE_ID secret");
+  }
 
   const accessToken = await getLuluAccessToken();
 
@@ -58,13 +62,13 @@ export async function createLuluPrintJob(
     line_items: [
       {
         external_id: order.id as string,
+        quantity: order.quantity as number,
+        title: order.book_title as string,
         printable_normalization: {
+          pod_package_id: podPackageId,
           cover: { source_url: coverUrl },
           interior: { source_url: interiorUrl },
         },
-        pod_package_id: podPackageId,
-        quantity: order.quantity as number,
-        title: order.book_title as string,
       },
     ],
     production_delay: 120,
