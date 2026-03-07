@@ -199,6 +199,33 @@ export type Database = {
         }
         Relationships: []
       }
+      print_order_alerts: {
+        Row: {
+          alert_state: string
+          alert_type: string
+          id: number
+          last_sent_at: string
+          print_order_id: string
+          send_count: number
+        }
+        Insert: {
+          alert_state: string
+          alert_type: string
+          id?: number
+          last_sent_at?: string
+          print_order_id: string
+          send_count?: number
+        }
+        Update: {
+          alert_state?: string
+          alert_type?: string
+          id?: number
+          last_sent_at?: string
+          print_order_id?: string
+          send_count?: number
+        }
+        Relationships: []
+      }
       print_orders: {
         Row: {
           alert_state: string
