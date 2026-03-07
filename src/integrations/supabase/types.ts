@@ -256,6 +256,42 @@ export type Database = {
         }
         Relationships: []
       }
+      print_order_events: {
+        Row: {
+          actor_id: string | null
+          actor_type: string
+          created_at: string
+          event_type: string
+          id: number
+          meta: Json | null
+          new_values: Json | null
+          old_values: Json | null
+          print_order_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_type: string
+          created_at?: string
+          event_type: string
+          id?: number
+          meta?: Json | null
+          new_values?: Json | null
+          old_values?: Json | null
+          print_order_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_type?: string
+          created_at?: string
+          event_type?: string
+          id?: number
+          meta?: Json | null
+          new_values?: Json | null
+          old_values?: Json | null
+          print_order_id?: string
+        }
+        Relationships: []
+      }
       print_orders: {
         Row: {
           alert_state: string
