@@ -2,6 +2,7 @@ import { Sun } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { sendAccountCreationEmail } from "@/lib/emails";
 import { z } from "zod";
 
 const signupSchema = z.object({
@@ -71,6 +72,12 @@ export const FullScreenSignup = () => {
         setSubmitted(false);
         return;
       }
+
+      // Send account creation email (non-blocking)
+      sendAccountCreationEmail({
+        email: result.data.email,
+        firstName: result.data.firstName,
+      });
 
       // Success - the user will be redirected by auth state change
       // ApprovedRoute will handle sending to /dashboard or /pending-approval

@@ -24,7 +24,6 @@ import {
   sendPasswordResetEmail,
   sendPaymentSuccessEmail,
   sendPaymentFailedEmail,
-  sendRecordingStartedEmail,
   sendRecordingFinishedEmail,
   sendTranscriptReadyEmail,
   sendBookPreviewReadyEmail,
@@ -40,7 +39,7 @@ const EMAIL_TYPES = [
   { value: 'passwordReset', label: 'Password Reset' },
   { value: 'paymentSuccess', label: 'Payment Success' },
   { value: 'paymentFailed', label: 'Payment Failed' },
-  { value: 'recordingStarted', label: 'Recording Started' },
+  
   { value: 'recordingFinished', label: 'Recording Finished' },
   { value: 'transcriptReady', label: 'Transcript Ready' },
   { value: 'bookPreviewReady', label: 'Book Preview Ready' },
@@ -114,14 +113,6 @@ export default function TestEmail() {
             amount: 4999,
             currency: 'usd',
             reason: 'Card declined'
-          });
-          break;
-        case 'recordingStarted':
-          response = await sendRecordingStartedEmail({ 
-            email, 
-            firstName, 
-            questionOrTopic: 'Tell me about your childhood',
-            sessionId: 'test-session-123'
           });
           break;
         case 'recordingFinished':
