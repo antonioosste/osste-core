@@ -189,7 +189,7 @@ serve(async (req) => {
             await fetch(fnUrl, {
               method: "POST",
               headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
-              body: JSON.stringify({ giftId: invitation.id, recipientEmail, recipientName, senderEmail, senderName }),
+              body: JSON.stringify({ giftId: invitation.id, recipientEmail, recipientName, senderEmail, senderName, personalMessage }),
             });
           } catch (_) { /* non-fatal */ }
 
