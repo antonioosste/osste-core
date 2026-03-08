@@ -84,7 +84,7 @@ export default function GiftFlow() {
     try {
       const { data, error } = await supabase.functions.invoke("create-gift-checkout", {
         body: {
-          plan: "digital",
+          plan: formData.plan,
           recipient_email: formData.recipientEmail,
           recipient_name: formData.recipientName,
           sender_email: formData.senderEmail,
