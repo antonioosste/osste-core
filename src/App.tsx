@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ApprovedRoute } from "@/components/auth/ApprovedRoute";
 import { useApproval } from "@/hooks/useApproval";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import Waitlist from "./pages/Waitlist";
 import Landing from "./pages/Landing";
 import Pricing from "./pages/Pricing";
@@ -25,7 +26,14 @@ import Checkout from "./pages/Checkout";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import CheckoutCancel from "./pages/CheckoutCancel";
 import Settings from "./pages/Settings";
-import Admin from "./pages/Admin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminSessions from "./pages/admin/AdminSessions";
+import AdminStories from "./pages/admin/AdminStories";
+import AdminPayments from "./pages/admin/AdminPayments";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminSettings from "./pages/admin/AdminSettings";
+import AdminAuditLog from "./pages/admin/AdminAuditLog";
 import AdminQuestions from "./pages/AdminQuestions";
 import AdminPrintOrders from "./pages/AdminPrintOrders";
 import QuestionBankImport from "./pages/QuestionBankImport";
@@ -87,11 +95,21 @@ const App = () => (
             <Route path="/checkout/success" element={<ApprovedRoute><CheckoutSuccess /></ApprovedRoute>} />
             <Route path="/checkout/cancel" element={<ApprovedRoute><CheckoutCancel /></ApprovedRoute>} />
             <Route path="/settings" element={<ApprovedRoute><DashboardLayout><Settings /></DashboardLayout></ApprovedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-            <Route path="/admin/questions" element={<ProtectedRoute><AdminQuestions /></ProtectedRoute>} />
-            <Route path="/admin/print-orders" element={<ProtectedRoute><AdminPrintOrders /></ProtectedRoute>} />
-            <Route path="/admin/import-questions" element={<ProtectedRoute><QuestionBankImport /></ProtectedRoute>} />
-            <Route path="/admin/question-import" element={<ProtectedRoute><QuestionImport /></ProtectedRoute>} />
+
+            {/* Admin routes with dedicated admin layout */}
+            <Route path="/admin" element={<ProtectedRoute><AdminLayout><AdminDashboard /></AdminLayout></ProtectedRoute>} />
+            <Route path="/admin/users" element={<ProtectedRoute><AdminLayout><AdminUsers /></AdminLayout></ProtectedRoute>} />
+            <Route path="/admin/sessions" element={<ProtectedRoute><AdminLayout><AdminSessions /></AdminLayout></ProtectedRoute>} />
+            <Route path="/admin/stories" element={<ProtectedRoute><AdminLayout><AdminStories /></AdminLayout></ProtectedRoute>} />
+            <Route path="/admin/payments" element={<ProtectedRoute><AdminLayout requirePermission="canManagePayments"><AdminPayments /></AdminLayout></ProtectedRoute>} />
+            <Route path="/admin/analytics" element={<ProtectedRoute><AdminLayout><AdminAnalytics /></AdminLayout></ProtectedRoute>} />
+            <Route path="/admin/settings" element={<ProtectedRoute><AdminLayout requirePermission="canManageSettings"><AdminSettings /></AdminLayout></ProtectedRoute>} />
+            <Route path="/admin/audit" element={<ProtectedRoute><AdminLayout requirePermission="canViewAuditLog"><AdminAuditLog /></AdminLayout></ProtectedRoute>} />
+            <Route path="/admin/print-orders" element={<ProtectedRoute><AdminLayout><AdminPrintOrders /></AdminLayout></ProtectedRoute>} />
+            <Route path="/admin/questions" element={<ProtectedRoute><AdminLayout><AdminQuestions /></AdminLayout></ProtectedRoute>} />
+            <Route path="/admin/import-questions" element={<ProtectedRoute><AdminLayout><QuestionBankImport /></AdminLayout></ProtectedRoute>} />
+            <Route path="/admin/question-import" element={<ProtectedRoute><AdminLayout><QuestionImport /></AdminLayout></ProtectedRoute>} />
+
             <Route path="/interview" element={<ApprovedRoute><Interview /></ApprovedRoute>} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/pending-approval" element={<ProtectedRoute><PendingApproval /></ProtectedRoute>} />
