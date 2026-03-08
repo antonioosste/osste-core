@@ -34,10 +34,12 @@ export const FullScreenSignup = () => {
     setPasswordError("");
 
     // Validate with zod
-    const result = signupSchema.safeParse({ email, password });
+    const result = signupSchema.safeParse({ firstName, lastName, email, password });
     
     if (!result.success) {
       const errors = result.error.flatten().fieldErrors;
+      if (errors.firstName?.[0]) setFirstNameError(errors.firstName[0]);
+      if (errors.lastName?.[0]) setLastNameError(errors.lastName[0]);
       if (errors.email?.[0]) setEmailError(errors.email[0]);
       if (errors.password?.[0]) setPasswordError(errors.password[0]);
       setSubmitted(false);
