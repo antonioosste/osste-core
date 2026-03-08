@@ -2,6 +2,7 @@ import { Sun } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { sendAccountCreationEmail } from "@/lib/emails";
 import { z } from "zod";
 
 const signupSchema = z.object({
