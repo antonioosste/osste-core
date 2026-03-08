@@ -48,12 +48,17 @@ export const FullScreenSignup = () => {
 
     try {
       const redirectUrl = `${window.location.origin}/`;
+      const fullName = `${result.data.firstName} ${result.data.lastName}`.trim();
       
       const { error } = await supabase.auth.signUp({
         email: result.data.email,
         password: result.data.password,
         options: {
           emailRedirectTo: redirectUrl,
+          data: {
+            name: fullName,
+            full_name: fullName,
+          },
         },
       });
 
