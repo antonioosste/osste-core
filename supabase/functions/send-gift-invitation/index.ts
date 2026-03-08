@@ -113,6 +113,10 @@ serve(async (req) => {
               <h1 style="margin: 0 0 16px; font-size: 24px; color: #1a1a1a;">You've Received a Gift! 🎁</h1>
               <p style="margin-top: 0;">Hello ${recipientDisplayName},</p>
               <p><strong>${senderDisplayName}</strong> has given you a wonderful gift — the opportunity to preserve your stories and memories with OSSTE.</p>
+              ${message ? `<div style="background-color: #f5f5f0; border-left: 3px solid #1a1a1a; padding: 16px 20px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+                <p style="margin: 0 0 4px; font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">A note from ${senderDisplayName}:</p>
+                <p style="margin: 0; font-style: italic; color: #333;">"${message.replace(/</g, '&lt;').replace(/>/g, '&gt;')}"</p>
+              </div>` : ''}
               <p>OSSTE helps you capture and share your life stories through guided conversations. Your stories matter, and now you have the perfect tool to preserve them for generations.</p>
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 28px 0;">
                 <tr>
