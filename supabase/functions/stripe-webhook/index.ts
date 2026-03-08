@@ -174,7 +174,8 @@ serve(async (req) => {
             .from("gift_invitations").insert({
               status: "paid", plan: giftPlan, recipient_email: recipientEmail,
               recipient_name: recipientName || null, sender_email: senderEmail,
-              sender_name: senderName || null, stripe_session_id: session.id,
+              sender_name: senderName || null, personal_message: personalMessage || null,
+              stripe_session_id: session.id,
               stripe_payment_intent: paymentIntentId || null, amount_paid: session.amount_total,
             }).select("id").single();
 
