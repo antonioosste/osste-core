@@ -28,6 +28,8 @@ export const FullScreenSignup = () => {
     e.preventDefault();
     setSubmitted(true);
     setGeneralError("");
+    setFirstNameError("");
+    setLastNameError("");
     setEmailError("");
     setPasswordError("");
 
