@@ -251,6 +251,7 @@ export default function GiftFlow() {
                         <p>Sending to: <span className="text-foreground">{formData.recipientEmail}</span></p>
                         {formData.recipientName && <p>Recipient: <span className="text-foreground">{formData.recipientName}</span></p>}
                         <p>Plan: <span className="text-foreground capitalize">{formData.plan}</span></p>
+                        {formData.personalMessage && <p>Message: <span className="text-foreground italic">"{formData.personalMessage}"</span></p>}
                       </div>
                     </div>
                     <Button onClick={handleCheckout} disabled={loading} className="w-full h-12 text-base">
