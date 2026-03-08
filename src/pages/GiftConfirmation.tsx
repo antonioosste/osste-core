@@ -117,12 +117,18 @@ export default function GiftConfirmation() {
                       <span className="text-muted-foreground">Email</span>
                       <span className="text-foreground">{giftData.recipientEmail}</span>
                     </div>
-                    <div className="flex justify-between py-2">
+                    <div className="flex justify-between py-2 border-b border-border/50">
                       <span className="text-muted-foreground">From</span>
                       <span className="text-foreground">
                         {giftData.senderName || giftData.senderEmail}
                       </span>
                     </div>
+                    {giftData.plan && (
+                      <div className="flex justify-between py-2">
+                        <span className="text-muted-foreground">Plan</span>
+                        <span className="text-foreground capitalize">{giftData.plan}</span>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
