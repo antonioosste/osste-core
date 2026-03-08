@@ -115,14 +115,6 @@ export default function TestEmail() {
             reason: 'Card declined'
           });
           break;
-        case 'recordingStarted':
-          response = await sendRecordingStartedEmail({ 
-            email, 
-            firstName, 
-            questionOrTopic: 'Tell me about your childhood',
-            sessionId: 'test-session-123'
-          });
-          break;
         case 'recordingFinished':
           response = await sendRecordingFinishedEmail({ 
             email, 
