@@ -12,6 +12,7 @@ interface GiftData {
   recipientName: string;
   senderEmail: string;
   senderName: string;
+  plan?: string;
 }
 
 export default function GiftConfirmation() {
