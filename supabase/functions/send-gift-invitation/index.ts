@@ -39,8 +39,8 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const { giftId, recipientEmail, recipientName, senderEmail, senderName }: GiftInvitationRequest = await req.json();
-    logStep("Request parsed", { giftId, recipientEmail, senderEmail });
+    const { giftId, recipientEmail, recipientName, senderEmail, senderName, personalMessage }: GiftInvitationRequest & { personalMessage?: string } = await req.json();
+    logStep("Request parsed", { giftId, recipientEmail, senderEmail, hasMessage: !!personalMessage });
 
     if (!recipientEmail || !recipientEmail.includes("@")) {
       return new Response(JSON.stringify({ success: false, error: "Invalid recipient email" }),
