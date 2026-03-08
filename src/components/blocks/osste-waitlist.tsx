@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useApproval } from "@/hooks/useApproval";
+import { sendWelcomeEmail } from "@/lib/emails";
 import { Clock, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
