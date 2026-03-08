@@ -35,6 +35,7 @@ export default function GiftFlow() {
     recipientName: "",
     senderEmail: "",
     senderName: "",
+    personalMessage: "",
     plan: initialPlan,
   });
 
