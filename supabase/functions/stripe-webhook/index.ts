@@ -242,6 +242,29 @@ serve(async (req) => {
 
         if (userId) {
           await supabaseAdmin.from("profiles").update({ plan }).eq("id", userId);
+          
+          // Send payment success email (non-blocking)
+          try {
+            const { data: profile } = await supabaseAdmin.from("profiles").select("email, name").eq("id", userId).single();
+            if (profile?.email) {
+              const fnUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email`;
+              await fetch(fnUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+                body: JSON.stringify({
+                  type: "paymentSuccess",
+                  email: profile.email,
+                  firstName: profile.name || undefined,
+                  amount: session.amount_total || 0,
+                  currency: session.currency || "usd",
+                  planName: plan === "legacy" ? "Legacy Story Plan" : "Digital Story Plan",
+                  idempotencyKey: `paymentSuccess:${event.id}`,
+                }),
+              });
+            }
+          } catch (emailErr) {
+            log("Payment email send failed (non-fatal)", { error: (emailErr as Error).message });
+          }
         }
 
         await recordEvent(event.id, event.type, event.data.object, "processed");
