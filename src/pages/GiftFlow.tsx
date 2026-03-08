@@ -19,6 +19,7 @@ interface GiftFormData {
   recipientName: string;
   senderEmail: string;
   senderName: string;
+  personalMessage: string;
   plan: GiftPlan;
 }
 
