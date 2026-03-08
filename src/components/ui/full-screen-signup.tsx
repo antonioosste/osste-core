@@ -131,6 +131,49 @@ export const FullScreenSignup = () => {
               </div>
             )}
 
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="firstName" className="block text-sm mb-2 text-card-foreground">
+                  First name
+                </label>
+                <input
+                  type="text"
+                  id="firstName"
+                  placeholder="Jane"
+                  className={`text-sm w-full py-2.5 px-3 border rounded-lg focus:outline-none focus:ring-2 bg-background text-foreground focus:ring-ring ${
+                    firstNameError ? "border-destructive" : "border-input"
+                  }`}
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  aria-invalid={!!firstNameError}
+                  disabled={submitted}
+                />
+                {firstNameError && (
+                  <p className="text-destructive text-xs mt-1">{firstNameError}</p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="lastName" className="block text-sm mb-2 text-card-foreground">
+                  Last name
+                </label>
+                <input
+                  type="text"
+                  id="lastName"
+                  placeholder="Doe"
+                  className={`text-sm w-full py-2.5 px-3 border rounded-lg focus:outline-none focus:ring-2 bg-background text-foreground focus:ring-ring ${
+                    lastNameError ? "border-destructive" : "border-input"
+                  }`}
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  aria-invalid={!!lastNameError}
+                  disabled={submitted}
+                />
+                {lastNameError && (
+                  <p className="text-destructive text-xs mt-1">{lastNameError}</p>
+                )}
+              </div>
+            </div>
+
             <div>
               <label htmlFor="email" className="block text-sm mb-2 text-card-foreground">
                 Your email
