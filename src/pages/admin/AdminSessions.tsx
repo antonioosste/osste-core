@@ -14,6 +14,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
+import { AdminPagination, paginate, usePagination } from "@/components/admin/AdminPagination";
 
 interface SessionRow {
   id: string;
@@ -37,22 +38,18 @@ export default function AdminSessions() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedSession, setSelectedSession] = useState<SessionRow | null>(null);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     async function fetchSessions() {
       const { data, error } = await supabase
-        .from("sessions")
-        .select("*")
-        .order("started_at", { ascending: false })
-        .limit(200);
+        .from("sessions").select("*").order("started_at", { ascending: false }).limit(500);
 
       if (!error && data) {
-        // Fetch profiles for user names
         const userIds = [...new Set(data.map((s: any) => s.user_id))];
         const { data: profiles } = await supabase.from("profiles").select("id, name, email").in("id", userIds);
         const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
-        // Fetch recording stats
         const sessionIds = data.map((s: any) => s.id);
         const { data: recordings } = await supabase.from("recordings").select("session_id, duration_seconds").in("session_id", sessionIds);
 
@@ -71,20 +68,17 @@ export default function AdminSessions() {
       }
       setLoading(false);
     }
-
     fetchSessions();
   }, []);
 
   const filtered = sessions.filter((s) => {
     if (!search) return true;
     const q = search.toLowerCase();
-    return (
-      s.title?.toLowerCase().includes(q) ||
-      s.profile?.name?.toLowerCase().includes(q) ||
-      s.profile?.email?.toLowerCase().includes(q) ||
-      s.id.includes(q)
-    );
+    return s.title?.toLowerCase().includes(q) || s.profile?.name?.toLowerCase().includes(q) || s.profile?.email?.toLowerCase().includes(q) || s.id.includes(q);
   });
+
+  const { totalPages, pageSize, totalItems } = usePagination(filtered, 25);
+  const paged = paginate(filtered, page, 25);
 
   const handleDelete = async (session: SessionRow) => {
     if (!permissions.canManageSessions) return;
@@ -95,14 +89,17 @@ export default function AdminSessions() {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const resp = await fetch(`https://${projectId}.supabase.co/functions/v1/delete-session-deep`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authSession.access_token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authSession.access_token}` },
         body: JSON.stringify({ session_id: session.id }),
       });
-
       if (!resp.ok) throw new Error("Failed to delete session");
+
+      // Audit log
+      await supabase.from("admin_audit_log").insert({
+        admin_id: authSession.user.id,
+        action: "delete_session", target_type: "session", target_id: session.id,
+        details: { session_title: session.title, user_id: session.user_id },
+      });
 
       toast({ title: "Deleted", description: `Session "${session.title || session.id}" deleted.` });
       setSessions((prev) => prev.filter((s) => s.id !== session.id));
@@ -128,82 +125,69 @@ export default function AdminSessions() {
         <CardContent className="pt-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search by title, user, or ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+            <Input placeholder="Search by title, user, or ID..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="pl-10" />
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mic className="h-5 w-5" />
-            Sessions ({filtered.length})
-          </CardTitle>
+          <CardTitle className="flex items-center gap-2"><Mic className="h-5 w-5" /> Sessions ({filtered.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>
           ) : (
-            <div className="overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Recordings</TableHead>
-                    <TableHead>Duration</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((session) => (
-                    <TableRow key={session.id}>
-                      <TableCell className="font-medium text-sm max-w-[200px] truncate">
-                        {session.title || "Untitled"}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="text-sm">{session.profile?.name || "Unknown"}</p>
-                          <p className="text-xs text-muted-foreground">{session.profile?.email}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>{session.recording_count}</TableCell>
-                      <TableCell className="text-sm">{formatDuration(session.total_duration || 0)}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-xs capitalize">{session.status || "active"}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {session.started_at ? format(new Date(session.started_at), "MMM d, yyyy") : "—"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button size="sm" variant="ghost" onClick={() => setSelectedSession(session)}>
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                          {permissions.canManageSessions && (
-                            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(session)}>
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
+            <>
+              <div className="overflow-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>User</TableHead>
+                      <TableHead>Recordings</TableHead>
+                      <TableHead>Duration</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {paged.map((session) => (
+                      <TableRow key={session.id}>
+                        <TableCell className="font-medium text-sm max-w-[200px] truncate">{session.title || "Untitled"}</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="text-sm">{session.profile?.name || "Unknown"}</p>
+                            <p className="text-xs text-muted-foreground">{session.profile?.email}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>{session.recording_count}</TableCell>
+                        <TableCell className="text-sm">{formatDuration(session.total_duration || 0)}</TableCell>
+                        <TableCell><Badge variant="outline" className="text-xs capitalize">{session.status || "active"}</Badge></TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{session.started_at ? format(new Date(session.started_at), "MMM d, yyyy") : "—"}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button size="sm" variant="ghost" onClick={() => setSelectedSession(session)}><Eye className="h-3 w-3" /></Button>
+                            {permissions.canManageSessions && (
+                              <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(session)}><Trash2 className="h-3 w-3" /></Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <AdminPagination page={page} totalPages={totalPages} onPageChange={setPage} totalItems={totalItems} pageSize={pageSize} />
+            </>
           )}
         </CardContent>
       </Card>
 
-      {/* Session Detail Dialog */}
       <Dialog open={!!selectedSession} onOpenChange={(open) => !open && setSelectedSession(null)}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{selectedSession?.title || "Untitled Session"}</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>{selectedSession?.title || "Untitled Session"}</DialogTitle></DialogHeader>
           {selectedSession && (
             <div className="space-y-3 text-sm">
               <div><strong>ID:</strong> <span className="font-mono text-xs">{selectedSession.id}</span></div>
@@ -213,10 +197,7 @@ export default function AdminSessions() {
               <div><strong>Recordings:</strong> {selectedSession.recording_count}</div>
               <div><strong>Duration:</strong> {formatDuration(selectedSession.total_duration || 0)}</div>
               {selectedSession.summary && (
-                <div>
-                  <strong>Summary:</strong>
-                  <p className="mt-1 text-muted-foreground">{selectedSession.summary}</p>
-                </div>
+                <div><strong>Summary:</strong><p className="mt-1 text-muted-foreground">{selectedSession.summary}</p></div>
               )}
             </div>
           )}
