@@ -159,6 +159,7 @@ serve(async (req) => {
         const recipientName = session.metadata?.recipient_name || "";
         const senderEmail = session.metadata?.sender_email || "";
         const senderName = session.metadata?.sender_name || "";
+        const personalMessage = session.metadata?.personal_message || "";
 
         try {
           const { data: existingGift } = await supabaseAdmin
