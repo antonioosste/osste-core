@@ -49,13 +49,8 @@ export function OssteWaitlist() {
         return;
       }
 
-      await supabase.functions.invoke("send-email", {
-        body: {
-          type: 'welcome',
-          email,
-          source: 'waitlist'
-        }
-      });
+      // Send welcome email via helper (non-blocking)
+      sendWelcomeEmail({ email, source: 'waitlist' });
 
       setMessage({
         type: "success",
