@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Gift, Mail, User, Heart, Sparkles, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Gift, Mail, User, Heart, Sparkles, Check, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
