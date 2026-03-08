@@ -39,7 +39,7 @@ const EMAIL_TYPES = [
   { value: 'passwordReset', label: 'Password Reset' },
   { value: 'paymentSuccess', label: 'Payment Success' },
   { value: 'paymentFailed', label: 'Payment Failed' },
-  { value: 'recordingStarted', label: 'Recording Started' },
+  
   { value: 'recordingFinished', label: 'Recording Finished' },
   { value: 'transcriptReady', label: 'Transcript Ready' },
   { value: 'bookPreviewReady', label: 'Book Preview Ready' },
