@@ -12,6 +12,7 @@ interface GiftData {
   recipientName: string;
   senderEmail: string;
   senderName: string;
+  plan?: string;
 }
 
 export default function GiftConfirmation() {
@@ -20,14 +21,18 @@ export default function GiftConfirmation() {
   const [giftData, setGiftData] = useState<GiftData | null>(null);
 
   useEffect(() => {
-    // Get gift data from session storage
+    const sessionId = searchParams.get('session_id');
+    if (!sessionId) {
+      // No session_id — might be a direct visit, still show the page
+    }
     const storedData = sessionStorage.getItem('giftData');
     if (storedData) {
-      setGiftData(JSON.parse(storedData));
-      // Clear it after reading
+      try {
+        setGiftData(JSON.parse(storedData));
+      } catch { /* ignore parse errors */ }
       sessionStorage.removeItem('giftData');
     }
-  }, []);
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -112,12 +117,18 @@ export default function GiftConfirmation() {
                       <span className="text-muted-foreground">Email</span>
                       <span className="text-foreground">{giftData.recipientEmail}</span>
                     </div>
-                    <div className="flex justify-between py-2">
+                    <div className="flex justify-between py-2 border-b border-border/50">
                       <span className="text-muted-foreground">From</span>
                       <span className="text-foreground">
                         {giftData.senderName || giftData.senderEmail}
                       </span>
                     </div>
+                    {giftData.plan && (
+                      <div className="flex justify-between py-2">
+                        <span className="text-muted-foreground">Plan</span>
+                        <span className="text-foreground capitalize">{giftData.plan}</span>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

@@ -25,43 +25,33 @@ export default function RedeemGift() {
     if (!gift_id) { setStatus("not_found"); return; }
 
     const fetchGift = async () => {
-      // Use service-level access via RPC or direct query
-      // Since RLS restricts to sender/recipient, unauthenticated users can't query directly.
-      // We'll attempt the query — if the user is the recipient (authenticated), it works.
-      // For unauthenticated users, we show auth prompt without fetching details.
-      if (!user) {
-        setStatus("ready");
-        return;
-      }
+      // Use RPC to safely fetch gift data (bypasses RLS for unauthenticated users)
+      const { data, error } = await supabase.rpc("get_gift_by_id", { p_gift_id: gift_id });
 
-      const { data, error } = await supabase
-        .from("gift_invitations")
-        .select("*")
-        .eq("id", gift_id)
-        .maybeSingle();
-
-      if (error || !data) {
+      if (error || !data || data.length === 0) {
         setStatus("not_found");
         return;
       }
 
-      if (data.status === "redeemed") {
+      const gift = data[0];
+
+      if (gift.status === "redeemed") {
         setStatus("redeemed");
-        setGiftData(data);
+        setGiftData(gift);
         return;
       }
 
-      if (data.status !== "paid" && data.status !== "sent") {
+      if (gift.status !== "paid" && gift.status !== "sent") {
         setStatus("error");
         return;
       }
 
-      setGiftData(data);
+      setGiftData(gift);
       setStatus("ready");
     };
 
     fetchGift();
-  }, [gift_id, user]);
+  }, [gift_id]);
 
   const handleRedeem = useCallback(async () => {
     if (!user || !gift_id) return;
@@ -84,13 +74,25 @@ export default function RedeemGift() {
 
       const plan = (gift as any).plan || "digital";
 
-      // Create a story group for the user with the gifted plan
+      const PLAN_DEFAULTS: Record<string, { minutes_limit: number; words_limit: number | null; pdf_enabled: boolean; printing_enabled: boolean; photo_uploads_enabled: boolean }> = {
+        digital: { minutes_limit: 60, words_limit: 30000, pdf_enabled: true, printing_enabled: false, photo_uploads_enabled: true },
+        legacy:  { minutes_limit: 120, words_limit: null, pdf_enabled: true, printing_enabled: true, photo_uploads_enabled: true },
+      };
+      const defaults = PLAN_DEFAULTS[plan] || PLAN_DEFAULTS.digital;
+
+      // Create a story group for the user with the gifted plan + limits
       const { data: storyGroup, error: sgErr } = await supabase
         .from("story_groups")
         .insert({
           user_id: user.id,
           title: "My Story",
           plan,
+          minutes_limit: defaults.minutes_limit,
+          words_limit: defaults.words_limit,
+          pdf_enabled: defaults.pdf_enabled,
+          printing_enabled: defaults.printing_enabled,
+          photo_uploads_enabled: defaults.photo_uploads_enabled,
+          archive_at: null,
         })
         .select("id")
         .single();

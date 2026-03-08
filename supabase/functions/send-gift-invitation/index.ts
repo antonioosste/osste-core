@@ -67,7 +67,7 @@ serve(async (req) => {
     const siteUrl = rawSiteUrl.replace(/\/+$/, "");
 
     const emailResponse = await resend.emails.send({
-      from: "OSSTE <stories@osste.com>",
+      from: "OSSTE stories@osste.com",
       to: [recipientEmail],
       subject: `${senderDisplayName} sent you a gift: Your story awaits!`,
       html: `

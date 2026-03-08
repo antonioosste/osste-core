@@ -1086,6 +1086,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_gift_by_id: {
+        Args: { p_gift_id: string }
+        Returns: {
+          id: string
+          plan: string
+          recipient_name: string
+          sender_name: string
+          status: string
+        }[]
+      }
       get_session_owner: { Args: { p_session_id: string }; Returns: string }
       get_user_account_plan: { Args: { p_user_id: string }; Returns: string }
       get_user_recording_limit_seconds: {
