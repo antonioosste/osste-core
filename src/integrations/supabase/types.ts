@@ -145,6 +145,7 @@ export type Database = {
           created_at: string
           id: string
           invitation_sent_at: string | null
+          personal_message: string | null
           plan: string | null
           recipient_email: string
           recipient_name: string | null
@@ -162,6 +163,7 @@ export type Database = {
           created_at?: string
           id?: string
           invitation_sent_at?: string | null
+          personal_message?: string | null
           plan?: string | null
           recipient_email: string
           recipient_name?: string | null
@@ -179,6 +181,7 @@ export type Database = {
           created_at?: string
           id?: string
           invitation_sent_at?: string | null
+          personal_message?: string | null
           plan?: string | null
           recipient_email?: string
           recipient_name?: string | null
