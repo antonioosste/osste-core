@@ -24,7 +24,6 @@ import {
   sendPasswordResetEmail,
   sendPaymentSuccessEmail,
   sendPaymentFailedEmail,
-  sendRecordingStartedEmail,
   sendRecordingFinishedEmail,
   sendTranscriptReadyEmail,
   sendBookPreviewReadyEmail,
