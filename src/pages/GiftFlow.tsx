@@ -43,7 +43,7 @@ export default function GiftFlow() {
     // Clear the param silently
   }
 
-  const handleInputChange = (field: keyof GiftFormData, value: string) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
