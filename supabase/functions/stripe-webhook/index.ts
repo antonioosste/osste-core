@@ -159,6 +159,7 @@ serve(async (req) => {
         const recipientName = session.metadata?.recipient_name || "";
         const senderEmail = session.metadata?.sender_email || "";
         const senderName = session.metadata?.sender_name || "";
+        const personalMessage = session.metadata?.personal_message || "";
 
         try {
           const { data: existingGift } = await supabaseAdmin
@@ -173,7 +174,8 @@ serve(async (req) => {
             .from("gift_invitations").insert({
               status: "paid", plan: giftPlan, recipient_email: recipientEmail,
               recipient_name: recipientName || null, sender_email: senderEmail,
-              sender_name: senderName || null, stripe_session_id: session.id,
+              sender_name: senderName || null, personal_message: personalMessage || null,
+              stripe_session_id: session.id,
               stripe_payment_intent: paymentIntentId || null, amount_paid: session.amount_total,
             }).select("id").single();
 
@@ -187,7 +189,7 @@ serve(async (req) => {
             await fetch(fnUrl, {
               method: "POST",
               headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
-              body: JSON.stringify({ giftId: invitation.id, recipientEmail, recipientName, senderEmail, senderName }),
+              body: JSON.stringify({ giftId: invitation.id, recipientEmail, recipientName, senderEmail, senderName, personalMessage }),
             });
           } catch (_) { /* non-fatal */ }
 

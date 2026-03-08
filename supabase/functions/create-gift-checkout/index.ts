@@ -14,7 +14,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { plan, recipient_email, recipient_name, sender_email, sender_name } = await req.json();
+    const { plan, recipient_email, recipient_name, sender_email, sender_name, personal_message } = await req.json();
 
     if (!plan || !recipient_email || !sender_email) {
       return new Response(
@@ -41,6 +41,9 @@ serve(async (req) => {
     const rawSiteUrl = Deno.env.get("SITE_URL") || req.headers.get("origin") || "https://osste.com";
     const siteUrl = rawSiteUrl.replace(/\/+$/, "");
 
+    // Stripe metadata values max 500 chars
+    const safeMessage = typeof personal_message === "string" ? personal_message.slice(0, 500) : "";
+
     const metadata: Record<string, string> = {
       type: "gift",
       plan,
@@ -48,6 +51,7 @@ serve(async (req) => {
       recipient_name: recipient_name || "",
       sender_email,
       sender_name: sender_name || "",
+      personal_message: safeMessage,
     };
 
     const session = await stripe.checkout.sessions.create({

@@ -1,0 +1,1 @@
+ALTER TABLE public.gift_invitations ADD COLUMN personal_message text;

@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Gift, Mail, User, Heart, Sparkles, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Gift, Mail, User, Heart, Sparkles, Check, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Header } from "@/components/layout/Header";
@@ -19,6 +20,7 @@ interface GiftFormData {
   recipientName: string;
   senderEmail: string;
   senderName: string;
+  personalMessage: string;
   plan: GiftPlan;
 }
 
@@ -34,6 +36,7 @@ export default function GiftFlow() {
     recipientName: "",
     senderEmail: "",
     senderName: "",
+    personalMessage: "",
     plan: initialPlan,
   });
 
@@ -89,6 +92,7 @@ export default function GiftFlow() {
           recipient_name: formData.recipientName,
           sender_email: formData.senderEmail,
           sender_name: formData.senderName,
+          personal_message: formData.personalMessage || undefined,
         },
       });
 
@@ -101,6 +105,7 @@ export default function GiftFlow() {
           recipientName: formData.recipientName,
           senderEmail: formData.senderEmail,
           senderName: formData.senderName,
+          personalMessage: formData.personalMessage,
           plan: formData.plan,
         }));
         window.location.href = data.url;
@@ -180,6 +185,18 @@ export default function GiftFlow() {
                       <Input id="recipientName" type="text" placeholder="Their name" value={formData.recipientName} onChange={(e) => handleInputChange('recipientName', e.target.value)} className="h-12" />
                       <p className="text-xs text-muted-foreground">Adding their name will personalize the invitation.</p>
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="personalMessage" className="flex items-center gap-2"><MessageSquare className="w-4 h-4" />Personal Message (optional)</Label>
+                      <Textarea
+                        id="personalMessage"
+                        placeholder="Write a heartfelt note to include with your gift..."
+                        value={formData.personalMessage}
+                        onChange={(e) => handleInputChange('personalMessage', e.target.value.slice(0, 500))}
+                        className="min-h-[100px] resize-none"
+                        maxLength={500}
+                      />
+                      <p className="text-xs text-muted-foreground">{formData.personalMessage.length}/500 characters · This message will be included in their invitation email.</p>
+                    </div>
                     <Button onClick={handleNext} className="w-full h-12 text-base">Continue<ArrowRight className="w-4 h-4 ml-2" /></Button>
                   </CardContent>
                 </Card>
@@ -234,6 +251,7 @@ export default function GiftFlow() {
                         <p>Sending to: <span className="text-foreground">{formData.recipientEmail}</span></p>
                         {formData.recipientName && <p>Recipient: <span className="text-foreground">{formData.recipientName}</span></p>}
                         <p>Plan: <span className="text-foreground capitalize">{formData.plan}</span></p>
+                        {formData.personalMessage && <p>Message: <span className="text-foreground italic">"{formData.personalMessage}"</span></p>}
                       </div>
                     </div>
                     <Button onClick={handleCheckout} disabled={loading} className="w-full h-12 text-base">
