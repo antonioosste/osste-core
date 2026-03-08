@@ -104,6 +104,7 @@ export default function GiftFlow() {
           recipientName: formData.recipientName,
           senderEmail: formData.senderEmail,
           senderName: formData.senderName,
+          personalMessage: formData.personalMessage,
           plan: formData.plan,
         }));
         window.location.href = data.url;
