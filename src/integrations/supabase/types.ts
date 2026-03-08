@@ -435,6 +435,7 @@ export type Database = {
           name: string | null
           plan: string | null
           updated_at: string | null
+          user_type: string
         }
         Insert: {
           approved?: boolean
@@ -447,6 +448,7 @@ export type Database = {
           name?: string | null
           plan?: string | null
           updated_at?: string | null
+          user_type?: string
         }
         Update: {
           approved?: boolean
@@ -459,6 +461,7 @@ export type Database = {
           name?: string | null
           plan?: string | null
           updated_at?: string | null
+          user_type?: string
         }
         Relationships: []
       }
