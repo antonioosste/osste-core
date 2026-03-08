@@ -196,11 +196,37 @@ export default function GiftFlow() {
                       <Input id="senderName" type="text" placeholder="Your name" value={formData.senderName} onChange={(e) => handleInputChange('senderName', e.target.value)} className="h-12" />
                       <p className="text-xs text-muted-foreground">Your name will appear in the gift invitation.</p>
                     </div>
+                    {/* Plan selector */}
+                    <div className="space-y-2">
+                      <Label>Choose a Plan</Label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {(["digital", "legacy"] as const).map((p) => (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => handleInputChange("plan", p)}
+                            className={cn(
+                              "rounded-lg border p-4 text-left transition-all",
+                              formData.plan === p
+                                ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                                : "border-border hover:border-primary/40"
+                            )}
+                          >
+                            <span className="font-semibold capitalize text-foreground">{p}</span>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {p === "digital" ? "60 min recording, PDF export" : "120 min recording, PDF + Print"}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
                     <div className="p-4 rounded-lg bg-muted/50 border border-border/50">
                       <h4 className="text-sm font-medium mb-2">Gift Summary</h4>
                       <div className="text-sm text-muted-foreground space-y-1">
                         <p>Sending to: <span className="text-foreground">{formData.recipientEmail}</span></p>
                         {formData.recipientName && <p>Recipient: <span className="text-foreground">{formData.recipientName}</span></p>}
+                        <p>Plan: <span className="text-foreground capitalize">{formData.plan}</span></p>
                       </div>
                     </div>
                     <Button onClick={handleCheckout} disabled={loading} className="w-full h-12 text-base">
