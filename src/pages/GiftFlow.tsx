@@ -185,6 +185,18 @@ export default function GiftFlow() {
                       <Input id="recipientName" type="text" placeholder="Their name" value={formData.recipientName} onChange={(e) => handleInputChange('recipientName', e.target.value)} className="h-12" />
                       <p className="text-xs text-muted-foreground">Adding their name will personalize the invitation.</p>
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="personalMessage" className="flex items-center gap-2"><MessageSquare className="w-4 h-4" />Personal Message (optional)</Label>
+                      <Textarea
+                        id="personalMessage"
+                        placeholder="Write a heartfelt note to include with your gift..."
+                        value={formData.personalMessage}
+                        onChange={(e) => handleInputChange('personalMessage', e.target.value.slice(0, 500))}
+                        className="min-h-[100px] resize-none"
+                        maxLength={500}
+                      />
+                      <p className="text-xs text-muted-foreground">{formData.personalMessage.length}/500 characters · This message will be included in their invitation email.</p>
+                    </div>
                     <Button onClick={handleNext} className="w-full h-12 text-base">Continue<ArrowRight className="w-4 h-4 ml-2" /></Button>
                   </CardContent>
                 </Card>
