@@ -73,6 +73,12 @@ export const FullScreenSignup = () => {
         return;
       }
 
+      // Send account creation email (non-blocking)
+      sendAccountCreationEmail({
+        email: result.data.email,
+        firstName: result.data.firstName,
+      });
+
       // Success - the user will be redirected by auth state change
       // ApprovedRoute will handle sending to /dashboard or /pending-approval
       navigate("/dashboard");
