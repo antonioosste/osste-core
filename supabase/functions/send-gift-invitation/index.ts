@@ -50,7 +50,7 @@ serve(async (req) => {
     // Idempotency: check if already sent
     const { data: existing } = await supabaseClient
       .from('gift_invitations')
-      .select('invitation_sent_at')
+      .select('invitation_sent_at, personal_message')
       .eq('id', giftId)
       .single();
 
@@ -59,6 +59,9 @@ serve(async (req) => {
       return new Response(JSON.stringify({ success: true, message: "Already sent", duplicate: true }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // Use the message from the request or fall back to DB value
+    const message = personalMessage || existing?.personal_message || "";
 
     // Update the gift invitation status
     const { error: updateError } = await supabaseClient
