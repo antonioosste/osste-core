@@ -12,11 +12,14 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
+type GiftPlan = "digital" | "legacy";
+
 interface GiftFormData {
   recipientEmail: string;
   recipientName: string;
   senderEmail: string;
   senderName: string;
+  plan: GiftPlan;
 }
 
 export default function GiftFlow() {
