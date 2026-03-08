@@ -51,7 +51,7 @@ export default function RedeemGift() {
     };
 
     fetchGift();
-  }, [gift_id, user]);
+  }, [gift_id]);
 
   const handleRedeem = useCallback(async () => {
     if (!user || !gift_id) return;
