@@ -96,6 +96,13 @@ export default function GiftFlow() {
       if (data?.error) throw new Error(data.message || data.error);
 
       if (data?.url) {
+        sessionStorage.setItem('giftData', JSON.stringify({
+          recipientEmail: formData.recipientEmail,
+          recipientName: formData.recipientName,
+          senderEmail: formData.senderEmail,
+          senderName: formData.senderName,
+          plan: formData.plan,
+        }));
         window.location.href = data.url;
       } else {
         throw new Error("No checkout URL returned");
