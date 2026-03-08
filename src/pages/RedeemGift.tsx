@@ -25,38 +25,28 @@ export default function RedeemGift() {
     if (!gift_id) { setStatus("not_found"); return; }
 
     const fetchGift = async () => {
-      // Use service-level access via RPC or direct query
-      // Since RLS restricts to sender/recipient, unauthenticated users can't query directly.
-      // We'll attempt the query — if the user is the recipient (authenticated), it works.
-      // For unauthenticated users, we show auth prompt without fetching details.
-      if (!user) {
-        setStatus("ready");
-        return;
-      }
+      // Use RPC to safely fetch gift data (bypasses RLS for unauthenticated users)
+      const { data, error } = await supabase.rpc("get_gift_by_id", { p_gift_id: gift_id });
 
-      const { data, error } = await supabase
-        .from("gift_invitations")
-        .select("*")
-        .eq("id", gift_id)
-        .maybeSingle();
-
-      if (error || !data) {
+      if (error || !data || data.length === 0) {
         setStatus("not_found");
         return;
       }
 
-      if (data.status === "redeemed") {
+      const gift = data[0];
+
+      if (gift.status === "redeemed") {
         setStatus("redeemed");
-        setGiftData(data);
+        setGiftData(gift);
         return;
       }
 
-      if (data.status !== "paid" && data.status !== "sent") {
+      if (gift.status !== "paid" && gift.status !== "sent") {
         setStatus("error");
         return;
       }
 
-      setGiftData(data);
+      setGiftData(gift);
       setStatus("ready");
     };
 
