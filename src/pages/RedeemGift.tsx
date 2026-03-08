@@ -111,8 +111,13 @@ export default function RedeemGift() {
 
       if (updateErr) throw new Error(`Failed to update gift: ${updateErr.message}`);
 
-      // Update profile plan
-      await supabase.from("profiles").update({ plan }).eq("id", user.id);
+      // Update profile: plan, approved, user_type for immediate access
+      await supabase.from("profiles").update({
+        plan,
+        approved: true,
+        beta_access_until: null,
+        user_type: "public",
+      }).eq("id", user.id);
 
       toast({ title: "Gift redeemed!", description: "Your story group has been created. Welcome to OSSTE!" });
       navigate("/dashboard");
