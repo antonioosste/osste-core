@@ -91,6 +91,7 @@ export default function GiftFlow() {
           recipient_name: formData.recipientName,
           sender_email: formData.senderEmail,
           sender_name: formData.senderName,
+          personal_message: formData.personalMessage || undefined,
         },
       });
 
