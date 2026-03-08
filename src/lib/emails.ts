@@ -1,34 +1,22 @@
 /**
  * OSSTE Email Service Client
  * 
- * This module provides typed helper functions for sending emails via the send-email edge function.
- * 
- * ADDING A NEW EMAIL TYPE:
- * 1. Add the template ID secret in Supabase (RESEND_TEMPLATE_*)
- * 2. Add the function parameters interface below
- * 3. Create the send function
- * 
- * WIRING TO A FEATURE:
- * 1. Import the relevant send function
- * 2. Call it with the required parameters
- * 3. Errors are logged but not thrown (email failures shouldn't break user flows)
- * 
- * All functions are async and return { success: boolean, emailId?: string, error?: string }
+ * Typed helper functions for sending emails via the send-email edge function.
+ * All functions are async, return { success, emailId?, error? }, and never throw.
  */
 
 import { supabase } from '@/integrations/supabase/client';
 
-// Response type from the edge function
 interface EmailResponse {
   success: boolean;
   message?: string;
   emailId?: string;
   usedTemplate?: boolean;
+  duplicate?: boolean;
   error?: string;
 }
 
-// Generic email sender
-async function sendEmail(params: Record<string, any>): Promise<EmailResponse> {
+async function sendEmail(params: Record<string, unknown>): Promise<EmailResponse> {
   try {
     const { data, error } = await supabase.functions.invoke('send-email', {
       body: params,
@@ -40,9 +28,9 @@ async function sendEmail(params: Record<string, any>): Promise<EmailResponse> {
     }
 
     if (data?.success) {
-      console.log(`[Email] ${params.type} email sent:`, data.emailId);
+      console.log(`[Email] ${params.type} email sent:`, data.emailId || '(no id)');
     } else {
-      console.warn(`[Email] ${params.type} email may have failed:`, data?.error);
+      console.warn(`[Email] ${params.type} email failed:`, data?.error);
     }
 
     return data as EmailResponse;
@@ -52,84 +40,49 @@ async function sendEmail(params: Record<string, any>): Promise<EmailResponse> {
   }
 }
 
-// ============================================================================
-// EMAIL SENDING FUNCTIONS
-// ============================================================================
+// ── Helpers ──
 
-/**
- * Send welcome email (for waitlist signups and direct welcomes)
- */
 export async function sendWelcomeEmail(params: {
   email: string;
   firstName?: string;
   source?: 'waitlist' | 'direct';
 }): Promise<EmailResponse> {
-  return sendEmail({
-    type: 'welcome',
-    ...params,
-  });
+  return sendEmail({ type: 'welcome', ...params });
 }
 
-/**
- * Send account creation confirmation email
- */
 export async function sendAccountCreationEmail(params: {
   email: string;
   firstName?: string;
 }): Promise<EmailResponse> {
-  return sendEmail({
-    type: 'accountCreation',
-    ...params,
-  });
+  return sendEmail({ type: 'accountCreation', ...params });
 }
 
-/**
- * Send email verification email
- */
 export async function sendEmailVerificationEmail(params: {
   email: string;
   verificationUrl: string;
   firstName?: string;
 }): Promise<EmailResponse> {
-  return sendEmail({
-    type: 'emailVerification',
-    ...params,
-  });
+  return sendEmail({ type: 'emailVerification', ...params });
 }
 
-/**
- * Send password reset email
- */
 export async function sendPasswordResetEmail(params: {
   email: string;
   resetUrl: string;
   firstName?: string;
 }): Promise<EmailResponse> {
-  return sendEmail({
-    type: 'passwordReset',
-    ...params,
-  });
+  return sendEmail({ type: 'passwordReset', ...params });
 }
 
-/**
- * Send payment success/subscription confirmation email
- */
 export async function sendPaymentSuccessEmail(params: {
   email: string;
   firstName?: string;
-  amount: number; // Amount in cents
-  currency: string; // e.g., 'usd'
+  amount: number;
+  currency: string;
   planName?: string;
 }): Promise<EmailResponse> {
-  return sendEmail({
-    type: 'paymentSuccess',
-    ...params,
-  });
+  return sendEmail({ type: 'paymentSuccess', ...params });
 }
 
-/**
- * Send payment failed/retry needed email
- */
 export async function sendPaymentFailedEmail(params: {
   email: string;
   firstName?: string;
@@ -137,45 +90,18 @@ export async function sendPaymentFailedEmail(params: {
   currency?: string;
   reason?: string;
 }): Promise<EmailResponse> {
-  return sendEmail({
-    type: 'paymentFailed',
-    ...params,
-  });
+  return sendEmail({ type: 'paymentFailed', ...params });
 }
 
-/**
- * Send recording started notification email
- */
-export async function sendRecordingStartedEmail(params: {
-  email: string;
-  firstName?: string;
-  questionOrTopic?: string;
-  sessionId: string;
-}): Promise<EmailResponse> {
-  return sendEmail({
-    type: 'recordingStarted',
-    ...params,
-  });
-}
-
-/**
- * Send recording finished notification email
- */
 export async function sendRecordingFinishedEmail(params: {
   email: string;
   firstName?: string;
   questionOrTopic?: string;
   sessionId: string;
 }): Promise<EmailResponse> {
-  return sendEmail({
-    type: 'recordingFinished',
-    ...params,
-  });
+  return sendEmail({ type: 'recordingFinished', ...params, idempotencyKey: `recordingFinished:${params.sessionId}` });
 }
 
-/**
- * Send transcript ready notification email
- */
 export async function sendTranscriptReadyEmail(params: {
   email: string;
   firstName?: string;
@@ -183,82 +109,49 @@ export async function sendTranscriptReadyEmail(params: {
   sessionId: string;
   chapterId: string;
 }): Promise<EmailResponse> {
-  return sendEmail({
-    type: 'transcriptReady',
-    ...params,
-  });
+  return sendEmail({ type: 'transcriptReady', ...params, idempotencyKey: `transcriptReady:${params.chapterId}` });
 }
 
-/**
- * Send book preview ready notification email
- */
 export async function sendBookPreviewReadyEmail(params: {
   email: string;
   firstName?: string;
   bookTitle: string;
   previewUrl: string;
 }): Promise<EmailResponse> {
-  return sendEmail({
-    type: 'bookPreviewReady',
-    ...params,
-  });
+  return sendEmail({ type: 'bookPreviewReady', ...params });
 }
 
-/**
- * Send final book ready notification email
- */
 export async function sendFinalBookReadyEmail(params: {
   email: string;
   firstName?: string;
   bookTitle: string;
   downloadUrl: string;
 }): Promise<EmailResponse> {
-  return sendEmail({
-    type: 'finalBookReady',
-    ...params,
-  });
+  return sendEmail({ type: 'finalBookReady', ...params });
 }
 
-/**
- * Send cancellation/subscription ended email
- */
 export async function sendCancellationEmail(params: {
   email: string;
   firstName?: string;
   planName?: string;
   effectiveDate?: string;
 }): Promise<EmailResponse> {
-  return sendEmail({
-    type: 'cancellation',
-    ...params,
-  });
+  return sendEmail({ type: 'cancellation', ...params });
 }
 
-/**
- * Send reactivation email (subscription resumed or re-engagement)
- */
 export async function sendReactivationEmail(params: {
   email: string;
   firstName?: string;
   planName?: string;
 }): Promise<EmailResponse> {
-  return sendEmail({
-    type: 'reactivation',
-    ...params,
-  });
+  return sendEmail({ type: 'reactivation', ...params });
 }
 
-/**
- * Send beta approval notification email with login link
- */
 export async function sendApprovedEmail(params: {
   email: string;
   firstName?: string;
   loginUrl?: string;
   betaAccessUntil?: string;
 }): Promise<EmailResponse> {
-  return sendEmail({
-    type: 'approved',
-    ...params,
-  });
+  return sendEmail({ type: 'approved', ...params });
 }
