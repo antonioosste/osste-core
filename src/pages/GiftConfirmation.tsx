@@ -21,14 +21,18 @@ export default function GiftConfirmation() {
   const [giftData, setGiftData] = useState<GiftData | null>(null);
 
   useEffect(() => {
-    // Get gift data from session storage
+    const sessionId = searchParams.get('session_id');
+    if (!sessionId) {
+      // No session_id — might be a direct visit, still show the page
+    }
     const storedData = sessionStorage.getItem('giftData');
     if (storedData) {
-      setGiftData(JSON.parse(storedData));
-      // Clear it after reading
+      try {
+        setGiftData(JSON.parse(storedData));
+      } catch { /* ignore parse errors */ }
       sessionStorage.removeItem('giftData');
     }
-  }, []);
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
