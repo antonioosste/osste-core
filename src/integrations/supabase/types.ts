@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          details: Json | null
+          id: string
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
+      }
       chapters: {
         Row: {
           created_at: string | null
@@ -1089,6 +1119,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_admin_role: { Args: { _user_id: string }; Returns: string }
       get_gift_by_id: {
         Args: { p_gift_id: string }
         Returns: {
@@ -1109,6 +1140,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: number
       }
+      has_admin_access: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
