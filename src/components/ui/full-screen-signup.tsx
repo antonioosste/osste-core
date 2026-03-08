@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
 const signupSchema = z.object({
+  firstName: z.string().trim().min(1, { message: "First name is required." }),
+  lastName: z.string().trim().min(1, { message: "Last name is required." }),
   email: z.string().trim().email({ message: "Please enter a valid email address." }),
   password: z.string().min(8, { message: "Password must be at least 8 characters." }),
 });
