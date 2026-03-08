@@ -28,11 +28,13 @@ export default function GiftFlow() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const initialPlan = (searchParams.get("plan") === "legacy" ? "legacy" : "digital") as GiftPlan;
   const [formData, setFormData] = useState<GiftFormData>({
     recipientEmail: "",
     recipientName: "",
     senderEmail: "",
     senderName: "",
+    plan: initialPlan,
   });
 
   // Show cancelled message if redirected back from Stripe
