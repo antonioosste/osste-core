@@ -5,14 +5,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
 const signupSchema = z.object({
+  firstName: z.string().trim().min(1, { message: "First name is required." }),
+  lastName: z.string().trim().min(1, { message: "Last name is required." }),
   email: z.string().trim().email({ message: "Please enter a valid email address." }),
   password: z.string().min(8, { message: "Password must be at least 8 characters." }),
 });
 
 export const FullScreenSignup = () => {
   const navigate = useNavigate();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstNameError, setFirstNameError] = useState("");
+  const [lastNameError, setLastNameError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -22,14 +28,18 @@ export const FullScreenSignup = () => {
     e.preventDefault();
     setSubmitted(true);
     setGeneralError("");
+    setFirstNameError("");
+    setLastNameError("");
     setEmailError("");
     setPasswordError("");
 
     // Validate with zod
-    const result = signupSchema.safeParse({ email, password });
+    const result = signupSchema.safeParse({ firstName, lastName, email, password });
     
     if (!result.success) {
       const errors = result.error.flatten().fieldErrors;
+      if (errors.firstName?.[0]) setFirstNameError(errors.firstName[0]);
+      if (errors.lastName?.[0]) setLastNameError(errors.lastName[0]);
       if (errors.email?.[0]) setEmailError(errors.email[0]);
       if (errors.password?.[0]) setPasswordError(errors.password[0]);
       setSubmitted(false);
@@ -38,12 +48,17 @@ export const FullScreenSignup = () => {
 
     try {
       const redirectUrl = `${window.location.origin}/`;
+      const fullName = `${result.data.firstName} ${result.data.lastName}`.trim();
       
       const { error } = await supabase.auth.signUp({
         email: result.data.email,
         password: result.data.password,
         options: {
           emailRedirectTo: redirectUrl,
+          data: {
+            name: fullName,
+            full_name: fullName,
+          },
         },
       });
 
@@ -115,6 +130,49 @@ export const FullScreenSignup = () => {
                 {generalError}
               </div>
             )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="firstName" className="block text-sm mb-2 text-card-foreground">
+                  First name
+                </label>
+                <input
+                  type="text"
+                  id="firstName"
+                  placeholder="Jane"
+                  className={`text-sm w-full py-2.5 px-3 border rounded-lg focus:outline-none focus:ring-2 bg-background text-foreground focus:ring-ring ${
+                    firstNameError ? "border-destructive" : "border-input"
+                  }`}
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  aria-invalid={!!firstNameError}
+                  disabled={submitted}
+                />
+                {firstNameError && (
+                  <p className="text-destructive text-xs mt-1">{firstNameError}</p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="lastName" className="block text-sm mb-2 text-card-foreground">
+                  Last name
+                </label>
+                <input
+                  type="text"
+                  id="lastName"
+                  placeholder="Doe"
+                  className={`text-sm w-full py-2.5 px-3 border rounded-lg focus:outline-none focus:ring-2 bg-background text-foreground focus:ring-ring ${
+                    lastNameError ? "border-destructive" : "border-input"
+                  }`}
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  aria-invalid={!!lastNameError}
+                  disabled={submitted}
+                />
+                {lastNameError && (
+                  <p className="text-destructive text-xs mt-1">{lastNameError}</p>
+                )}
+              </div>
+            </div>
 
             <div>
               <label htmlFor="email" className="block text-sm mb-2 text-card-foreground">
