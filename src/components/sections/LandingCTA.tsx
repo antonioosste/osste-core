@@ -2,11 +2,13 @@ import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { CTAParticles } from "@/components/landing/CTAParticles";
 
 export function LandingCTA() {
   return (
-    <section className="py-24 md:py-32 bg-ink">
-      <div className="container mx-auto px-4">
+    <section className="py-24 md:py-32 bg-ink relative overflow-hidden">
+      <CTAParticles />
+      <div className="container mx-auto px-4 relative z-[1]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
