@@ -20,8 +20,20 @@ export default {
         paper: "hsl(var(--paper))",
         "paper-alt": "hsl(var(--paper-alt))",
         ink: "hsl(var(--ink))",
+        "ink-soft": "hsl(var(--ink-soft))",
         antique: "hsl(var(--antique))",
         "antique-hover": "hsl(var(--antique-hover))",
+        blush: {
+          DEFAULT: "hsl(var(--blush))",
+          mid: "hsl(var(--blush-mid))",
+          deep: "hsl(var(--blush-deep))",
+        },
+        gold: {
+          DEFAULT: "hsl(var(--gold))",
+          light: "hsl(var(--gold-light))",
+        },
+        cream: "hsl(var(--cream))",
+        rose: "hsl(var(--rose))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -81,9 +93,10 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["DM Sans", "system-ui", "sans-serif"],
         serif: ["Cormorant Garamond", "Georgia", "serif"],
         display: ["Cormorant Garamond", "Georgia", "serif"],
+        body: ["Lora", "Georgia", "serif"],
       },
       borderRadius: {
         lg: "var(--radius)",

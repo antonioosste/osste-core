@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, User, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +24,7 @@ const navigation = [
 
 export function Header({ isAuthenticated = false }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { user, signOut } = useAuth();
 
@@ -35,8 +36,24 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
     location.pathname.startsWith("/stories") ||
     location.pathname.startsWith("/settings");
 
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <header className="w-full border-b border-border/40 bg-background/90 backdrop-blur-sm">
+    <header
+      className={cn(
+        "w-full sticky top-0 z-50 transition-shadow duration-300",
+        scrolled && "shadow-[0_4px_24px_rgba(44,34,24,0.08)]"
+      )}
+      style={{
+        background: "rgba(251, 246, 241, 0.88)",
+        backdropFilter: "blur(12px)",
+        borderBottom: "1px solid rgba(168, 132, 92, 0.15)",
+      }}
+    >
       <div className="max-w-screen-xl mx-auto px-6">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -55,7 +72,7 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors tracking-wide"
+                  className="text-[13px] font-normal uppercase tracking-[1px] text-ink-soft hover:text-gold transition-colors font-sans"
                 >
                   {item.name}
                 </Link>
@@ -98,10 +115,14 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
               </DropdownMenu>
             ) : (
               <div className="hidden md:flex items-center space-x-3">
-                <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
+                <Button variant="ghost" size="sm" asChild className="text-ink-soft font-sans uppercase tracking-[1px] text-[13px]">
                   <Link to="/login">Sign In</Link>
                 </Button>
-                <Button size="sm" className="bg-primary hover:bg-antique-hover text-primary-foreground" asChild>
+                <Button
+                  size="sm"
+                  asChild
+                  className="btn-sweep bg-ink text-cream hover:bg-ink rounded-[2px] font-sans uppercase tracking-[1.5px] text-[13px]"
+                >
                   <Link to="/signup">Get Started</Link>
                 </Button>
               </div>
@@ -127,9 +148,10 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
       {/* Mobile menu */}
       <div
         className={cn(
-          "md:hidden border-t border-border/40 bg-background",
+          "md:hidden border-t bg-cream",
           mobileMenuOpen ? "block" : "hidden"
         )}
+        style={{ borderColor: "rgba(168, 132, 92, 0.15)" }}
       >
         <div className="container mx-auto px-6 py-4 space-y-4">
           {!isDashboard && (
@@ -138,7 +160,7 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className="block text-sm font-medium text-muted-foreground hover:text-foreground"
+                  className="block text-[13px] font-normal uppercase tracking-[1px] text-ink-soft hover:text-gold font-sans"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.name}
@@ -148,13 +170,13 @@ export function Header({ isAuthenticated = false }: HeaderProps) {
           )}
 
           {!isUserAuthenticated && (
-            <div className="flex flex-col space-y-2 pt-3 border-t border-border/40">
+            <div className="flex flex-col space-y-2 pt-3 border-t" style={{ borderColor: "rgba(168, 132, 92, 0.15)" }}>
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
                   Sign In
                 </Link>
               </Button>
-              <Button size="sm" className="bg-primary hover:bg-antique-hover text-primary-foreground" asChild>
+              <Button size="sm" className="btn-sweep bg-ink text-cream hover:bg-ink rounded-[2px] uppercase tracking-[1.5px]" asChild>
                 <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
                   Get Started
                 </Link>

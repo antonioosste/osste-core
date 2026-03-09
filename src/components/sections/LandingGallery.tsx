@@ -1,55 +1,98 @@
 import { motion } from "framer-motion";
 
+const galleryImages = [
+  {
+    src: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&auto=format&fit=crop",
+    alt: "Old letters and journal — evokes written memories",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&auto=format&fit=crop",
+    alt: "Family together, warm light — connection across generations",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=800&auto=format&fit=crop",
+    alt: "Grandmother with grandchild — legacy and love",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800&auto=format&fit=crop",
+    alt: "Open book — the memoir itself",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&auto=format&fit=crop",
+    alt: "Warm portrait, natural light — personal and human",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800&auto=format&fit=crop",
+    alt: "Warm portrait — intimate storytelling feel",
+  },
+];
+
 export function LandingGallery() {
   return (
-    <section className="py-24 md:py-32 bg-paper-alt">
+    <section className="py-24 md:py-32 bg-blush">
       <div className="container mx-auto px-4 mb-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-3xl mx-auto text-center"
+          className="max-w-3xl mx-auto text-center reveal"
         >
-          <h2 className="text-3xl md:text-5xl font-display text-foreground mb-4">
+          <span className="eyebrow text-gold mb-4 block">Gallery</span>
+          <h2 className="text-3xl md:text-5xl font-display text-ink mb-4">
             Stories That Come to Life
           </h2>
-          <p className="text-lg text-muted-foreground font-light">
+          <p className="text-lg text-ink-soft font-body font-light">
             See how families are preserving their precious memories.
           </p>
         </motion.div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 px-4 max-w-7xl mx-auto">
-        <figure className="col-span-1 row-span-2">
-          <img src="https://images.unsplash.com/photo-1718838541476-d04e71caa347?w=800&auto=format&fit=crop" alt="Family story moment" className="w-full h-full object-cover rounded-lg" loading="lazy" />
-        </figure>
-        <figure>
-          <img src="https://images.unsplash.com/photo-1715432362539-6ab2ab480db2?w=800&auto=format&fit=crop" alt="Memory preservation" className="w-full h-48 md:h-56 object-cover rounded-lg" loading="lazy" />
-        </figure>
-        <figure>
-          <img src="https://images.unsplash.com/photo-1718601980986-0ce75101d52d?w=800&auto=format&fit=crop" alt="Storytelling session" className="w-full h-48 md:h-56 object-cover rounded-lg" loading="lazy" />
-        </figure>
-        <figure className="row-span-2">
-          <img src="https://images.unsplash.com/photo-1476180814856-a36609db0493?w=800&auto=format&fit=crop" alt="Family book creation" className="w-full h-full object-cover rounded-lg" loading="lazy" />
-        </figure>
-        <figure>
-          <img src="https://images.unsplash.com/photo-1685904042960-66242a0ac352?w=800&auto=format&fit=crop" alt="Family gathering" className="w-full h-48 md:h-56 object-cover rounded-lg" loading="lazy" />
-        </figure>
-        <figure>
-          <img src="https://images.unsplash.com/photo-1595407660626-db35dcd16609?w=800&auto=format&fit=crop" alt="Legacy preservation" className="w-full h-48 md:h-56 object-cover rounded-lg" loading="lazy" />
-        </figure>
-        <figure>
-          <img src="https://images.unsplash.com/photo-1719547907790-f661a88302c2?w=800&auto=format&fit=crop" alt="Generations together" className="w-full h-48 md:h-56 object-cover rounded-lg" loading="lazy" />
-        </figure>
-        <figure>
-          <img src="https://images.unsplash.com/photo-1599054799131-4b09c73a63cf?w=800&auto=format&fit=crop" alt="Shared stories" className="w-full h-48 md:h-56 object-cover rounded-lg" loading="lazy" />
-        </figure>
-        <figure>
-          <img src="https://images.unsplash.com/photo-1719963532023-01b573d1d584?w=800&auto=format&fit=crop" alt="Recording moments" className="w-full h-48 md:h-56 object-cover rounded-lg" loading="lazy" />
-        </figure>
-        <figure>
-          <img src="/images/gallery/family-photos.jpg" alt="Vintage family photographs" className="w-full h-48 md:h-56 object-cover rounded-lg" loading="lazy" />
-        </figure>
+      {/* Grid: Row 1 = 40/30/30, Row 2 = 50/50 */}
+      <div className="max-w-6xl mx-auto px-4 reveal reveal-delay-1">
+        <div className="grid grid-cols-10 gap-3 mb-3">
+          <div className="col-span-4 gallery-img-wrap aspect-[4/3]">
+            <img
+              src={galleryImages[0].src}
+              alt={galleryImages[0].alt}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
+          <div className="col-span-3 gallery-img-wrap aspect-[4/3]">
+            <img
+              src={galleryImages[1].src}
+              alt={galleryImages[1].alt}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
+          <div className="col-span-3 gallery-img-wrap aspect-[4/3]">
+            <img
+              src={galleryImages[2].src}
+              alt={galleryImages[2].alt}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="gallery-img-wrap aspect-[3/2]">
+            <img
+              src={galleryImages[3].src}
+              alt={galleryImages[3].alt}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
+          <div className="gallery-img-wrap aspect-[3/2]">
+            <img
+              src={galleryImages[4].src}
+              alt={galleryImages[4].alt}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
+        </div>
       </div>
     </section>
   );

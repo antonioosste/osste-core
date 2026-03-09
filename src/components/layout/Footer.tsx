@@ -20,7 +20,7 @@ const footerLinks = {
 
 export function Footer() {
   return (
-    <footer className="bg-paper-alt border-t border-border/40">
+    <footer className="bg-ink border-t border-cream/10">
       <div className="container mx-auto px-6 py-12 md:py-16">
         {/* Top: centered logo */}
         <div className="flex justify-center mb-10">
@@ -28,15 +28,20 @@ export function Footer() {
             <img
               src="/brand/osste-logo-main.png"
               alt="OSSTE"
-              className="h-10 w-auto opacity-70"
+              className="h-10 w-auto opacity-60 brightness-200"
             />
           </Link>
         </div>
 
+        {/* Tagline */}
+        <p className="text-center text-sm text-cream/50 font-body italic mb-10">
+          Every life deserves to be written.
+        </p>
+
         {/* Links row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto text-center mb-10">
           <div>
-            <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4">
+            <h3 className="eyebrow text-gold-light mb-4">
               Product
             </h3>
             <ul className="space-y-2">
@@ -44,7 +49,7 @@ export function Footer() {
                 <li key={link.name}>
                   <Link
                     to={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-sm text-cream/50 hover:text-cream transition-colors font-sans"
                   >
                     {link.name}
                   </Link>
@@ -53,7 +58,7 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4">
+            <h3 className="eyebrow text-gold-light mb-4">
               Support
             </h3>
             <ul className="space-y-2">
@@ -61,7 +66,7 @@ export function Footer() {
                 <li key={link.name}>
                   <Link
                     to={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-sm text-cream/50 hover:text-cream transition-colors font-sans"
                   >
                     {link.name}
                   </Link>
@@ -70,7 +75,7 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4">
+            <h3 className="eyebrow text-gold-light mb-4">
               Legal
             </h3>
             <ul className="space-y-2">
@@ -78,7 +83,7 @@ export function Footer() {
                 <li key={link.name}>
                   <Link
                     to={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-sm text-cream/50 hover:text-cream transition-colors font-sans"
                   >
                     {link.name}
                   </Link>
@@ -89,8 +94,8 @@ export function Footer() {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-border/40 pt-6">
-          <p className="text-center text-xs text-muted-foreground font-light">
+        <div className="border-t border-cream/10 pt-6">
+          <p className="text-center text-xs text-cream/40 font-sans">
             © {new Date().getFullYear()} OSSTE. All rights reserved.
           </p>
         </div>
