@@ -46,9 +46,10 @@ const testimonials = [
 export function HomeTestimonials() {
   return (
     <TestimonialsSection
-      title="Trusted by Families Worldwide"
+      title="Stories That Have Moved Us"
       description="Real families use OSSTE to capture voices, photos, and memories—turning interviews into a polished keepsake for future generations."
       testimonials={testimonials}
+      className="bg-cream"
     />
   )
 }

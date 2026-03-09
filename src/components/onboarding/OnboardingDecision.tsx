@@ -20,41 +20,41 @@ function OptionCard({ icon, title, description, highlight, isSelected, onClick }
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={cn(
-        "relative flex flex-col items-center p-8 md:p-10 rounded-2xl border-2 transition-all duration-300 text-left w-full group",
-        "bg-card/80 backdrop-blur-sm",
+        "relative flex flex-col items-center p-8 md:p-10 rounded-[4px] border transition-all duration-300 text-left w-full group",
+        "bg-cream/80 backdrop-blur-sm",
         isSelected 
-          ? "border-primary shadow-xl shadow-primary/20 ring-2 ring-primary/30" 
-          : "border-border/50 hover:border-primary/50 hover:shadow-lg"
+          ? "border-gold shadow-xl shadow-gold/10 ring-2 ring-gold/20" 
+          : "border-blush-deep/30 hover:border-gold/50 hover:shadow-lg"
       )}
     >
       {/* Gradient overlay on hover */}
       <div className={cn(
-        "absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300",
-        "bg-gradient-to-br from-primary/5 to-amber-500/5",
+        "absolute inset-0 rounded-[4px] opacity-0 transition-opacity duration-300",
+        "bg-gradient-to-br from-blush/30 to-blush-deep/10",
         isSelected ? "opacity-100" : "group-hover:opacity-100"
       )} />
       
       {/* Icon */}
       <div className={cn(
-        "relative w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center mb-6 transition-all duration-300",
+        "relative w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center mb-6 transition-all duration-300",
         isSelected 
-          ? "bg-primary text-primary-foreground" 
-          : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+          ? "bg-gold text-cream" 
+          : "bg-blush text-ink-soft group-hover:bg-blush-mid group-hover:text-gold"
       )}>
         {icon}
       </div>
       
       {/* Content */}
       <div className="relative text-center">
-        <h3 className="text-xl md:text-2xl font-semibold text-foreground mb-2">
+        <h3 className="text-xl md:text-2xl font-display text-ink mb-2">
           {title}
         </h3>
-        <p className="text-muted-foreground text-sm md:text-base mb-4">
+        <p className="text-ink-soft text-sm md:text-base mb-4 font-body">
           {description}
         </p>
         <span className={cn(
-          "inline-flex items-center gap-1.5 text-sm font-medium transition-colors",
-          isSelected ? "text-primary" : "text-muted-foreground group-hover:text-primary"
+          "inline-flex items-center gap-1.5 text-sm font-sans uppercase tracking-[1.5px] transition-colors",
+          isSelected ? "text-gold" : "text-ink-soft group-hover:text-gold"
         )}>
           {highlight}
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -66,9 +66,9 @@ function OptionCard({ icon, title, description, highlight, isSelected, onClick }
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="absolute -top-2 -right-2 w-8 h-8 bg-primary rounded-full flex items-center justify-center"
+          className="absolute -top-2 -right-2 w-8 h-8 bg-gold rounded-full flex items-center justify-center"
         >
-          <Sparkles className="w-4 h-4 text-primary-foreground" />
+          <Sparkles className="w-4 h-4 text-cream" />
         </motion.div>
       )}
     </motion.button>
@@ -88,23 +88,22 @@ export function OnboardingDecision() {
   };
 
   return (
-    <section className="py-20 md:py-28 px-4 bg-gradient-to-b from-background via-muted/30 to-background">
+    <section className="py-20 md:py-28 px-4 bg-blush">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12 md:mb-16"
+          className="text-center mb-12 md:mb-16 reveal"
         >
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-            <Heart className="w-4 h-4" />
+          <span className="eyebrow text-gold mb-4 block">
             Begin Your Journey
           </span>
-          <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
+          <h2 className="text-3xl md:text-5xl font-display text-ink mb-4">
             How would you like to start?
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-ink-soft max-w-2xl mx-auto font-body">
             Whether you're preserving your own memories or giving the gift of storytelling to someone special, we're here to help.
           </p>
         </motion.div>
@@ -115,7 +114,7 @@ export function OnboardingDecision() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          className="grid md:grid-cols-2 gap-6 md:gap-8 mb-10"
+          className="grid md:grid-cols-2 gap-6 md:gap-8 mb-10 reveal reveal-delay-1"
         >
           <OptionCard
             icon={<BookOpen className="w-8 h-8 md:w-10 md:h-10" />}
@@ -146,10 +145,10 @@ export function OnboardingDecision() {
             onClick={handleContinue}
             disabled={!selected}
             className={cn(
-              "inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300",
+              "btn-text inline-flex items-center gap-2 px-8 py-4 rounded-[2px] text-lg transition-all duration-300",
               selected
-                ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30"
-                : "bg-muted text-muted-foreground cursor-not-allowed"
+                ? "btn-sweep bg-ink text-cream hover:bg-ink shadow-lg shadow-ink/15"
+                : "bg-blush-mid text-ink-soft cursor-not-allowed"
             )}
           >
             Continue
