@@ -58,7 +58,7 @@ export function AdminLayout({ children, requirePermission }: AdminLayoutProps) {
       <div className="min-h-screen flex w-full bg-background">
         <AdminSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center border-b border-border/40 px-4 shrink-0">
+          <header className="h-14 flex items-center px-4 shrink-0">
             <SidebarTrigger className="mr-4" />
             <span className="text-sm font-medium text-muted-foreground">OSSTE Admin</span>
           </header>
