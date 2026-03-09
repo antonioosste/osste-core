@@ -37,7 +37,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
-      <SidebarHeader className="border-b border-border/40 p-4">
+      <SidebarHeader className="p-4">
         {!collapsed && (
           <Link to="/" className="flex items-center">
             <img 
