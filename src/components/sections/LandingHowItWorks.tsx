@@ -1,30 +1,79 @@
 import { Mic, Sparkles, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 
+function MicRipple() {
+  return (
+    <div className="relative w-16 h-16 flex items-center justify-center mx-auto mb-4">
+      {[0, 0.5, 1].map((delay, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full border-[1.5px] border-rose/40"
+          style={{ width: 64, height: 64 }}
+          animate={{ scale: [1, 2], opacity: [0.5, 0] }}
+          transition={{ duration: 2, repeat: Infinity, delay, ease: "easeOut" }}
+        />
+      ))}
+      <div className="w-16 h-16 rounded-full bg-blush flex items-center justify-center relative z-10">
+        <Mic className="w-6 h-6 text-rose" />
+      </div>
+    </div>
+  );
+}
+
+function TypewriterText() {
+  return (
+    <div className="mx-auto mb-4 h-8 flex items-center justify-center">
+      <span className="typewriter-text font-body italic text-[11px] text-ink-soft">
+        It was a warm summer morning...
+      </span>
+    </div>
+  );
+}
+
+function BookOpenAnim() {
+  return (
+    <div className="group/book flex items-center justify-center mx-auto mb-4 h-16" style={{ perspective: 400 }}>
+      <div className="flex">
+        {/* Left cover */}
+        <div
+          className="w-8 h-12 rounded-l-sm transition-transform duration-500 group-hover/book:[transform:rotateY(30deg)]"
+          style={{
+            background: "hsl(var(--ink))",
+            borderRight: "2px solid hsl(var(--gold))",
+            transformOrigin: "right center",
+          }}
+        />
+        {/* Right cover */}
+        <div
+          className="w-8 h-12 rounded-r-sm"
+          style={{ background: "hsl(var(--ink))" }}
+        />
+      </div>
+    </div>
+  );
+}
+
 const steps = [
   {
     numeral: "I",
     eyebrow: "VOICE INTERVIEW",
     step: "Record",
-    title: "Voice Interview",
     description: "Start a natural conversation guided by our AI interviewer.",
-    icon: Mic,
+    illustration: <MicRipple />,
   },
   {
     numeral: "II",
     eyebrow: "AI WRITING",
     step: "Refine",
-    title: "AI Enhancement",
     description: "Our AI polishes your story while preserving your authentic voice.",
-    icon: Sparkles,
+    illustration: <TypewriterText />,
   },
   {
     numeral: "III",
     eyebrow: "YOUR BOOK",
     step: "Print",
-    title: "Beautiful Books",
     description: "Generate professional books ready to share with family.",
-    icon: BookOpen,
+    illustration: <BookOpenAnim />,
   },
 ];
 
@@ -66,6 +115,8 @@ export function LandingHowItWorks() {
               )}
 
               <div className="relative z-10">
+                {/* Illustration */}
+                {item.illustration}
                 {/* Eyebrow */}
                 <span className="eyebrow text-gold-light block mb-2">
                   {item.eyebrow}

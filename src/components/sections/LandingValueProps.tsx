@@ -27,8 +27,33 @@ const valueProps = [
 
 export function LandingValueProps() {
   return (
-    <section className="py-24 md:py-32 bg-cream">
-      <div className="container mx-auto px-4">
+    <section className="py-24 md:py-32 bg-cream relative overflow-hidden">
+      {/* Faint grain texture */}
+      <div
+        className="absolute inset-0 pointer-events-none z-0 opacity-[0.03]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+        }}
+      />
+
+      {/* Watermark book SVG */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+        <svg
+          width="500"
+          height="500"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="rgba(168, 132, 92, 0.04)"
+          strokeWidth="0.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+        </svg>
+      </div>
+
+      <div className="container mx-auto px-4 relative z-[1]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
