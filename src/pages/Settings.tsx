@@ -119,12 +119,42 @@ export default function Settings() {
     });
   };
 
-  const handleDeleteAccount = () => {
-    toast({
-      title: "Account deletion initiated",
-      description: "Your account deletion request has been submitted. This action cannot be undone.",
-      variant: "destructive",
-    });
+  const handleDeleteAccount = async () => {
+    if (!user?.email || deleteConfirmEmail !== user.email) {
+      toast({ title: "Email mismatch", description: "Please enter your account email correctly.", variant: "destructive" });
+      return;
+    }
+    if (!deletePassword) {
+      toast({ title: "Password required", description: "Please enter your password to confirm.", variant: "destructive" });
+      return;
+    }
+
+    setDeleteLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-account', {
+        body: { email: deleteConfirmEmail, password: deletePassword },
+      });
+
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+
+      toast({
+        title: "Account deleted",
+        description: "Your account and all associated data have been permanently deleted.",
+      });
+
+      // Sign out locally
+      await signOut();
+      navigate("/login");
+    } catch (err: any) {
+      toast({
+        title: "Account deletion failed",
+        description: err?.message || "An error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const handleSignOut = async () => {
