@@ -49,6 +49,11 @@ export default function Settings() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteConfirmEmail, setDeleteConfirmEmail] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
 
   useEffect(() => {
     if (profile) {
