@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, CreditCard, Shield, LogOut, Download, Trash2, Sparkles, Star, Crown, ArrowRight, Settings2, BadgeCheck } from "lucide-react";
+import { User, CreditCard, Shield, LogOut, Download, Trash2, Sparkles, Star, Crown, ArrowRight, Settings2, BadgeCheck, Loader2, AlertTriangle, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -49,6 +49,11 @@ export default function Settings() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteConfirmEmail, setDeleteConfirmEmail] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -114,12 +119,42 @@ export default function Settings() {
     });
   };
 
-  const handleDeleteAccount = () => {
-    toast({
-      title: "Account deletion initiated",
-      description: "Your account deletion request has been submitted. This action cannot be undone.",
-      variant: "destructive",
-    });
+  const handleDeleteAccount = async () => {
+    if (!user?.email || deleteConfirmEmail !== user.email) {
+      toast({ title: "Email mismatch", description: "Please enter your account email correctly.", variant: "destructive" });
+      return;
+    }
+    if (!deletePassword) {
+      toast({ title: "Password required", description: "Please enter your password to confirm.", variant: "destructive" });
+      return;
+    }
+
+    setDeleteLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-account', {
+        body: { email: deleteConfirmEmail, password: deletePassword },
+      });
+
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+
+      toast({
+        title: "Account deleted",
+        description: "Your account and all associated data have been permanently deleted.",
+      });
+
+      // Sign out locally
+      await signOut();
+      navigate("/login");
+    } catch (err: any) {
+      toast({
+        title: "Account deletion failed",
+        description: err?.message || "An error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const handleSignOut = async () => {
@@ -405,29 +440,85 @@ export default function Settings() {
                     <p className="font-medium text-destructive">Delete Account</p>
                     <p className="text-sm text-muted-foreground">Permanently delete your account and all data</p>
                   </div>
-                  <AlertDialog>
+                  <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => {
+                    setDeleteDialogOpen(open);
+                    if (!open) { setDeletePassword(""); setDeleteConfirmEmail(""); setShowDeletePassword(false); }
+                  }}>
                     <AlertDialogTrigger asChild>
                       <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
                         <Trash2 className="w-4 h-4 mr-2" />
                         Delete Account
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="max-w-md">
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete your account
-                          and remove all your data from our servers, including all stories, recordings, and personal information.
+                        <AlertDialogTitle className="flex items-center gap-2">
+                          <AlertTriangle className="w-5 h-5 text-destructive" />
+                          Delete Account Permanently
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-left space-y-3">
+                          <p>This action <strong>cannot be undone</strong>. All of the following will be permanently deleted:</p>
+                          <ul className="list-disc list-inside text-sm space-y-1 text-muted-foreground">
+                            <li>Your profile and account</li>
+                            <li>All books, stories, and chapters</li>
+                            <li>All recording sessions and audio files</li>
+                            <li>All uploaded photos and images</li>
+                            <li>Payment and billing records</li>
+                            <li>Print order history</li>
+                          </ul>
+                          <p className="text-sm font-medium text-destructive">Please re-enter your credentials to confirm.</p>
                         </AlertDialogDescription>
                       </AlertDialogHeader>
+                      <div className="space-y-3 py-2">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="delete-email" className="text-sm">Email</Label>
+                          <Input
+                            id="delete-email"
+                            type="email"
+                            placeholder={user?.email || "your@email.com"}
+                            value={deleteConfirmEmail}
+                            onChange={(e) => setDeleteConfirmEmail(e.target.value)}
+                            disabled={deleteLoading}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="delete-password" className="text-sm">Password</Label>
+                          <div className="relative">
+                            <Input
+                              id="delete-password"
+                              type={showDeletePassword ? "text" : "password"}
+                              placeholder="Enter your password"
+                              value={deletePassword}
+                              onChange={(e) => setDeletePassword(e.target.value)}
+                              disabled={deleteLoading}
+                            />
+                            <button
+                              type="button"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                              onClick={() => setShowDeletePassword(!showDeletePassword)}
+                              tabIndex={-1}
+                            >
+                              {showDeletePassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
+                        <AlertDialogCancel disabled={deleteLoading}>Cancel</AlertDialogCancel>
+                        <Button
+                          variant="destructive"
                           onClick={handleDeleteAccount}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          disabled={deleteLoading || !deleteConfirmEmail || !deletePassword}
                         >
-                          Delete Account
-                        </AlertDialogAction>
+                          {deleteLoading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Deleting...
+                            </>
+                          ) : (
+                            "Delete My Account"
+                          )}
+                        </Button>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
