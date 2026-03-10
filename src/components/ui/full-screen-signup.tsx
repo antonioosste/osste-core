@@ -1,48 +1,82 @@
-import { Sun } from "lucide-react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { sendAccountCreationEmail } from "@/lib/emails";
 import { z } from "zod";
+import { motion } from "framer-motion";
+import { AuthBrandPanel } from "@/components/auth/AuthBrandPanel";
 
-const signupSchema = z.object({
-  firstName: z.string().trim().min(1, { message: "First name is required." }),
-  lastName: z.string().trim().min(1, { message: "Last name is required." }),
-  email: z.string().trim().email({ message: "Please enter a valid email address." }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters." }),
-});
+const signupSchema = z
+  .object({
+    firstName: z.string().trim().min(1, "First name is required."),
+    lastName: z.string().trim().min(1, "Last name is required."),
+    email: z.string().trim().email("Please enter a valid email address."),
+    password: z.string().min(8, "Password must be at least 8 characters."),
+    confirmPassword: z.string().min(1, "Please confirm your password."),
+    phone: z.string().optional(),
+    referralSource: z.string().optional(),
+    agreeTerms: z.literal(true, {
+      errorMap: () => ({ message: "You must agree to the terms." }),
+    }),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
+  });
+
+type SignupForm = z.infer<typeof signupSchema>;
+
+const referralOptions = [
+  "Friend or Family",
+  "Social Media",
+  "Search Engine",
+  "Podcast / Blog",
+  "Gift",
+  "Other",
+];
 
 export const FullScreenSignup = () => {
   const navigate = useNavigate();
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [firstNameError, setFirstNameError] = useState("");
-  const [lastNameError, setLastNameError] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const [form, setForm] = useState<Partial<SignupForm>>({
+    agreeTerms: undefined,
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [generalError, setGeneralError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmTouched, setConfirmTouched] = useState(false);
+
+  const set = useCallback(
+    (field: keyof SignupForm, value: unknown) => {
+      setForm((f) => ({ ...f, [field]: value }));
+      setErrors((e) => {
+        const next = { ...e };
+        delete next[field];
+        return next;
+      });
+    },
+    []
+  );
+
+  const passwordsMatch =
+    form.password && form.confirmPassword && form.password === form.confirmPassword;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
     setGeneralError("");
-    setFirstNameError("");
-    setLastNameError("");
-    setEmailError("");
-    setPasswordError("");
+    setErrors({});
 
-    // Validate with zod
-    const result = signupSchema.safeParse({ firstName, lastName, email, password });
-    
+    const result = signupSchema.safeParse(form);
     if (!result.success) {
-      const errors = result.error.flatten().fieldErrors;
-      if (errors.firstName?.[0]) setFirstNameError(errors.firstName[0]);
-      if (errors.lastName?.[0]) setLastNameError(errors.lastName[0]);
-      if (errors.email?.[0]) setEmailError(errors.email[0]);
-      if (errors.password?.[0]) setPasswordError(errors.password[0]);
+      const flat = result.error.flatten().fieldErrors;
+      const mapped: Record<string, string> = {};
+      for (const [k, v] of Object.entries(flat)) {
+        if (v?.[0]) mapped[k] = v[0];
+      }
+      setErrors(mapped);
       setSubmitted(false);
       return;
     }
@@ -50,7 +84,7 @@ export const FullScreenSignup = () => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       const fullName = `${result.data.firstName} ${result.data.lastName}`.trim();
-      
+
       const { error } = await supabase.auth.signUp({
         email: result.data.email,
         password: result.data.password,
@@ -59,6 +93,8 @@ export const FullScreenSignup = () => {
           data: {
             name: fullName,
             full_name: fullName,
+            phone: result.data.phone || undefined,
+            referral_source: result.data.referralSource || undefined,
           },
         },
       });
@@ -73,177 +109,241 @@ export const FullScreenSignup = () => {
         return;
       }
 
-      // Send account creation email (non-blocking)
       sendAccountCreationEmail({
         email: result.data.email,
         firstName: result.data.firstName,
       });
 
-      // Success - the user will be redirected by auth state change
-      // ApprovedRoute will handle sending to /dashboard or /pending-approval
       navigate("/dashboard");
-    } catch (err) {
+    } catch {
       setGeneralError("An unexpected error occurred. Please try again.");
       setSubmitted(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center overflow-hidden p-4 bg-background">
-      <div className="relative w-full max-w-5xl overflow-hidden flex flex-col md:flex-row rounded-3xl shadow-2xl ring-1 ring-border">
-        {/* Subtle vertical gloss strips */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 flex gap-2 opacity-20">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-[40rem] w-16 bg-gradient-to-b from-transparent via-foreground/30 to-background/20"
-              />
-            ))}
-          </div>
-        </div>
+    <div className="auth-page-wrapper">
+      {/* Left brand panel */}
+      <AuthBrandPanel variant="signup" />
 
-        {/* Soft accent blobs */}
-        <div className="absolute -bottom-20 -left-24 h-64 w-64 rounded-full bg-primary/50 blur-3xl opacity-30" />
-        <div className="absolute -bottom-10 right-0 h-40 w-40 rounded-full bg-card blur-2xl opacity-60" />
+      {/* Right form panel */}
+      <div className="auth-form-panel">
+        <div className="auth-form-container">
+          {/* Logo */}
+          <Link to="/" className="inline-flex items-center gap-2 mb-10">
+            <img src="/brand/osste-logo-transparent.png" alt="OSSTE" className="h-8" />
+          </Link>
 
-        {/* Left pane */}
-        <div className="relative bg-foreground text-background p-8 md:p-12 md:w-1/2">
-          <h1 className="text-2xl md:text-3xl font-serif font-medium leading-tight tracking-tight">
-            Design and dev partner for startups and founders.
-          </h1>
-          <p className="mt-4 text-background/70">
-            Welcome to <span className="font-semibold">OSSTE</span>. Sign up to start capturing your stories.
-          </p>
-        </div>
-
-        {/* Right pane */}
-        <div className="p-8 md:p-12 md:w-1/2 flex flex-col bg-card">
-          <div className="mb-8">
-            <div className="text-primary mb-4">
-              <Sun className="h-10 w-10" aria-hidden="true" />
-            </div>
-            <h2 className="text-3xl font-serif font-medium tracking-tight text-card-foreground">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+          >
+            <h1 className="font-serif text-3xl font-medium tracking-tight text-foreground mb-1">
               Get Started
-            </h2>
-            <p className="text-muted-foreground">
+            </h1>
+            <p className="font-sans text-sm text-muted-foreground mb-8">
               Create your account to keep your memories flowing.
             </p>
-          </div>
+          </motion.div>
 
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
-            {generalError && (
-              <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg border border-destructive/20">
-                {generalError}
-              </div>
-            )}
+          {generalError && (
+            <div className="bg-destructive/10 text-destructive text-sm p-3 rounded mb-5 border border-destructive/20">
+              {generalError}
+            </div>
+          )}
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="firstName" className="block text-sm mb-2 text-card-foreground">
-                  First name
-                </label>
+          <motion.form
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            onSubmit={handleSubmit}
+            className="space-y-5"
+            noValidate
+          >
+            {/* First + Last name */}
+            <div className="grid grid-cols-1 min-[480px]:grid-cols-2 gap-3">
+              <div className="auth-field-group">
+                <label htmlFor="su-first" className="auth-label">First name</label>
                 <input
+                  id="su-first"
                   type="text"
-                  id="firstName"
                   placeholder="Jane"
-                  className={`text-sm w-full py-2.5 px-3 border rounded-lg focus:outline-none focus:ring-2 bg-background text-foreground focus:ring-ring ${
-                    firstNameError ? "border-destructive" : "border-input"
-                  }`}
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  aria-invalid={!!firstNameError}
+                  className={`auth-input ${errors.firstName ? "auth-input-error" : ""}`}
+                  value={form.firstName || ""}
+                  onChange={(e) => set("firstName", e.target.value)}
                   disabled={submitted}
                 />
-                {firstNameError && (
-                  <p className="text-destructive text-xs mt-1">{firstNameError}</p>
-                )}
+                {errors.firstName && <p className="auth-error-msg">{errors.firstName}</p>}
               </div>
-              <div>
-                <label htmlFor="lastName" className="block text-sm mb-2 text-card-foreground">
-                  Last name
-                </label>
+              <div className="auth-field-group">
+                <label htmlFor="su-last" className="auth-label">Last name</label>
                 <input
+                  id="su-last"
                   type="text"
-                  id="lastName"
                   placeholder="Doe"
-                  className={`text-sm w-full py-2.5 px-3 border rounded-lg focus:outline-none focus:ring-2 bg-background text-foreground focus:ring-ring ${
-                    lastNameError ? "border-destructive" : "border-input"
-                  }`}
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  aria-invalid={!!lastNameError}
+                  className={`auth-input ${errors.lastName ? "auth-input-error" : ""}`}
+                  value={form.lastName || ""}
+                  onChange={(e) => set("lastName", e.target.value)}
                   disabled={submitted}
                 />
-                {lastNameError && (
-                  <p className="text-destructive text-xs mt-1">{lastNameError}</p>
-                )}
+                {errors.lastName && <p className="auth-error-msg">{errors.lastName}</p>}
               </div>
             </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm mb-2 text-card-foreground">
-                Your email
-              </label>
+            {/* Email */}
+            <div className="auth-field-group">
+              <label htmlFor="su-email" className="auth-label">Email</label>
               <input
+                id="su-email"
                 type="email"
-                id="email"
-                placeholder="you@osste.com"
-                className={`text-sm w-full py-2.5 px-3 border rounded-lg focus:outline-none focus:ring-2 bg-background text-foreground focus:ring-ring ${
-                  emailError ? "border-destructive" : "border-input"
-                }`}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                aria-invalid={!!emailError}
-                aria-describedby="email-error"
+                placeholder="you@example.com"
+                className={`auth-input ${errors.email ? "auth-input-error" : ""}`}
+                value={form.email || ""}
+                onChange={(e) => set("email", e.target.value)}
                 disabled={submitted}
               />
-              {emailError && (
-                <p id="email-error" className="text-destructive text-xs mt-1">
-                  {emailError}
-                </p>
+              {errors.email && <p className="auth-error-msg">{errors.email}</p>}
+            </div>
+
+            {/* Password */}
+            <div className="auth-field-group">
+              <label htmlFor="su-password" className="auth-label">Password</label>
+              <div className="relative">
+                <input
+                  id="su-password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Minimum 8 characters"
+                  className={`auth-input pr-12 ${errors.password ? "auth-input-error" : ""}`}
+                  value={form.password || ""}
+                  onChange={(e) => set("password", e.target.value)}
+                  disabled={submitted}
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {errors.password && <p className="auth-error-msg">{errors.password}</p>}
+            </div>
+
+            {/* Confirm Password */}
+            <div className="auth-field-group">
+              <label htmlFor="su-confirm" className="auth-label">Confirm Password</label>
+              <div className="relative">
+                <input
+                  id="su-confirm"
+                  type={showConfirm ? "text" : "password"}
+                  placeholder="Re-enter your password"
+                  className={`auth-input pr-12 ${errors.confirmPassword ? "auth-input-error" : ""}`}
+                  value={form.confirmPassword || ""}
+                  onChange={(e) => set("confirmPassword", e.target.value)}
+                  onBlur={() => setConfirmTouched(true)}
+                  disabled={submitted}
+                />
+                {confirmTouched && passwordsMatch && (
+                  <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-success" />
+                )}
+                {!passwordsMatch && (
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                  >
+                    {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                )}
+              </div>
+              {errors.confirmPassword && <p className="auth-error-msg">{errors.confirmPassword}</p>}
+              {confirmTouched && form.confirmPassword && !passwordsMatch && !errors.confirmPassword && (
+                <p className="auth-error-msg">Passwords do not match</p>
               )}
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm mb-2 text-card-foreground">
-                Password
+            {/* Phone (optional) */}
+            <div className="auth-field-group">
+              <label htmlFor="su-phone" className="auth-label">
+                Phone Number <span className="text-muted-foreground font-normal">(optional)</span>
               </label>
               <input
-                type="password"
-                id="password"
-                placeholder="Minimum 8 characters"
-                className={`text-sm w-full py-2.5 px-3 border rounded-lg focus:outline-none focus:ring-2 bg-background text-foreground focus:ring-ring ${
-                  passwordError ? "border-destructive" : "border-input"
-                }`}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                aria-invalid={!!passwordError}
-                aria-describedby="password-error"
+                id="su-phone"
+                type="tel"
+                placeholder="+1 (555) 000-0000"
+                className="auth-input"
+                value={form.phone || ""}
+                onChange={(e) => set("phone", e.target.value)}
                 disabled={submitted}
               />
-              {passwordError && (
-                <p id="password-error" className="text-destructive text-xs mt-1">
-                  {passwordError}
-                </p>
+            </div>
+
+            {/* Referral (optional) */}
+            <div className="auth-field-group">
+              <label htmlFor="su-referral" className="auth-label">
+                How did you hear about us?{" "}
+                <span className="text-muted-foreground font-normal">(optional)</span>
+              </label>
+              <select
+                id="su-referral"
+                className="auth-input appearance-none"
+                value={form.referralSource || ""}
+                onChange={(e) => set("referralSource", e.target.value)}
+                disabled={submitted}
+              >
+                <option value="">Select an option</option>
+                {referralOptions.map((o) => (
+                  <option key={o} value={o}>{o}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Terms checkbox */}
+            <div className="auth-field-group">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 rounded border-input accent-primary"
+                  checked={!!form.agreeTerms}
+                  onChange={(e) => set("agreeTerms", e.target.checked || undefined)}
+                  disabled={submitted}
+                />
+                <span className="font-sans text-xs text-muted-foreground leading-relaxed">
+                  I agree to the{" "}
+                  <Link to="/terms" className="text-primary hover:underline" target="_blank">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link to="/privacy" className="text-primary hover:underline" target="_blank">
+                    Privacy Policy
+                  </Link>
+                </span>
+              </label>
+              {errors.agreeTerms && <p className="auth-error-msg">{errors.agreeTerms}</p>}
+            </div>
+
+            {/* Submit */}
+            <button type="submit" disabled={submitted} className="auth-submit-btn">
+              {submitted ? (
+                <span className="auth-dots">
+                  <span /><span /><span />
+                </span>
+              ) : (
+                "CONTINUE"
               )}
-            </div>
-
-            <button
-              type="submit"
-              disabled={submitted}
-              className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground font-medium py-2.5 px-4 rounded-lg transition-colors"
-            >
-              {submitted ? "Creating account..." : "Continue"}
             </button>
+          </motion.form>
 
-            <div className="text-center text-muted-foreground text-sm">
-              Already have an account?{" "}
-              <a href="/login" className="text-card-foreground font-medium underline hover:text-primary transition-colors">
-                Login
-              </a>
-            </div>
-          </form>
+          {/* Switch link */}
+          <p className="mt-8 text-center font-sans text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link to="/login" className="text-primary font-medium hover:underline">
+              Login
+            </Link>
+          </p>
         </div>
       </div>
     </div>
