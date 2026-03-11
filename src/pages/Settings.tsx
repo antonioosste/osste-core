@@ -458,7 +458,15 @@ export default function Settings() {
                   </div>
                   <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => {
                     setDeleteDialogOpen(open);
-                    if (!open) { setDeletePassword(""); setDeleteConfirmEmail(""); setShowDeletePassword(false); }
+                    if (open) {
+                      setDeleteConfirmEmail(user?.email || "");
+                      setDeletePassword("");
+                      setShowDeletePassword(false);
+                      return;
+                    }
+                    setDeletePassword("");
+                    setDeleteConfirmEmail("");
+                    setShowDeletePassword(false);
                   }}>
                     <AlertDialogTrigger asChild>
                       <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
