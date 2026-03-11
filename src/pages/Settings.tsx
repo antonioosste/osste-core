@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { User, CreditCard, Shield, LogOut, Download, Trash2, Sparkles, Star, Crown, ArrowRight, Settings2, BadgeCheck, Loader2, AlertTriangle, Eye, EyeOff } from "lucide-react";
+import { User, CreditCard, Shield, Download, Trash2, Sparkles, Star, Crown, ArrowRight, Settings2, BadgeCheck, Loader2, AlertTriangle, Eye, EyeOff, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -49,6 +49,11 @@ export default function Settings() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteConfirmEmail, setDeleteConfirmEmail] = useState("");
@@ -173,11 +178,41 @@ export default function Settings() {
     }
   };
 
-  const handleSignOut = async () => {
+  const handleChangePassword = async () => {
+    if (!currentPassword.trim()) {
+      toast({ title: "Current password required", variant: "destructive" });
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast({ title: "New password too short", description: "Must be at least 6 characters.", variant: "destructive" });
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      toast({ title: "Passwords don't match", description: "New password and confirmation must match.", variant: "destructive" });
+      return;
+    }
+
+    setPasswordLoading(true);
     try {
-      await signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
+      // Re-authenticate with current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || "",
+        password: currentPassword,
+      });
+      if (signInError) throw new Error("Current password is incorrect.");
+
+      // Update password
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+      if (updateError) throw updateError;
+
+      toast({ title: "Password updated", description: "Your password has been changed successfully." });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+    } catch (err: any) {
+      toast({ title: "Failed to update password", description: err?.message || "Please try again.", variant: "destructive" });
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -238,6 +273,71 @@ export default function Settings() {
                 </div>
                 <Button onClick={handleSaveProfile} disabled={loading}>
                   Save Changes
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Change Password */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <KeyRound className="w-5 h-5 mr-2" />
+                  Change Password
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="current-password">Current Password</Label>
+                  <Input
+                    id="current-password"
+                    type="password"
+                    autoComplete="current-password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    disabled={passwordLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">New Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="new-password"
+                      type={showNewPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      disabled={passwordLoading}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      tabIndex={-1}
+                    >
+                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                  <Input
+                    id="confirm-new-password"
+                    type={showNewPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    disabled={passwordLoading}
+                  />
+                </div>
+                <Button onClick={handleChangePassword} disabled={passwordLoading}>
+                  {passwordLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Password"
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -555,26 +655,6 @@ export default function Settings() {
             </Card>
           </TabsContent>
         </Tabs>
-
-        {/* Account Actions */}
-        <Card className="mt-8 border-destructive/20">
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="font-medium text-foreground">Sign Out</h3>
-                <p className="text-sm text-muted-foreground">Sign out of your account on this device</p>
-              </div>
-              <Button 
-                variant="outline" 
-                className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-                onClick={handleSignOut}
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
