@@ -178,11 +178,41 @@ export default function Settings() {
     }
   };
 
-  const handleSignOut = async () => {
+  const handleChangePassword = async () => {
+    if (!currentPassword.trim()) {
+      toast({ title: "Current password required", variant: "destructive" });
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast({ title: "New password too short", description: "Must be at least 6 characters.", variant: "destructive" });
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      toast({ title: "Passwords don't match", description: "New password and confirmation must match.", variant: "destructive" });
+      return;
+    }
+
+    setPasswordLoading(true);
     try {
-      await signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
+      // Re-authenticate with current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || "",
+        password: currentPassword,
+      });
+      if (signInError) throw new Error("Current password is incorrect.");
+
+      // Update password
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+      if (updateError) throw updateError;
+
+      toast({ title: "Password updated", description: "Your password has been changed successfully." });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+    } catch (err: any) {
+      toast({ title: "Failed to update password", description: err?.message || "Please try again.", variant: "destructive" });
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
