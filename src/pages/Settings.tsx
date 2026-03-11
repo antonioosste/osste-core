@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { User, CreditCard, Shield, LogOut, Download, Trash2, Sparkles, Star, Crown, ArrowRight, Settings2, BadgeCheck, Loader2, AlertTriangle, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,6 +54,8 @@ export default function Settings() {
   const [deleteConfirmEmail, setDeleteConfirmEmail] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showDeletePassword, setShowDeletePassword] = useState(false);
+  const deleteEmailRef = useRef<HTMLInputElement>(null);
+  const deletePasswordRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (profile) {
@@ -120,11 +122,25 @@ export default function Settings() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!user?.email || deleteConfirmEmail !== user.email) {
+    const enteredEmail = (deleteEmailRef.current?.value || deleteConfirmEmail).trim();
+    const enteredPassword = deletePasswordRef.current?.value || deletePassword;
+    const normalizedUserEmail = user?.email?.trim().toLowerCase();
+    const normalizedEnteredEmail = enteredEmail.toLowerCase();
+
+    setDeleteConfirmEmail(enteredEmail);
+    setDeletePassword(enteredPassword);
+
+    if (!normalizedUserEmail) {
+      toast({ title: "Account email unavailable", description: "Please sign in again and retry account deletion.", variant: "destructive" });
+      return;
+    }
+
+    if (normalizedEnteredEmail !== normalizedUserEmail) {
       toast({ title: "Email mismatch", description: "Please enter your account email correctly.", variant: "destructive" });
       return;
     }
-    if (!deletePassword) {
+
+    if (!enteredPassword.trim()) {
       toast({ title: "Password required", description: "Please enter your password to confirm.", variant: "destructive" });
       return;
     }
@@ -132,7 +148,7 @@ export default function Settings() {
     setDeleteLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('delete-account', {
-        body: { email: deleteConfirmEmail, password: deletePassword },
+        body: { email: enteredEmail, password: enteredPassword },
       });
 
       if (error) throw new Error(error.message);
@@ -442,7 +458,15 @@ export default function Settings() {
                   </div>
                   <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => {
                     setDeleteDialogOpen(open);
-                    if (!open) { setDeletePassword(""); setDeleteConfirmEmail(""); setShowDeletePassword(false); }
+                    if (open) {
+                      setDeleteConfirmEmail(user?.email || "");
+                      setDeletePassword("");
+                      setShowDeletePassword(false);
+                      return;
+                    }
+                    setDeletePassword("");
+                    setDeleteConfirmEmail("");
+                    setShowDeletePassword(false);
                   }}>
                     <AlertDialogTrigger asChild>
                       <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
@@ -474,7 +498,9 @@ export default function Settings() {
                           <Label htmlFor="delete-email" className="text-sm">Email</Label>
                           <Input
                             id="delete-email"
+                            ref={deleteEmailRef}
                             type="email"
+                            autoComplete="username"
                             placeholder={user?.email || "your@email.com"}
                             value={deleteConfirmEmail}
                             onChange={(e) => setDeleteConfirmEmail(e.target.value)}
@@ -486,7 +512,9 @@ export default function Settings() {
                           <div className="relative">
                             <Input
                               id="delete-password"
+                              ref={deletePasswordRef}
                               type={showDeletePassword ? "text" : "password"}
+                              autoComplete="current-password"
                               placeholder="Enter your password"
                               value={deletePassword}
                               onChange={(e) => setDeletePassword(e.target.value)}
@@ -508,7 +536,7 @@ export default function Settings() {
                         <Button
                           variant="destructive"
                           onClick={handleDeleteAccount}
-                          disabled={deleteLoading || !deleteConfirmEmail || !deletePassword}
+                          disabled={deleteLoading}
                         >
                           {deleteLoading ? (
                             <>
