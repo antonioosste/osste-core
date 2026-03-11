@@ -127,7 +127,7 @@ export default function Session() {
 
   // Waveform animation
   const [waveformData, setWaveformData] = useState<number[]>(new Array(20).fill(0));
-  const intervalRef = useRef<NodeJS.Timeout>();
+  const intervalRef = useRef<ReturnType<typeof setInterval>>();
 
   // Conversation scroll reference
   const conversationEndRef = useRef<HTMLDivElement>(null);
