@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { User, CreditCard, Shield, LogOut, Download, Trash2, Sparkles, Star, Crown, ArrowRight, Settings2, BadgeCheck, Loader2, AlertTriangle, Eye, EyeOff } from "lucide-react";
+import { User, CreditCard, Shield, Download, Trash2, Sparkles, Star, Crown, ArrowRight, Settings2, BadgeCheck, Loader2, AlertTriangle, Eye, EyeOff, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
