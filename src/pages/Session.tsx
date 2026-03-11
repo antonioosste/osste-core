@@ -343,7 +343,7 @@ export default function Session() {
 
   // Timer effect
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     if (isRecording) {
       interval = setInterval(() => {
         setSessionTime((prev) => prev + 1);
