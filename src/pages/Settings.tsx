@@ -276,6 +276,71 @@ export default function Settings() {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Change Password */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <KeyRound className="w-5 h-5 mr-2" />
+                  Change Password
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="current-password">Current Password</Label>
+                  <Input
+                    id="current-password"
+                    type="password"
+                    autoComplete="current-password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    disabled={passwordLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">New Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="new-password"
+                      type={showNewPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      disabled={passwordLoading}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      tabIndex={-1}
+                    >
+                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                  <Input
+                    id="confirm-new-password"
+                    type={showNewPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    disabled={passwordLoading}
+                  />
+                </div>
+                <Button onClick={handleChangePassword} disabled={passwordLoading}>
+                  {passwordLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Password"
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* ── Billing ── */}
