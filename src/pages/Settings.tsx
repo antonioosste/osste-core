@@ -122,11 +122,25 @@ export default function Settings() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!user?.email || deleteConfirmEmail !== user.email) {
+    const enteredEmail = (deleteEmailRef.current?.value || deleteConfirmEmail).trim();
+    const enteredPassword = deletePasswordRef.current?.value || deletePassword;
+    const normalizedUserEmail = user?.email?.trim().toLowerCase();
+    const normalizedEnteredEmail = enteredEmail.toLowerCase();
+
+    setDeleteConfirmEmail(enteredEmail);
+    setDeletePassword(enteredPassword);
+
+    if (!normalizedUserEmail) {
+      toast({ title: "Account email unavailable", description: "Please sign in again and retry account deletion.", variant: "destructive" });
+      return;
+    }
+
+    if (normalizedEnteredEmail !== normalizedUserEmail) {
       toast({ title: "Email mismatch", description: "Please enter your account email correctly.", variant: "destructive" });
       return;
     }
-    if (!deletePassword) {
+
+    if (!enteredPassword.trim()) {
       toast({ title: "Password required", description: "Please enter your password to confirm.", variant: "destructive" });
       return;
     }
@@ -134,7 +148,7 @@ export default function Settings() {
     setDeleteLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('delete-account', {
-        body: { email: deleteConfirmEmail, password: deletePassword },
+        body: { email: enteredEmail, password: enteredPassword },
       });
 
       if (error) throw new Error(error.message);
