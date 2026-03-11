@@ -498,7 +498,9 @@ export default function Settings() {
                           <Label htmlFor="delete-email" className="text-sm">Email</Label>
                           <Input
                             id="delete-email"
+                            ref={deleteEmailRef}
                             type="email"
+                            autoComplete="username"
                             placeholder={user?.email || "your@email.com"}
                             value={deleteConfirmEmail}
                             onChange={(e) => setDeleteConfirmEmail(e.target.value)}
