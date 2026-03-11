@@ -655,26 +655,6 @@ export default function Settings() {
             </Card>
           </TabsContent>
         </Tabs>
-
-        {/* Account Actions */}
-        <Card className="mt-8 border-destructive/20">
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="font-medium text-foreground">Sign Out</h3>
-                <p className="text-sm text-muted-foreground">Sign out of your account on this device</p>
-              </div>
-              <Button 
-                variant="outline" 
-                className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-                onClick={handleSignOut}
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
