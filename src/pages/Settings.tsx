@@ -54,6 +54,8 @@ export default function Settings() {
   const [deleteConfirmEmail, setDeleteConfirmEmail] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showDeletePassword, setShowDeletePassword] = useState(false);
+  const deleteEmailRef = useRef<HTMLInputElement>(null);
+  const deletePasswordRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (profile) {
