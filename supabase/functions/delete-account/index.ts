@@ -38,7 +38,10 @@ serve(async (req: Request) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    if (email !== user.email) {
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const normalizedUserEmail = user.email?.trim().toLowerCase();
+
+    if (normalizedEmail !== normalizedUserEmail) {
       return new Response(JSON.stringify({ error: 'Email does not match your account' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
@@ -46,7 +49,7 @@ serve(async (req: Request) => {
     // Verify password with a fresh sign-in using anon key
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const anonClient = createClient(supabaseUrl, anonKey);
-    const { error: signInError } = await anonClient.auth.signInWithPassword({ email, password });
+    const { error: signInError } = await anonClient.auth.signInWithPassword({ email: normalizedEmail, password });
 
     if (signInError) {
       return new Response(JSON.stringify({ error: 'Incorrect password. Account deletion aborted.' }),

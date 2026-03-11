@@ -536,7 +536,7 @@ export default function Settings() {
                         <Button
                           variant="destructive"
                           onClick={handleDeleteAccount}
-                          disabled={deleteLoading || !deleteConfirmEmail || !deletePassword}
+                          disabled={deleteLoading}
                         >
                           {deleteLoading ? (
                             <>
