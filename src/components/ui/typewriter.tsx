@@ -50,7 +50,7 @@ const Typewriter = ({
   const texts = Array.isArray(text) ? text : [text]
 
   useEffect(() => {
-    let timeout: NodeJS.Timeout
+    let timeout: ReturnType<typeof setTimeout>
     const currentText = texts[currentTextIndex]
 
     const startTyping = () => {
