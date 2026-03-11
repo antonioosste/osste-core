@@ -512,7 +512,9 @@ export default function Settings() {
                           <div className="relative">
                             <Input
                               id="delete-password"
+                              ref={deletePasswordRef}
                               type={showDeletePassword ? "text" : "password"}
+                              autoComplete="current-password"
                               placeholder="Enter your password"
                               value={deletePassword}
                               onChange={(e) => setDeletePassword(e.target.value)}
