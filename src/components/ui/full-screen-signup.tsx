@@ -85,7 +85,7 @@ export const FullScreenSignup = () => {
       const redirectUrl = `${window.location.origin}/`;
       const fullName = `${result.data.firstName} ${result.data.lastName}`.trim();
 
-      const { error } = await supabase.auth.signUp({
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email: result.data.email,
         password: result.data.password,
         options: {
@@ -105,6 +105,13 @@ export const FullScreenSignup = () => {
         } else {
           setGeneralError(error.message);
         }
+        setSubmitted(false);
+        return;
+      }
+
+      // Supabase returns a fake success with empty identities when email already exists
+      if (signUpData?.user && signUpData.user.identities?.length === 0) {
+        setGeneralError("An account with this email already exists. Please log in instead.");
         setSubmitted(false);
         return;
       }
