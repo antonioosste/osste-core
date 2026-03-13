@@ -120,14 +120,7 @@ export function useSession(initialSessionId?: string | null) {
 
       if (updateError) throw updateError;
 
-      // Send recording finished email (non-blocking)
-      if (user?.email) {
-        sendRecordingFinishedEmail({
-          email: user.email,
-          firstName: user.user_metadata?.name || undefined,
-          sessionId: targetId,
-        });
-      }
+      // Recording session emails intentionally removed to reduce noise
 
       setSessionId(null);
       toast({
