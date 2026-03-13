@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mic, Eye, EyeOff } from "lucide-react";
+import { PasswordStrength, isPasswordStrong } from "@/components/ui/password-strength";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
