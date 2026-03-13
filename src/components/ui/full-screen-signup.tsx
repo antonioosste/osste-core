@@ -238,6 +238,7 @@ export const FullScreenSignup = () => {
               </div>
               {errors.password && <p className="auth-error-msg">{errors.password}</p>}
               <PasswordStrength password={form.password || ""} />
+            </div>
 
             {/* Confirm Password */}
             <div className="auth-field-group">
