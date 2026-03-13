@@ -13,7 +13,7 @@ const signupSchema = z
     firstName: z.string().trim().min(1, "First name is required."),
     lastName: z.string().trim().min(1, "Last name is required."),
     email: z.string().trim().email("Please enter a valid email address."),
-    password: z.string().min(8, "Password must be at least 8 characters."),
+    password: z.string().min(8, "Password must be at least 8 characters.").refine(isPasswordStrong, "Password does not meet all requirements."),
     confirmPassword: z.string().min(1, "Please confirm your password."),
     phone: z.string().optional(),
     referralSource: z.string().optional(),
