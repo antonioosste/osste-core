@@ -37,8 +37,8 @@ export default function ResetPassword() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (password.length < 6) {
-      toast({ title: "Error", description: "Password must be at least 6 characters.", variant: "destructive" });
+    if (!isPasswordStrong(password)) {
+      toast({ title: "Error", description: "Password does not meet all strength requirements.", variant: "destructive" });
       return;
     }
     if (password !== confirmPassword) {
