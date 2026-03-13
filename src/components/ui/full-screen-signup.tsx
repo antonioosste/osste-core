@@ -4,6 +4,7 @@ import { Eye, EyeOff, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { sendAccountCreationEmail } from "@/lib/emails";
 import { z } from "zod";
+import { PasswordStrength, isPasswordStrong } from "@/components/ui/password-strength";
 import { motion } from "framer-motion";
 import { AuthBrandPanel } from "@/components/auth/AuthBrandPanel";
 
