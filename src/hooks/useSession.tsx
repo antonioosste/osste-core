@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
-import { sendRecordingFinishedEmail } from '@/lib/emails';
 
 /**
  * SessionParams for creating a new session (Chapter Recording)
@@ -121,14 +120,7 @@ export function useSession(initialSessionId?: string | null) {
 
       if (updateError) throw updateError;
 
-      // Send recording finished email (non-blocking)
-      if (user?.email) {
-        sendRecordingFinishedEmail({
-          email: user.email,
-          firstName: user.user_metadata?.name || undefined,
-          sessionId: targetId,
-        });
-      }
+      // Recording session emails intentionally removed to reduce noise
 
       setSessionId(null);
       toast({

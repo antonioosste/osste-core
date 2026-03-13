@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { User, CreditCard, Shield, Download, Trash2, Sparkles, Star, Crown, ArrowRight, Settings2, BadgeCheck, Loader2, AlertTriangle, Eye, EyeOff, KeyRound } from "lucide-react";
+import { PasswordStrength, isPasswordStrong } from "@/components/ui/password-strength";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -183,8 +184,8 @@ export default function Settings() {
       toast({ title: "Current password required", variant: "destructive" });
       return;
     }
-    if (newPassword.length < 6) {
-      toast({ title: "New password too short", description: "Must be at least 6 characters.", variant: "destructive" });
+    if (!isPasswordStrong(newPassword)) {
+      toast({ title: "Password too weak", description: "Please meet all password requirements.", variant: "destructive" });
       return;
     }
     if (newPassword !== confirmNewPassword) {
@@ -317,6 +318,7 @@ export default function Settings() {
                       {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                 <PasswordStrength password={newPassword} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirm-new-password">Confirm New Password</Label>

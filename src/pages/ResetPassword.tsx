@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mic, Eye, EyeOff } from "lucide-react";
+import { PasswordStrength, isPasswordStrong } from "@/components/ui/password-strength";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,8 +37,8 @@ export default function ResetPassword() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (password.length < 6) {
-      toast({ title: "Error", description: "Password must be at least 6 characters.", variant: "destructive" });
+    if (!isPasswordStrong(password)) {
+      toast({ title: "Error", description: "Password does not meet all strength requirements.", variant: "destructive" });
       return;
     }
     if (password !== confirmPassword) {
@@ -116,8 +117,9 @@ export default function ResetPassword() {
                     tabIndex={-1}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
+                   </Button>
+                 </div>
+                 <PasswordStrength password={password} />
               </div>
 
               <div className="space-y-2">

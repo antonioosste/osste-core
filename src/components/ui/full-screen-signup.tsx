@@ -4,6 +4,7 @@ import { Eye, EyeOff, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { sendAccountCreationEmail } from "@/lib/emails";
 import { z } from "zod";
+import { PasswordStrength, isPasswordStrong } from "@/components/ui/password-strength";
 import { motion } from "framer-motion";
 import { AuthBrandPanel } from "@/components/auth/AuthBrandPanel";
 
@@ -12,7 +13,7 @@ const signupSchema = z
     firstName: z.string().trim().min(1, "First name is required."),
     lastName: z.string().trim().min(1, "Last name is required."),
     email: z.string().trim().email("Please enter a valid email address."),
-    password: z.string().min(8, "Password must be at least 8 characters."),
+    password: z.string().min(8, "Password must be at least 8 characters.").refine(isPasswordStrong, "Password does not meet all requirements."),
     confirmPassword: z.string().min(1, "Please confirm your password."),
     phone: z.string().optional(),
     referralSource: z.string().optional(),
@@ -236,6 +237,7 @@ export const FullScreenSignup = () => {
                 </button>
               </div>
               {errors.password && <p className="auth-error-msg">{errors.password}</p>}
+              <PasswordStrength password={form.password || ""} />
             </div>
 
             {/* Confirm Password */}
