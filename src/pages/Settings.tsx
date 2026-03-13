@@ -184,8 +184,8 @@ export default function Settings() {
       toast({ title: "Current password required", variant: "destructive" });
       return;
     }
-    if (newPassword.length < 6) {
-      toast({ title: "New password too short", description: "Must be at least 6 characters.", variant: "destructive" });
+    if (!isPasswordStrong(newPassword)) {
+      toast({ title: "Password too weak", description: "Please meet all password requirements.", variant: "destructive" });
       return;
     }
     if (newPassword !== confirmNewPassword) {

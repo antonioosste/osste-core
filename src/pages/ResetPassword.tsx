@@ -117,8 +117,9 @@ export default function ResetPassword() {
                     tabIndex={-1}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
+                   </Button>
+                 </div>
+                 <PasswordStrength password={password} />
               </div>
 
               <div className="space-y-2">
