@@ -12,6 +12,12 @@ const corsHeaders = {
 const log = (step: string, details?: unknown) =>
   console.log(`[CREATE-PRINT-CHECKOUT] ${step}${details ? ` – ${JSON.stringify(details)}` : ""}`);
 
+// Fixed product configuration
+const FIXED_FORMAT = "paperback";
+const FIXED_TRIM_SIZE = "5.5x8.5";
+const FIXED_QUANTITY = 1;
+const FIXED_SIZE = "small";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -46,24 +52,33 @@ serve(async (req) => {
     log("User authenticated", { userId, email: userEmail });
 
     const { orderData } = await req.json();
-    log("Order data received", { orderData });
+    log("Order data received (will be normalized)", { orderData });
 
-    if (!orderData?.story_group_id || !orderData?.format || !orderData?.size) {
-      return new Response(JSON.stringify({ error: "Invalid order data: missing required fields" }), {
+    if (!orderData?.story_group_id) {
+      return new Response(JSON.stringify({ error: "Invalid order data: missing story_group_id" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const basePrice = orderData.format === "hardcover" ? 4999 : 2999;
-    const sizeMultiplier = orderData.size === "large" ? 1.5 : orderData.size === "small" ? 0.8 : 1;
-    const unitPrice = Math.round(basePrice * sizeMultiplier);
-    const quantity = Math.max(1, Math.min(10, orderData.quantity || 1));
-    const totalPrice = unitPrice * quantity;
-    log("Price calculated", { unitPrice, totalPrice, quantity });
+    // Log if client sent non-standard values (for monitoring)
+    if (orderData.format && orderData.format !== FIXED_FORMAT) {
+      log("Client sent non-standard format, ignoring", { sent: orderData.format, forced: FIXED_FORMAT });
+    }
+    if (orderData.trim_size && orderData.trim_size !== FIXED_TRIM_SIZE) {
+      log("Client sent non-standard trim_size, ignoring", { sent: orderData.trim_size, forced: FIXED_TRIM_SIZE });
+    }
+    if (orderData.quantity && orderData.quantity !== FIXED_QUANTITY) {
+      log("Client sent non-standard quantity, ignoring", { sent: orderData.quantity, forced: FIXED_QUANTITY });
+    }
+
+    log("Normalized values", { format: FIXED_FORMAT, trim_size: FIXED_TRIM_SIZE, quantity: FIXED_QUANTITY, size: FIXED_SIZE });
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    const skipStripe = Deno.env.get("PRINT_SKIP_STRIPE") === "true";
+    log("Stripe skip flag", { skipStripe });
 
     const { data: order, error: insertErr } = await supabaseAdmin
       .from("print_orders")
@@ -71,20 +86,19 @@ serve(async (req) => {
         user_id: userId,
         story_group_id: orderData.story_group_id,
         book_title: orderData.book_title || "Untitled",
-        format: orderData.format,
-        size: orderData.size,
-        quantity,
+        format: FIXED_FORMAT,
+        size: FIXED_SIZE,
+        quantity: FIXED_QUANTITY,
         shipping_name: orderData.shipping_name || "",
         shipping_address: orderData.shipping_address || "",
         shipping_city: orderData.shipping_city || "",
         shipping_state: orderData.shipping_state || "",
         shipping_zip: orderData.shipping_zip || "",
         shipping_country: orderData.shipping_country || "US",
-        total_price: totalPrice / 100,
+        total_price: 0,
         currency: "usd",
-        status: "checkout_created",
-        // Cover customization (defaults applied by DB if omitted)
-        trim_size: orderData.trim_size || "6x9",
+        status: skipStripe ? "paid" : "checkout_created",
+        trim_size: FIXED_TRIM_SIZE,
         cover_title: orderData.cover_title || orderData.book_title || "Untitled",
         cover_subtitle: orderData.cover_subtitle || null,
         cover_image_url: orderData.cover_image_url || null,
@@ -100,17 +114,26 @@ serve(async (req) => {
       });
     }
 
-    log("print_orders row created", { id: order.id });
+    log("print_orders row created", { id: order.id, status: skipStripe ? "paid" : "checkout_created" });
 
-    // Audit: order created
     await logAuditEvent(supabaseAdmin, {
       print_order_id: order.id,
       actor_type: "user",
       actor_id: userId,
       event_type: "order_created",
-      new_values: { status: "checkout_created", format: orderData.format, size: orderData.size, quantity },
+      new_values: { status: skipStripe ? "paid" : "checkout_created", format: FIXED_FORMAT, trim_size: FIXED_TRIM_SIZE, quantity: FIXED_QUANTITY },
     });
 
+    // If skipping Stripe, return order directly (no payment needed)
+    if (skipStripe) {
+      log("Stripe skipped – order created as paid", { orderId: order.id });
+      return new Response(
+        JSON.stringify({ print_order_id: order.id }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // Otherwise create a $0 Stripe checkout for record-keeping
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
     const customerId = customers.data.length > 0 ? customers.data[0].id : undefined;
@@ -122,13 +145,13 @@ serve(async (req) => {
       line_items: [{
         price_data: {
           currency: "usd",
-          unit_amount: unitPrice,
+          unit_amount: 0,
           product_data: {
-            name: `${orderData.format === "hardcover" ? "Hardcover" : "Paperback"} Book – ${orderData.size} size`,
+            name: "Paperback Book – 5.5×8.5",
             description: `Physical copy of: ${orderData.book_title || "Untitled"}`,
           },
         },
-        quantity,
+        quantity: 1,
       }],
       mode: "payment",
       success_url: siteUrl + "/print-success?session_id={CHECKOUT_SESSION_ID}",
