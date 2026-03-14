@@ -53,24 +53,36 @@ export default function PrintSuccess() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const sessionId = searchParams.get("session_id");
+  const orderId = searchParams.get("order_id");
   const [order, setOrder] = useState<PrintOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchOrder = useCallback(async () => {
-    if (!sessionId) return;
-    const { data } = await supabase
-      .from("print_orders")
-      .select(SELECT_COLS)
-      .eq("stripe_session_id", sessionId)
-      .maybeSingle();
-    if (data) setOrder(data as PrintOrder);
-    return data;
-  }, [sessionId]);
+    if (orderId) {
+      const { data } = await supabase
+        .from("print_orders")
+        .select(SELECT_COLS)
+        .eq("id", orderId)
+        .maybeSingle();
+      if (data) setOrder(data as PrintOrder);
+      return data;
+    }
+    if (sessionId) {
+      const { data } = await supabase
+        .from("print_orders")
+        .select(SELECT_COLS)
+        .eq("stripe_session_id", sessionId)
+        .maybeSingle();
+      if (data) setOrder(data as PrintOrder);
+      return data;
+    }
+    return null;
+  }, [orderId, sessionId]);
 
   useEffect(() => {
-    if (!sessionId) {
-      setError("No session ID provided");
+    if (!sessionId && !orderId) {
+      setError("No order or session ID provided");
       setLoading(false);
       return;
     }
@@ -84,7 +96,7 @@ export default function PrintSuccess() {
       setLoading(false);
     };
     initialFetch();
-  }, [sessionId, fetchOrder]);
+  }, [sessionId, orderId, fetchOrder]);
 
   useEffect(() => {
     if (!order || TERMINAL_STATUSES.has(order.status)) return;
