@@ -31,10 +31,23 @@ interface PrintOrder {
   tracking_url: string | null;
   carrier_name: string | null;
   last_synced_at: string | null;
+  cover_title: string | null;
+  cover_subtitle: string | null;
+  cover_color_theme: string | null;
+  cover_image_url: string | null;
+  trim_size: string | null;
 }
 
+const THEME_COLORS: Record<string, { bg: string; text: string; accent: string; label: string }> = {
+  classic:  { bg: "#2c3e50", text: "#fdfbf7", accent: "#c5a059", label: "Classic" },
+  burgundy: { bg: "#722F37", text: "#fdfbf7", accent: "#D4A574", label: "Burgundy" },
+  navy:     { bg: "#1B2A4A", text: "#fdfbf7", accent: "#B8860B", label: "Navy" },
+  forest:   { bg: "#2D4A3E", text: "#fdfbf7", accent: "#C5A059", label: "Forest" },
+  charcoal: { bg: "#333333", text: "#fdfbf7", accent: "#A0A0A0", label: "Charcoal" },
+};
+
 const SELECT_COLS =
-  "id, status, book_title, format, size, quantity, total_price, lulu_print_job_id, lulu_order_id, lulu_status, error_message, shipping_name, shipping_city, shipping_state, tracking_id, tracking_url, carrier_name, last_synced_at";
+  "id, status, book_title, format, size, quantity, total_price, lulu_print_job_id, lulu_order_id, lulu_status, error_message, shipping_name, shipping_city, shipping_state, tracking_id, tracking_url, carrier_name, last_synced_at, cover_title, cover_subtitle, cover_color_theme, cover_image_url, trim_size";
 
 export default function PrintSuccess() {
   const [searchParams] = useSearchParams();
