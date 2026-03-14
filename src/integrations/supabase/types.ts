@@ -416,6 +416,7 @@ export type Database = {
           lulu_print_job_id: string | null
           lulu_status: string | null
           page_count: number | null
+          pod_package_id: string | null
           quantity: number
           shipping_address: string
           shipping_city: string
@@ -462,6 +463,7 @@ export type Database = {
           lulu_print_job_id?: string | null
           lulu_status?: string | null
           page_count?: number | null
+          pod_package_id?: string | null
           quantity?: number
           shipping_address: string
           shipping_city: string
@@ -508,6 +510,7 @@ export type Database = {
           lulu_print_job_id?: string | null
           lulu_status?: string | null
           page_count?: number | null
+          pod_package_id?: string | null
           quantity?: number
           shipping_address?: string
           shipping_city?: string
