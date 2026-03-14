@@ -125,7 +125,6 @@ function buildInteriorHtml(
 <meta charset="UTF-8"/>
 <style>
   @page {
-    size: ${trim.width}in ${trim.height}in;
     margin: ${trim.marginTop} ${trim.marginOuter} ${trim.marginBottom} ${trim.marginGutter};
   }
   body {
