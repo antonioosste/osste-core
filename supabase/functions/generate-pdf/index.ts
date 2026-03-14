@@ -125,7 +125,6 @@ function buildInteriorHtml(
 <meta charset="UTF-8"/>
 <style>
   @page {
-    size: ${trim.width}in ${trim.height}in;
     margin: ${trim.marginTop} ${trim.marginOuter} ${trim.marginBottom} ${trim.marginGutter};
   }
   body {
@@ -436,9 +435,10 @@ async function generateInteriorPdf(
   const { html, pageCount } = buildInteriorHtml(bookTitle, chapters, trim);
   log("Interior HTML built", { pageCount, trimSize });
 
-  log("Interior PDF dimensions", { trimSize, widthIn: trim.width, heightIn: trim.height, pageCount });
+  const pdfshiftFormat = `${trim.width}inx${trim.height}in`;
+  log("Interior PDF dimensions", { trimSize, pdfshiftFormat, widthIn: trim.width, heightIn: trim.height, pageCount });
 
-  const buffer = await callPdfShift(pdfshiftKey, html);
+  const buffer = await callPdfShift(pdfshiftKey, html, { format: pdfshiftFormat });
   log("Interior PDF generated", { sizeBytes: buffer.byteLength });
 
   return { buffer, pageCount };
