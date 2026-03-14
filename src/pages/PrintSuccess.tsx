@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle, AlertTriangle, Package, Printer, ExternalLink, Truck, Mail, Clock } from "lucide-react";
+import { CheckCircle, AlertTriangle, Package, Printer, ExternalLink, Truck, Mail, Clock, Palette } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   getStatusDisplay,
@@ -31,10 +31,23 @@ interface PrintOrder {
   tracking_url: string | null;
   carrier_name: string | null;
   last_synced_at: string | null;
+  cover_title: string | null;
+  cover_subtitle: string | null;
+  cover_color_theme: string | null;
+  cover_image_url: string | null;
+  trim_size: string | null;
 }
 
+const THEME_COLORS: Record<string, { bg: string; text: string; accent: string; label: string }> = {
+  classic:  { bg: "#2c3e50", text: "#fdfbf7", accent: "#c5a059", label: "Classic" },
+  burgundy: { bg: "#722F37", text: "#fdfbf7", accent: "#D4A574", label: "Burgundy" },
+  navy:     { bg: "#1B2A4A", text: "#fdfbf7", accent: "#B8860B", label: "Navy" },
+  forest:   { bg: "#2D4A3E", text: "#fdfbf7", accent: "#C5A059", label: "Forest" },
+  charcoal: { bg: "#333333", text: "#fdfbf7", accent: "#A0A0A0", label: "Charcoal" },
+};
+
 const SELECT_COLS =
-  "id, status, book_title, format, size, quantity, total_price, lulu_print_job_id, lulu_order_id, lulu_status, error_message, shipping_name, shipping_city, shipping_state, tracking_id, tracking_url, carrier_name, last_synced_at";
+  "id, status, book_title, format, size, quantity, total_price, lulu_print_job_id, lulu_order_id, lulu_status, error_message, shipping_name, shipping_city, shipping_state, tracking_id, tracking_url, carrier_name, last_synced_at, cover_title, cover_subtitle, cover_color_theme, cover_image_url, trim_size";
 
 export default function PrintSuccess() {
   const [searchParams] = useSearchParams();
@@ -162,7 +175,37 @@ export default function PrintSuccess() {
             </div>
           </div>
 
-          {/* Tracking — only when data exists */}
+          {/* Cover design details */}
+          {order.cover_title && (() => {
+            const theme = THEME_COLORS[order.cover_color_theme || "classic"] || THEME_COLORS.classic;
+            return (
+              <div className="bg-muted p-4 rounded-lg space-y-2">
+                <h3 className="font-medium flex items-center gap-2 text-sm">
+                  <Palette className="h-4 w-4 shrink-0" /> Cover Design
+                </h3>
+                <div className="flex items-start gap-3">
+                  <div
+                    className="w-14 aspect-[6/9] rounded-sm shadow shrink-0 flex items-center justify-center"
+                    style={{ background: theme.bg }}
+                  >
+                    {order.cover_image_url ? (
+                      <img src={order.cover_image_url} alt="" className="w-full h-full object-cover rounded-sm" />
+                    ) : (
+                      <span className="text-[5px] font-bold text-center px-0.5 leading-tight" style={{ color: theme.text }}>
+                        {order.cover_title}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p><span className="font-medium text-foreground">Title:</span> {order.cover_title}</p>
+                    {order.cover_subtitle && <p><span className="font-medium text-foreground">Subtitle:</span> {order.cover_subtitle}</p>}
+                    <p><span className="font-medium text-foreground">Theme:</span> {theme.label}</p>
+                    {order.trim_size && <p><span className="font-medium text-foreground">Trim:</span> {order.trim_size}</p>}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
           {hasTracking && (
             <div className="bg-muted p-4 rounded-lg space-y-2">
               <h3 className="font-medium flex items-center gap-2 text-sm">
