@@ -438,13 +438,7 @@ async function generateInteriorPdf(
 
   log("Interior PDF dimensions", { trimSize, widthIn: trim.width, heightIn: trim.height, pageCount });
 
-  const buffer = await callPdfShift(pdfshiftKey, html, {
-    format: "custom",
-    width: trim.width,
-    height: trim.height,
-    unit: "in",
-    print_background: true,
-  });
+  const buffer = await callPdfShift(pdfshiftKey, html);
   log("Interior PDF generated", { sizeBytes: buffer.byteLength });
 
   return { buffer, pageCount };
