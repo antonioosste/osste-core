@@ -679,7 +679,8 @@ serve(async (req) => {
       pdfshiftKey, bookTitle, chapters, trimSize,
     );
 
-    const interiorPath = `books/${effectiveUserId}/${storyId}-interior.pdf`;
+    const interiorVersion = Date.now();
+    const interiorPath = `books/${effectiveUserId}/${storyId}-interior-v${interiorVersion}.pdf`;
     const interiorUrl = await uploadPdf(admin, interiorPath, interiorBuffer);
     log("Interior uploaded", { path: interiorPath });
 
