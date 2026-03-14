@@ -108,11 +108,13 @@ export default function PrintRequest() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      // If Stripe was skipped, redirect to success page directly
+      // Stripe flow: redirect to Stripe checkout
       if (data?.url) {
         window.location.href = data.url;
-      } else if (data?.print_order_id) {
-        navigate(`/print-success?order_id=${data.print_order_id}`);
+      }
+      // Skip-stripe flow: navigate directly
+      else if (data?.redirect_url) {
+        navigate(data.redirect_url);
       }
     } catch (error) {
       console.error('Checkout error:', error);

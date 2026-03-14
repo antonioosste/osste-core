@@ -124,11 +124,106 @@ serve(async (req) => {
       new_values: { status: skipStripe ? "paid" : "checkout_created", format: FIXED_FORMAT, trim_size: FIXED_TRIM_SIZE, quantity: FIXED_QUANTITY },
     });
 
-    // If skipping Stripe, return order directly (no payment needed)
+    // If skipping Stripe, trigger PDF generation + Lulu submission immediately
     if (skipStripe) {
-      log("Stripe skipped – order created as paid", { orderId: order.id });
+      log("Stripe skipped – order created as paid, starting fulfillment", { orderId: order.id });
+
+      const siteUrl = (Deno.env.get("SITE_URL") || req.headers.get("origin") || "").replace(/\/+$/, "");
+      const redirectUrl = `/print-success?order_id=${order.id}`;
+
+      // Fire-and-forget: trigger PDF generation + Lulu submit asynchronously
+      // so the user gets an immediate response
+      (async () => {
+        try {
+          // Find story for this story_group
+          const { data: storyRow } = await supabaseAdmin
+            .from("stories")
+            .select("id")
+            .eq("story_group_id", orderData.story_group_id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (!storyRow) {
+            log("No story found for PDF generation", { story_group_id: orderData.story_group_id });
+            await supabaseAdmin.from("print_orders").update({ status: "awaiting_pdfs", error_message: "No story found for PDF generation" }).eq("id", order.id);
+            return;
+          }
+
+          await supabaseAdmin.from("print_orders").update({ status: "generating_pdfs" }).eq("id", order.id);
+
+          const generatePdfUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/generate-pdf`;
+          const pdfResp = await fetch(generatePdfUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+            },
+            body: JSON.stringify({
+              storyId: storyRow.id,
+              print_order_id: order.id,
+              generate_cover: true,
+            }),
+          });
+
+          if (!pdfResp.ok) {
+            const errText = await pdfResp.text();
+            throw new Error(`generate-pdf returned ${pdfResp.status}: ${errText}`);
+          }
+
+          const pdfResult = await pdfResp.json();
+          log("PDFs generated for skip-stripe order", { interiorUrl: pdfResult.interior_pdf_url?.substring(0, 60), coverUrl: pdfResult.cover_pdf_url?.substring(0, 60) });
+
+          await logAuditEvent(supabaseAdmin, {
+            print_order_id: order.id, actor_type: "system", event_type: "pdfs_generated",
+            new_values: { interior_pdf_url: pdfResult.interior_pdf_url, cover_pdf_url: pdfResult.cover_pdf_url, page_count: pdfResult.page_count },
+          });
+
+          // Re-fetch order to get updated PDF URLs
+          const { data: freshOrder } = await supabaseAdmin.from("print_orders").select("*").eq("id", order.id).single();
+
+          if (freshOrder?.interior_pdf_url && freshOrder?.cover_pdf_url) {
+            const { isValidFormat, isValidTrimSize, getPodPackageId } = await import("../_shared/luluPackages.ts");
+            if (!isValidFormat(freshOrder.format) || !isValidTrimSize(freshOrder.trim_size)) {
+              const msg = `Invalid format/trim_size: format='${freshOrder.format}', trim_size='${freshOrder.trim_size}'`;
+              await supabaseAdmin.from("print_orders").update({ status: "lulu_error", error_message: msg }).eq("id", order.id);
+              return;
+            }
+
+            let resolvedPodPackageId: string;
+            try { resolvedPodPackageId = getPodPackageId(freshOrder.format, freshOrder.trim_size); }
+            catch (pkgErr) {
+              const msg = pkgErr instanceof Error ? pkgErr.message : String(pkgErr);
+              await supabaseAdmin.from("print_orders").update({ status: "lulu_error", error_message: msg }).eq("id", order.id);
+              return;
+            }
+
+            const { createLuluPrintJob } = await import("../_shared/lulu.ts");
+            const lulu = await createLuluPrintJob(freshOrder, log);
+            const mappedStatus = lulu.status_name === "CREATED" ? "lulu_created" : "lulu_" + lulu.status_name.toLowerCase();
+            await supabaseAdmin.from("print_orders").update({
+              lulu_print_job_id: lulu.print_job_id, lulu_order_id: lulu.order_id,
+              lulu_status: lulu.status_name, lulu_cost_incl_tax: lulu.total_cost_incl_tax,
+              currency: lulu.currency || "usd", status: mappedStatus,
+              pod_package_id: resolvedPodPackageId,
+            }).eq("id", order.id);
+
+            await logAuditEvent(supabaseAdmin, {
+              print_order_id: order.id, actor_type: "system", event_type: "lulu_submit",
+              new_values: { lulu_print_job_id: lulu.print_job_id, pod_package_id: resolvedPodPackageId, status: mappedStatus },
+            });
+
+            log("Lulu job submitted for skip-stripe order", { orderId: order.id, luluJobId: lulu.print_job_id });
+          }
+        } catch (err) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          log("Skip-stripe fulfillment error (async)", { orderId: order.id, error: errMsg });
+          await supabaseAdmin.from("print_orders").update({ status: "lulu_error", error_message: errMsg }).eq("id", order.id);
+        }
+      })();
+
       return new Response(
-        JSON.stringify({ print_order_id: order.id }),
+        JSON.stringify({ ok: true, skipped_stripe: true, order_id: order.id, redirect_url: redirectUrl }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
