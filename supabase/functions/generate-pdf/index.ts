@@ -436,7 +436,15 @@ async function generateInteriorPdf(
   const { html, pageCount } = buildInteriorHtml(bookTitle, chapters, trim);
   log("Interior HTML built", { pageCount, trimSize });
 
-  const buffer = await callPdfShift(pdfshiftKey, html);
+  log("Interior PDF dimensions", { trimSize, widthIn: trim.width, heightIn: trim.height, pageCount });
+
+  const buffer = await callPdfShift(pdfshiftKey, html, {
+    format: "custom",
+    width: trim.width,
+    height: trim.height,
+    unit: "in",
+    print_background: true,
+  });
   log("Interior PDF generated", { sizeBytes: buffer.byteLength });
 
   return { buffer, pageCount };
@@ -671,7 +679,8 @@ serve(async (req) => {
       pdfshiftKey, bookTitle, chapters, trimSize,
     );
 
-    const interiorPath = `books/${effectiveUserId}/${storyId}-interior.pdf`;
+    const interiorVersion = Date.now();
+    const interiorPath = `books/${effectiveUserId}/${storyId}-interior-v${interiorVersion}.pdf`;
     const interiorUrl = await uploadPdf(admin, interiorPath, interiorBuffer);
     log("Interior uploaded", { path: interiorPath });
 
