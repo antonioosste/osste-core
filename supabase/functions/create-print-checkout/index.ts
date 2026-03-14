@@ -83,6 +83,12 @@ serve(async (req) => {
         total_price: totalPrice / 100,
         currency: "usd",
         status: "checkout_created",
+        // Cover customization (defaults applied by DB if omitted)
+        trim_size: orderData.trim_size || "6x9",
+        cover_title: orderData.cover_title || orderData.book_title || "Untitled",
+        cover_subtitle: orderData.cover_subtitle || null,
+        cover_image_url: orderData.cover_image_url || null,
+        cover_color_theme: orderData.cover_color_theme || "classic",
       })
       .select("id")
       .single();

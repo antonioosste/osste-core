@@ -117,9 +117,81 @@ serve(async (req) => {
             return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
           }
 
-          if (orderRow.interior_pdf_url && orderRow.cover_pdf_url) {
+          let interiorUrl = orderRow.interior_pdf_url;
+          let coverUrl = orderRow.cover_pdf_url;
+
+          // ── Auto-generate PDFs if missing ──
+          if (!interiorUrl || !coverUrl) {
+            log("PDFs missing, auto-generating", { printOrderId, hasInterior: !!interiorUrl, hasCover: !!coverUrl });
+
+            // Find the story for this story_group
+            const { data: storyRow } = await supabaseAdmin
+              .from("stories")
+              .select("id")
+              .eq("story_group_id", orderRow.story_group_id)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (!storyRow) {
+              log("No story found for PDF generation", { story_group_id: orderRow.story_group_id });
+              await supabaseAdmin.from("print_orders").update({ status: "awaiting_pdfs", error_message: "No story found for PDF generation" }).eq("id", printOrderId);
+              await recordEvent(event.id, event.type, event.data.object, "processed");
+              return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
+            }
+
             try {
-              const lulu = await createLuluPrintJob(orderRow, log);
+              await supabaseAdmin.from("print_orders").update({ status: "generating_pdfs" }).eq("id", printOrderId);
+
+              const generatePdfUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/generate-pdf`;
+              const pdfResp = await fetch(generatePdfUrl, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                },
+                body: JSON.stringify({
+                  storyId: storyRow.id,
+                  print_order_id: printOrderId,
+                  generate_cover: true,
+                }),
+              });
+
+              if (!pdfResp.ok) {
+                const errText = await pdfResp.text();
+                throw new Error(`generate-pdf returned ${pdfResp.status}: ${errText}`);
+              }
+
+              const pdfResult = await pdfResp.json();
+              interiorUrl = pdfResult.interior_pdf_url;
+              coverUrl = pdfResult.cover_pdf_url;
+
+              await logAuditEvent(supabaseAdmin, {
+                print_order_id: printOrderId, actor_type: "webhook", event_type: "pdfs_generated",
+                new_values: { interior_pdf_url: interiorUrl, cover_pdf_url: coverUrl, page_count: pdfResult.page_count },
+              });
+
+              log("PDFs auto-generated", { interiorUrl: interiorUrl?.substring(0, 60), coverUrl: coverUrl?.substring(0, 60) });
+            } catch (genErr) {
+              const errMsg = genErr instanceof Error ? genErr.message : String(genErr);
+              log("PDF generation failed", { error: errMsg });
+              await supabaseAdmin.from("print_orders").update({ status: "lulu_error", error_message: `pdf_generation: ${errMsg}` }).eq("id", printOrderId);
+              await logAuditEvent(supabaseAdmin, {
+                print_order_id: printOrderId, actor_type: "webhook", event_type: "error",
+                meta: { error: errMsg, step: "pdf_generation" },
+              });
+              await recordEvent(event.id, event.type, event.data.object, "processed");
+              return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
+            }
+          }
+
+          // Re-fetch updated order with PDF URLs
+          const { data: freshOrder } = await supabaseAdmin
+            .from("print_orders").select("*").eq("id", printOrderId).single();
+
+          if (freshOrder && freshOrder.interior_pdf_url && freshOrder.cover_pdf_url) {
+            try {
+              const lulu = await createLuluPrintJob(freshOrder, log);
               const mappedStatus = lulu.status_name === "CREATED" ? "lulu_created" : "lulu_" + lulu.status_name.toLowerCase();
               await supabaseAdmin.from("print_orders").update({
                 lulu_print_job_id: lulu.print_job_id, lulu_order_id: lulu.order_id,
