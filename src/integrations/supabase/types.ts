@@ -395,7 +395,11 @@ export type Database = {
           alert_state: string
           book_title: string
           carrier_name: string | null
+          cover_color_theme: string
+          cover_image_url: string | null
           cover_pdf_url: string | null
+          cover_subtitle: string | null
+          cover_title: string | null
           created_at: string | null
           currency: string | null
           error_message: string | null
@@ -411,6 +415,7 @@ export type Database = {
           lulu_order_id: string | null
           lulu_print_job_id: string | null
           lulu_status: string | null
+          page_count: number | null
           quantity: number
           shipping_address: string
           shipping_city: string
@@ -428,6 +433,7 @@ export type Database = {
           total_price: number
           tracking_id: string | null
           tracking_url: string | null
+          trim_size: string
           updated_at: string | null
           user_id: string
         }
@@ -435,7 +441,11 @@ export type Database = {
           alert_state?: string
           book_title: string
           carrier_name?: string | null
+          cover_color_theme?: string
+          cover_image_url?: string | null
           cover_pdf_url?: string | null
+          cover_subtitle?: string | null
+          cover_title?: string | null
           created_at?: string | null
           currency?: string | null
           error_message?: string | null
@@ -451,6 +461,7 @@ export type Database = {
           lulu_order_id?: string | null
           lulu_print_job_id?: string | null
           lulu_status?: string | null
+          page_count?: number | null
           quantity?: number
           shipping_address: string
           shipping_city: string
@@ -468,6 +479,7 @@ export type Database = {
           total_price: number
           tracking_id?: string | null
           tracking_url?: string | null
+          trim_size?: string
           updated_at?: string | null
           user_id: string
         }
@@ -475,7 +487,11 @@ export type Database = {
           alert_state?: string
           book_title?: string
           carrier_name?: string | null
+          cover_color_theme?: string
+          cover_image_url?: string | null
           cover_pdf_url?: string | null
+          cover_subtitle?: string | null
+          cover_title?: string | null
           created_at?: string | null
           currency?: string | null
           error_message?: string | null
@@ -491,6 +507,7 @@ export type Database = {
           lulu_order_id?: string | null
           lulu_print_job_id?: string | null
           lulu_status?: string | null
+          page_count?: number | null
           quantity?: number
           shipping_address?: string
           shipping_city?: string
@@ -508,6 +525,7 @@ export type Database = {
           total_price?: number
           tracking_id?: string | null
           tracking_url?: string | null
+          trim_size?: string
           updated_at?: string | null
           user_id?: string
         }
