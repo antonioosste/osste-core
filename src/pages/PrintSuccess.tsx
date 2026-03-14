@@ -175,7 +175,37 @@ export default function PrintSuccess() {
             </div>
           </div>
 
-          {/* Tracking — only when data exists */}
+          {/* Cover design details */}
+          {order.cover_title && (() => {
+            const theme = THEME_COLORS[order.cover_color_theme || "classic"] || THEME_COLORS.classic;
+            return (
+              <div className="bg-muted p-4 rounded-lg space-y-2">
+                <h3 className="font-medium flex items-center gap-2 text-sm">
+                  <Palette className="h-4 w-4 shrink-0" /> Cover Design
+                </h3>
+                <div className="flex items-start gap-3">
+                  <div
+                    className="w-14 aspect-[6/9] rounded-sm shadow shrink-0 flex items-center justify-center"
+                    style={{ background: theme.bg }}
+                  >
+                    {order.cover_image_url ? (
+                      <img src={order.cover_image_url} alt="" className="w-full h-full object-cover rounded-sm" />
+                    ) : (
+                      <span className="text-[5px] font-bold text-center px-0.5 leading-tight" style={{ color: theme.text }}>
+                        {order.cover_title}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p><span className="font-medium text-foreground">Title:</span> {order.cover_title}</p>
+                    {order.cover_subtitle && <p><span className="font-medium text-foreground">Subtitle:</span> {order.cover_subtitle}</p>}
+                    <p><span className="font-medium text-foreground">Theme:</span> {theme.label}</p>
+                    {order.trim_size && <p><span className="font-medium text-foreground">Trim:</span> {order.trim_size}</p>}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
           {hasTracking && (
             <div className="bg-muted p-4 rounded-lg space-y-2">
               <h3 className="font-medium flex items-center gap-2 text-sm">
