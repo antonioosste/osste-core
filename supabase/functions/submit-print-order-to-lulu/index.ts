@@ -83,6 +83,26 @@ serve(async (req) => {
 
     await supabaseAdmin.from("print_orders").update({ interior_pdf_url, cover_pdf_url }).eq("id", print_order_id);
 
+    // Validate format + trim_size before attempting Lulu submit
+    const { isValidFormat, isValidTrimSize, getPodPackageId } = await import("../_shared/luluPackages.ts");
+    if (!isValidFormat(order.format)) {
+      await supabaseAdmin.from("print_orders").update({ status: "lulu_error", error_message: `Invalid format: '${order.format}'` }).eq("id", print_order_id);
+      return json({ error: `Invalid format: '${order.format}'` }, 400);
+    }
+    if (!isValidTrimSize(order.trim_size)) {
+      await supabaseAdmin.from("print_orders").update({ status: "lulu_error", error_message: `Invalid trim_size: '${order.trim_size}'` }).eq("id", print_order_id);
+      return json({ error: `Invalid trim_size: '${order.trim_size}'` }, 400);
+    }
+
+    let resolvedPodPackageId: string;
+    try {
+      resolvedPodPackageId = getPodPackageId(order.format, order.trim_size);
+    } catch (pkgErr) {
+      const msg = pkgErr instanceof Error ? pkgErr.message : String(pkgErr);
+      await supabaseAdmin.from("print_orders").update({ status: "lulu_error", error_message: msg }).eq("id", print_order_id);
+      return json({ error: msg }, 400);
+    }
+
     const orderWithPdfs = { ...order, interior_pdf_url, cover_pdf_url };
 
     try {
@@ -93,6 +113,7 @@ serve(async (req) => {
         lulu_print_job_id: lulu.print_job_id, lulu_order_id: lulu.order_id,
         lulu_status: lulu.status_name, lulu_cost_incl_tax: lulu.total_cost_incl_tax,
         currency: lulu.currency || "usd", status: mappedStatus, error_message: null,
+        pod_package_id: resolvedPodPackageId,
       }).eq("id", print_order_id);
 
       await logAuditEvent(supabaseAdmin, {

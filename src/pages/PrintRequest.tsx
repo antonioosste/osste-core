@@ -378,21 +378,11 @@ export default function PrintRequest() {
                 </div>
               </div>
 
-              {/* Trim Size */}
-              <div>
-                <Label className="mb-2 block">Trim Size</Label>
-                <Select value={trimSize} onValueChange={setTrimSize}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TRIM_SIZES.map(ts => (
-                      <SelectItem key={ts.value} value={ts.value}>{ts.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              {/* Trim Size (read-only, derived from step 1) */}
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm font-medium">Trim Size: {TRIM_SIZES.find(t => t.value === trimSize)?.label || trimSize}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Must match the book size selected in step 1
+                  Determined by book size selected in step 1. Go back to change it.
                 </p>
               </div>
 
