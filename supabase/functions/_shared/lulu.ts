@@ -116,13 +116,23 @@ export async function createLuluPrintJob(
   order: Record<string, unknown>,
   log: (step: string, details?: unknown) => void = console.log,
 ): Promise<LuluResult> {
+  const { getPodPackageId, isValidFormat, isValidTrimSize } = await import("./luluPackages.ts");
+
   const useSandbox = Deno.env.get("LULU_USE_SANDBOX") === "true";
   const apiBase = useSandbox ? "https://api.sandbox.lulu.com" : "https://api.lulu.com";
-  const podPackageId = Deno.env.get("LULU_POD_PACKAGE_ID");
 
-  if (!podPackageId) {
-    throw new LuluApiError("Missing LULU_POD_PACKAGE_ID secret", 400, false);
+  const format = (order.format as string) || "paperback";
+  const trimSize = (order.trim_size as string) || "6x9";
+
+  if (!isValidFormat(format)) {
+    throw new LuluApiError(`Invalid format: '${format}'`, 400, false);
   }
+  if (!isValidTrimSize(trimSize)) {
+    throw new LuluApiError(`Invalid trim_size: '${trimSize}'`, 400, false);
+  }
+
+  const podPackageId = getPodPackageId(format, trimSize);
+  log("Resolved pod_package_id", { format, trimSize, podPackageId });
 
   const accessToken = await getLuluAccessToken();
 

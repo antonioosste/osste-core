@@ -190,6 +190,25 @@ serve(async (req) => {
             .from("print_orders").select("*").eq("id", printOrderId).single();
 
           if (freshOrder && freshOrder.interior_pdf_url && freshOrder.cover_pdf_url) {
+            // Validate format + trim_size before Lulu submit
+            const { isValidFormat, isValidTrimSize, getPodPackageId } = await import("../_shared/luluPackages.ts");
+            if (!isValidFormat(freshOrder.format) || !isValidTrimSize(freshOrder.trim_size)) {
+              const msg = `Invalid format/trim_size: format='${freshOrder.format}', trim_size='${freshOrder.trim_size}'`;
+              await supabaseAdmin.from("print_orders").update({ status: "lulu_error", error_message: msg }).eq("id", printOrderId);
+              await logAuditEvent(supabaseAdmin, { print_order_id: printOrderId, actor_type: "webhook", event_type: "error", meta: { error: msg, step: "validate_package" } });
+              await recordEvent(event.id, event.type, event.data.object, "processed");
+              return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
+            }
+
+            let resolvedPodPackageId: string;
+            try { resolvedPodPackageId = getPodPackageId(freshOrder.format, freshOrder.trim_size); }
+            catch (pkgErr) {
+              const msg = pkgErr instanceof Error ? pkgErr.message : String(pkgErr);
+              await supabaseAdmin.from("print_orders").update({ status: "lulu_error", error_message: msg }).eq("id", printOrderId);
+              await recordEvent(event.id, event.type, event.data.object, "processed");
+              return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
+            }
+
             try {
               const lulu = await createLuluPrintJob(freshOrder, log);
               const mappedStatus = lulu.status_name === "CREATED" ? "lulu_created" : "lulu_" + lulu.status_name.toLowerCase();
@@ -197,6 +216,7 @@ serve(async (req) => {
                 lulu_print_job_id: lulu.print_job_id, lulu_order_id: lulu.order_id,
                 lulu_status: lulu.status_name, lulu_cost_incl_tax: lulu.total_cost_incl_tax,
                 currency: lulu.currency || "usd", status: mappedStatus,
+                pod_package_id: resolvedPodPackageId,
               }).eq("id", printOrderId);
 
               await logAuditEvent(supabaseAdmin, {
