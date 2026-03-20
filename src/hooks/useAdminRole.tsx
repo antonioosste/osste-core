@@ -10,6 +10,7 @@ export interface AdminPermissions {
   canManageStories: boolean;
   canManagePayments: boolean;
   canManageSettings: boolean;
+  canManagePlans: boolean;
   canViewAuditLog: boolean;
   canManageRoles: boolean;
 }
