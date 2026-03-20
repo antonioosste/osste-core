@@ -599,11 +599,7 @@ export default function Session() {
   const startRecording = async () => {
     // Check account-level recording limit
     if (isRecordingLimitReached) {
-      toast({
-        title: "Recording limit reached",
-        description: "You've reached your total recording limit for your current plan. Upgrade to get more recording time.",
-        variant: "destructive",
-      });
+      setShowUpgradeDialog(true);
       return;
     }
 
