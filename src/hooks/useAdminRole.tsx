@@ -23,6 +23,7 @@ function getPermissions(role: AdminRole): AdminPermissions {
         canManageStories: true,
         canManagePayments: true,
         canManageSettings: true,
+        canManagePlans: true,
         canViewAuditLog: true,
         canManageRoles: true,
       };
