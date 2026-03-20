@@ -305,12 +305,11 @@ serve(async (req) => {
       }
 
       // ── SELF-PURCHASE FLOW ──
-      if (!plan || !PLAN_DEFAULTS[plan]) {
+      const planConfig = plan ? await getPlanDefaults(supabaseAdmin, plan) : null;
+      if (!plan || !planConfig) {
         await recordEvent(event.id, event.type, event.data.object, "ignored");
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
-
-      const planConfig = PLAN_DEFAULTS[plan];
 
       try {
         if (userId && paymentIntentId) {
