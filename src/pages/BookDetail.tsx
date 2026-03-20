@@ -65,6 +65,7 @@ export default function BookDetail() {
   const [showStyleDialog, setShowStyleDialog] = useState(false);
   const [styleInstruction, setStyleInstruction] = useState("");
   const [recordingsBySession, setRecordingsBySession] = useState<Record<string, { duration_seconds: number }[]>>({});
+  const [turnCountBySession, setTurnCountBySession] = useState<Record<string, number>>({});
   const [dismissedSuggestionTitle, setDismissedSuggestionTitle] = useState<string | null>(null);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
 
