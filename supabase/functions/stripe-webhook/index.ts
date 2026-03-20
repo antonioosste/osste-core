@@ -7,10 +7,20 @@ import { logAuditEvent } from "../_shared/audit.ts";
 const log = (step: string, details?: unknown) =>
   console.log(`[STRIPE-WEBHOOK] ${step}${details ? ` – ${JSON.stringify(details)}` : ""}`);
 
-const PLAN_DEFAULTS: Record<string, { minutes_limit: number; words_limit: number | null; pdf_enabled: boolean; printing_enabled: boolean; photo_uploads_enabled: boolean }> = {
-  digital: { minutes_limit: 60, words_limit: 30000, pdf_enabled: true, printing_enabled: false, photo_uploads_enabled: true },
-  legacy:  { minutes_limit: 120, words_limit: null, pdf_enabled: true, printing_enabled: true, photo_uploads_enabled: true },
-};
+// Plan defaults are now fetched from the `plans` table via get_plan_config RPC
+async function getPlanDefaults(supabaseAdmin: any, plan: string) {
+  const { data, error } = await supabaseAdmin.rpc("get_plan_config", { p_plan_name: plan });
+  if (error || !data || data.length === 0) {
+    log("Failed to fetch plan config, using fallback", { plan, error: error?.message });
+    // Fallback defaults in case DB is unreachable
+    const fallback: Record<string, any> = {
+      digital: { minutes_limit: 60, words_limit: 30000, pdf_enabled: true, printing_enabled: false, photo_uploads_enabled: true, archive_days: null },
+      legacy:  { minutes_limit: 120, words_limit: null, pdf_enabled: true, printing_enabled: true, photo_uploads_enabled: true, archive_days: null },
+    };
+    return fallback[plan] || null;
+  }
+  return data[0];
+}
 
 serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });

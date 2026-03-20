@@ -74,11 +74,9 @@ export default function RedeemGift() {
 
       const plan = (gift as any).plan || "digital";
 
-      const PLAN_DEFAULTS: Record<string, { minutes_limit: number; words_limit: number | null; pdf_enabled: boolean; printing_enabled: boolean; photo_uploads_enabled: boolean }> = {
-        digital: { minutes_limit: 60, words_limit: 30000, pdf_enabled: true, printing_enabled: false, photo_uploads_enabled: true },
-        legacy:  { minutes_limit: 120, words_limit: null, pdf_enabled: true, printing_enabled: true, photo_uploads_enabled: true },
-      };
-      const defaults = PLAN_DEFAULTS[plan] || PLAN_DEFAULTS.digital;
+      // Fetch plan config from the central plans table
+      const { data: planRows } = await (supabase as any).rpc("get_plan_config", { p_plan_name: plan });
+      const defaults = planRows?.[0] || { minutes_limit: 60, words_limit: 30000, pdf_enabled: true, printing_enabled: false, photo_uploads_enabled: true, archive_days: null };
 
       // Create a story group for the user with the gifted plan + limits
       const { data: storyGroup, error: sgErr } = await supabase
