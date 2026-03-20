@@ -148,6 +148,46 @@ export default function BookDetail() {
     fetchRecordings();
   }, [bookSessions.length]);
 
+  // Fetch turn counts for sessions to know which have recordings
+  useEffect(() => {
+    const fetchTurnCounts = async () => {
+      if (bookSessions.length === 0) return;
+      const sessionIds = bookSessions.map(s => s.id);
+      const { data, error } = await supabase
+        .from('turns')
+        .select('session_id')
+        .in('session_id', sessionIds);
+      if (error) return;
+      const counts = (data || []).reduce((acc, t) => {
+        if (t.session_id) acc[t.session_id] = (acc[t.session_id] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      setTurnCountBySession(counts);
+    };
+    fetchTurnCounts();
+  }, [bookSessions.length]);
+
+  const handleGenerateChapter = async (targetSessionId: string) => {
+    if (!session?.access_token) {
+      toast({ title: "Not authenticated", variant: "destructive" });
+      return;
+    }
+    try {
+      toast({ title: "Generating chapter…", description: "This may take a moment." });
+      await generateChapters(session.access_token, targetSessionId);
+      toast({ title: "Chapter generated!", description: "Refreshing…" });
+      // Reload to refetch all data
+      window.location.reload();
+    } catch (error) {
+      console.error("Chapter generation failed:", error);
+      toast({
+        title: "Chapter generation failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSaveEdit = async () => {
     if (!bookId || !editTitle.trim()) return;
     
