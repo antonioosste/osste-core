@@ -65,6 +65,10 @@ export default function BookDetail() {
   const [styleInstruction, setStyleInstruction] = useState("");
   const [recordingsBySession, setRecordingsBySession] = useState<Record<string, { duration_seconds: number }[]>>({});
   const [dismissedSuggestionTitle, setDismissedSuggestionTitle] = useState<string | null>(null);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+
+  // Project-level feature flags
+  const { features: projectFeatures } = useProjectFeatures(bookId);
 
   // Get sessions for this book
   const bookSessions = sessions.filter(s => s.story_group_id === bookId);
