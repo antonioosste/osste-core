@@ -42,6 +42,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { generateChapters } from "@/lib/backend-api";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
+import { UsageBanner } from "@/components/dashboard/UsageBanner";
+import { UpgradeDialog } from "@/components/dashboard/UpgradeDialog";
 
 type SessionStatus = "idle" | "listening" | "thinking" | "speaking" | "paused" | "error";
 type PermissionState = "granted" | "denied" | "pending" | "prompt";
