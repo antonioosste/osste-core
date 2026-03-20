@@ -596,6 +596,13 @@ export default function Dashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Upgrade Dialog */}
+      <UpgradeDialog
+        open={showUpgradeDialog}
+        onOpenChange={setShowUpgradeDialog}
+        reason={isRecordingLimitReached ? "limit_reached" : "proactive"}
+      />
     </div>
   );
 }
