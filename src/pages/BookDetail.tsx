@@ -52,7 +52,7 @@ export default function BookDetail() {
   const { getStoryGroup, updateStoryGroup } = useStoryGroups();
   const { sessions, deleteSession, updateSession } = useSessions();
   const { stories, refetch: refetchStories } = useStories();
-  const { chapters } = useChapters();
+  const { chapters, refetch: refetchChapters } = useChapters();
   
   const [book, setBook] = useState<any>(null);
   const [loading, setLoading] = useState(true);
