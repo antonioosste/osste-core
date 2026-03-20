@@ -61,6 +61,11 @@ export default function BookPreview() {
   const [isBookOpen, setIsBookOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [storyGroupTitle, setStoryGroupTitle] = useState<string>("");
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+
+  // Derive story_group_id from loaded story data
+  const storyGroupId = story?.story_group_id;
+  const { features: projectFeatures } = useProjectFeatures(storyGroupId);
 
   // Fetch story and related data
   useEffect(() => {
