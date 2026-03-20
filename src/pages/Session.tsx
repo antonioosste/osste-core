@@ -42,6 +42,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { generateChapters } from "@/lib/backend-api";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
+import { UsageBanner } from "@/components/dashboard/UsageBanner";
+import { UpgradeDialog } from "@/components/dashboard/UpgradeDialog";
 
 type SessionStatus = "idle" | "listening" | "thinking" | "speaking" | "paused" | "error";
 type PermissionState = "granted" | "denied" | "pending" | "prompt";
@@ -120,6 +122,7 @@ export default function Session() {
 
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
   const [isGeneratingChapters, setIsGeneratingChapters] = useState(false);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
 
   // Conversation state
   const [messages, setMessages] = useState<Message[]>([]);
@@ -596,11 +599,7 @@ export default function Session() {
   const startRecording = async () => {
     // Check account-level recording limit
     if (isRecordingLimitReached) {
-      toast({
-        title: "Recording limit reached",
-        description: "You've reached your total recording limit for your current plan. Upgrade to get more recording time.",
-        variant: "destructive",
-      });
+      setShowUpgradeDialog(true);
       return;
     }
 
@@ -1466,6 +1465,20 @@ export default function Session() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Usage limit banner for session page */}
+      {isRecordingLimitReached && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-4">
+          <UsageBanner onUpgrade={() => setShowUpgradeDialog(true)} />
+        </div>
+      )}
+
+      {/* Upgrade Dialog */}
+      <UpgradeDialog
+        open={showUpgradeDialog}
+        onOpenChange={setShowUpgradeDialog}
+        reason="limit_reached"
+      />
     </div>
   );
 }

@@ -32,6 +32,8 @@ import { useRecordings } from "@/hooks/useRecordings";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { PrintOrdersList } from "@/components/dashboard/PrintOrdersList";
+import { UsageBanner } from "@/components/dashboard/UsageBanner";
+import { UpgradeDialog } from "@/components/dashboard/UpgradeDialog";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -40,7 +42,7 @@ export default function Dashboard() {
   const { profile } = useProfile();
   const { recordings } = useRecordings();
   const { storyGroups, loading: groupsLoading, createStoryGroup, deleteStoryGroup, updateStoryGroup } = useStoryGroups();
-  const { accountUsage } = useEntitlements();
+  const { accountUsage, isRecordingLimitReached } = useEntitlements();
   
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newBookTitle, setNewBookTitle] = useState('');
@@ -49,6 +51,7 @@ export default function Dashboard() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [editBookId, setEditBookId] = useState<string | null>(null);
   const [editBookTitle, setEditBookTitle] = useState('');
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   
   // Check if user has any paid project
   const hasAnyPaidProject = storyGroups?.some((g: any) => g.plan === 'digital' || g.plan === 'legacy') ?? false;
@@ -153,10 +156,26 @@ export default function Dashboard() {
           <Button 
             size="lg" 
             className="gap-2 text-lg px-8 py-6 h-auto"
-            onClick={() => navigate('/session')}
+            onClick={() => {
+              if (isRecordingLimitReached) {
+                setShowUpgradeDialog(true);
+              } else {
+                navigate('/session');
+              }
+            }}
+            variant={isRecordingLimitReached ? "outline" : "default"}
           >
-            <Play className="w-5 h-5" />
-            Start Recording
+            {isRecordingLimitReached ? (
+              <>
+                <AlertTriangle className="w-5 h-5" />
+                Limit Reached
+              </>
+            ) : (
+              <>
+                <Play className="w-5 h-5" />
+                Start Recording
+              </>
+            )}
           </Button>
           
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -233,6 +252,11 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* Usage Banner */}
+      <div className="mb-8">
+        <UsageBanner onUpgrade={() => setShowUpgradeDialog(true)} />
+      </div>
 
       {/* KPIs */}
       <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mb-8 sm:mb-12">
@@ -572,6 +596,13 @@ export default function Dashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Upgrade Dialog */}
+      <UpgradeDialog
+        open={showUpgradeDialog}
+        onOpenChange={setShowUpgradeDialog}
+        reason={isRecordingLimitReached ? "limit_reached" : "proactive"}
+      />
     </div>
   );
 }
