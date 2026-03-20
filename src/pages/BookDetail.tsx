@@ -175,9 +175,8 @@ export default function BookDetail() {
     try {
       toast({ title: "Generating chapter…", description: "This may take a moment." });
       await generateChapters(session.access_token, targetSessionId);
-      toast({ title: "Chapter generated!", description: "Refreshing…" });
-      // Reload to refetch all data
-      window.location.reload();
+      await refetchChapters();
+      toast({ title: "Chapter generated!", description: "Your chapter is now available." });
     } catch (error) {
       console.error("Chapter generation failed:", error);
       toast({
