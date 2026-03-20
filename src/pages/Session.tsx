@@ -1465,6 +1465,20 @@ export default function Session() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Usage limit banner for session page */}
+      {isRecordingLimitReached && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-4">
+          <UsageBanner onUpgrade={() => setShowUpgradeDialog(true)} />
+        </div>
+      )}
+
+      {/* Upgrade Dialog */}
+      <UpgradeDialog
+        open={showUpgradeDialog}
+        onOpenChange={setShowUpgradeDialog}
+        reason="limit_reached"
+      />
     </div>
   );
 }
