@@ -38,7 +38,7 @@ import { useChapters } from "@/hooks/useChapters";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useProjectFeatures } from "@/hooks/useProjectFeatures";
-import { assembleStory } from "@/lib/backend-api";
+import { assembleStory, generateChapters } from "@/lib/backend-api";
 import { supabase } from "@/integrations/supabase/client";
 import { getChapterDisplayTitle } from "@/lib/chapterTitle";
 import { FeatureLocked } from "@/components/ui/feature-locked";
@@ -65,6 +65,7 @@ export default function BookDetail() {
   const [showStyleDialog, setShowStyleDialog] = useState(false);
   const [styleInstruction, setStyleInstruction] = useState("");
   const [recordingsBySession, setRecordingsBySession] = useState<Record<string, { duration_seconds: number }[]>>({});
+  const [turnCountBySession, setTurnCountBySession] = useState<Record<string, number>>({});
   const [dismissedSuggestionTitle, setDismissedSuggestionTitle] = useState<string | null>(null);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
 
@@ -146,6 +147,46 @@ export default function BookDetail() {
     
     fetchRecordings();
   }, [bookSessions.length]);
+
+  // Fetch turn counts for sessions to know which have recordings
+  useEffect(() => {
+    const fetchTurnCounts = async () => {
+      if (bookSessions.length === 0) return;
+      const sessionIds = bookSessions.map(s => s.id);
+      const { data, error } = await supabase
+        .from('turns')
+        .select('session_id')
+        .in('session_id', sessionIds);
+      if (error) return;
+      const counts = (data || []).reduce((acc, t) => {
+        if (t.session_id) acc[t.session_id] = (acc[t.session_id] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      setTurnCountBySession(counts);
+    };
+    fetchTurnCounts();
+  }, [bookSessions.length]);
+
+  const handleGenerateChapter = async (targetSessionId: string) => {
+    if (!session?.access_token) {
+      toast({ title: "Not authenticated", variant: "destructive" });
+      return;
+    }
+    try {
+      toast({ title: "Generating chapter…", description: "This may take a moment." });
+      await generateChapters(session.access_token, targetSessionId);
+      toast({ title: "Chapter generated!", description: "Refreshing…" });
+      // Reload to refetch all data
+      window.location.reload();
+    } catch (error) {
+      console.error("Chapter generation failed:", error);
+      toast({
+        title: "Chapter generation failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleSaveEdit = async () => {
     if (!bookId || !editTitle.trim()) return;
@@ -484,14 +525,16 @@ export default function BookDetail() {
                         hasChapterContent={!!chapterData}
                         wordCount={wordCount}
                         recordingDurationSeconds={recordingDurationSeconds}
-                        onEdit={async (sessionId, newTitle) => {
-                          await updateSession(sessionId, { title: newTitle });
+                        hasTurns={(turnCountBySession[sessionItem.id] || 0) > 0}
+                        onEdit={async (sid, newTitle) => {
+                          await updateSession(sid, { title: newTitle });
                           toast({
                             title: "Session title updated",
                             description: "Your changes have been saved"
                           });
                         }}
-                        onDelete={(sessionId) => setDeleteChapterId(sessionId)}
+                        onDelete={(sid) => setDeleteChapterId(sid)}
+                        onGenerateChapter={handleGenerateChapter}
                       />
                     );
                   })}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, Clock, Mic, Trash2, Edit, Eye, Play } from "lucide-react";
+import { Calendar, Clock, Mic, Trash2, Edit, Eye, Play, RotateCcw, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ interface ChapterCardProps {
   chapterId?: string;
   chapterIndex: number;
   title: string;
-  suggestedTitle?: string | null; // kept for prop compat but not displayed
+  suggestedTitle?: string | null;
   status: string;
   startedAt: string | null;
   endedAt: string | null;
@@ -20,8 +20,10 @@ interface ChapterCardProps {
   hasChapterContent: boolean;
   wordCount: number;
   recordingDurationSeconds: number;
+  hasTurns?: boolean;
   onEdit: (sessionId: string, newTitle: string) => Promise<void>;
   onDelete: (sessionId: string) => void;
+  onGenerateChapter?: (sessionId: string) => Promise<void>;
 }
 
 export function ChapterCard({
@@ -37,13 +39,16 @@ export function ChapterCard({
   hasChapterContent,
   wordCount,
   recordingDurationSeconds,
+  hasTurns,
   onEdit,
   onDelete,
+  onGenerateChapter,
 }: ChapterCardProps) {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(title);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const isCompleted = status === "completed";
   const canView = isCompleted && hasChapterContent && chapterId;
@@ -192,14 +197,36 @@ export function ChapterCard({
             </Button>
           )}
 
-          {/* View Button - only show if completed AND has chapter content */}
-          {/* View button hidden - chapter menu button handles viewing */}
-
           {/* If completed but wants to continue editing */}
           {isCompleted && (
             <Button variant="outline" size="sm" onClick={() => navigate(`/session?id=${sessionId}`)} className="h-8">
               <Play className="w-3.5 h-3.5 mr-1.5" />
               Continue
+            </Button>
+          )}
+
+          {/* Generate / Retry Chapter - show for completed sessions without chapter content that have turns */}
+          {isCompleted && !hasChapterContent && hasTurns && onGenerateChapter && (
+            <Button
+              variant="default"
+              size="sm"
+              className="h-8"
+              disabled={isGenerating}
+              onClick={async () => {
+                setIsGenerating(true);
+                try {
+                  await onGenerateChapter(sessionId);
+                } finally {
+                  setIsGenerating(false);
+                }
+              }}
+            >
+              {isGenerating ? (
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+              ) : (
+                <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+              )}
+              {isGenerating ? "Generating…" : "Generate Chapter"}
             </Button>
           )}
 

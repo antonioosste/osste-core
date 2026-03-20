@@ -940,15 +940,31 @@ export default function Session() {
           console.log("🔄 Generating chapter content for:", sessionId);
           await generateChapters(token, sessionId);
 
-          toast({
-            title: "Chapter saved",
-            description: "Your chapter has been saved successfully.",
-          });
+          // Verify the chapter was actually created in the DB
+          const { data: createdChapter } = await supabase
+            .from("chapters")
+            .select("id")
+            .eq("session_id", sessionId)
+            .maybeSingle();
+
+          if (createdChapter) {
+            toast({
+              title: "Chapter saved",
+              description: "Your chapter has been generated successfully.",
+            });
+          } else {
+            console.warn("⚠️ generateChapters returned success but no chapter found in DB");
+            toast({
+              title: "Chapter saved partially",
+              description: "Recording saved but chapter text wasn't generated. You can retry from the book page.",
+              variant: "default",
+            });
+          }
         } catch (chapterError) {
           console.error("Error generating chapter:", chapterError);
           toast({
-            title: "Chapter saved",
-            description: "Chapter saved, but content generation failed. You can retry later.",
+            title: "Recording saved",
+            description: "Your recording is saved but chapter generation failed. You can retry from the book page.",
             variant: "default",
           });
         } finally {
