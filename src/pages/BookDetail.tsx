@@ -654,9 +654,16 @@ export default function BookDetail() {
                       {bookStory.approved && (
                         <Button 
                           variant="outline"
-                          onClick={() => navigate(`/book/preview/${bookStory.id}`)}
+                          onClick={() => {
+                            if (!projectFeatures?.pdfEnabled) {
+                              setShowUpgradeDialog(true);
+                              return;
+                            }
+                            navigate(`/book/preview/${bookStory.id}`);
+                          }}
                           className="flex-1 sm:flex-none min-h-[44px]"
                         >
+                          {!projectFeatures?.pdfEnabled && <Lock className="w-4 h-4 mr-2" />}
                           <BookOpen className="w-4 h-4 mr-2" />
                           Preview Book
                         </Button>
@@ -672,9 +679,16 @@ export default function BookDetail() {
                       </Button>
                       <Button 
                         variant="outline"
-                        onClick={() => navigate(`/print-request?group=${bookId}`)}
+                        onClick={() => {
+                          if (!projectFeatures?.printingEnabled) {
+                            setShowUpgradeDialog(true);
+                            return;
+                          }
+                          navigate(`/print-request?group=${bookId}`);
+                        }}
                         className="flex-1 sm:flex-none min-h-[44px]"
                       >
+                        {!projectFeatures?.printingEnabled && <Lock className="w-4 h-4 mr-2" />}
                         <Printer className="w-4 h-4 mr-2" />
                         Order Print
                       </Button>
