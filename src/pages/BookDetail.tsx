@@ -12,7 +12,8 @@ import {
   Loader2,
   Printer,
   RotateCcw,
-  AlertTriangle
+  AlertTriangle,
+  Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
