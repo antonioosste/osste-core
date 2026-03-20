@@ -42,7 +42,7 @@ export default function Dashboard() {
   const { profile } = useProfile();
   const { recordings } = useRecordings();
   const { storyGroups, loading: groupsLoading, createStoryGroup, deleteStoryGroup, updateStoryGroup } = useStoryGroups();
-  const { accountUsage } = useEntitlements();
+  const { accountUsage, isRecordingLimitReached } = useEntitlements();
   
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newBookTitle, setNewBookTitle] = useState('');
@@ -51,6 +51,7 @@ export default function Dashboard() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [editBookId, setEditBookId] = useState<string | null>(null);
   const [editBookTitle, setEditBookTitle] = useState('');
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   
   // Check if user has any paid project
   const hasAnyPaidProject = storyGroups?.some((g: any) => g.plan === 'digital' || g.plan === 'legacy') ?? false;
