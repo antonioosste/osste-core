@@ -525,8 +525,9 @@ export default function BookDetail() {
                         hasChapterContent={!!chapterData}
                         wordCount={wordCount}
                         recordingDurationSeconds={recordingDurationSeconds}
-                        onEdit={async (sessionId, newTitle) => {
-                          await updateSession(sessionId, { title: newTitle });
+                        hasTurns={(turnCountBySession[sessionItem.id] || 0) > 0}
+                        onEdit={async (sid, newTitle) => {
+                          await updateSession(sid, { title: newTitle });
                           toast({
                             title: "Session title updated",
                             description: "Your changes have been saved"
