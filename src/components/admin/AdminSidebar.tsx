@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, Mic, BookOpen, CreditCard,
-  BarChart3, Settings, ScrollText, ArrowLeft, Printer, HelpCircle,
+  BarChart3, Settings, ScrollText, ArrowLeft, Printer, HelpCircle, Package,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
