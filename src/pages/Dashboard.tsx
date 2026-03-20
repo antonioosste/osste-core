@@ -32,6 +32,8 @@ import { useRecordings } from "@/hooks/useRecordings";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { PrintOrdersList } from "@/components/dashboard/PrintOrdersList";
+import { UsageBanner } from "@/components/dashboard/UsageBanner";
+import { UpgradeDialog } from "@/components/dashboard/UpgradeDialog";
 
 export default function Dashboard() {
   const navigate = useNavigate();
