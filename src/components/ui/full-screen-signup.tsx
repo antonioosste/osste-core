@@ -117,6 +117,7 @@ export const FullScreenSignup = () => {
         return;
       }
 
+      // Send account creation email with idempotency key to prevent duplicates
       sendAccountCreationEmail({
         email: result.data.email,
         firstName: result.data.firstName,

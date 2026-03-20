@@ -3,7 +3,6 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
-import { sendAccountCreationEmail } from '@/lib/emails';
 
 interface AuthContextType {
   user: User | null;
@@ -63,12 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
 
       if (data.user) {
-        // Send account creation email (non-blocking)
-        sendAccountCreationEmail({
-          email: data.user.email!,
-          firstName: name || undefined,
-        });
-
+        // NOTE: Account creation email is sent by full-screen-signup.tsx
+        // Do NOT send here to avoid duplicate emails and rate-limit errors
         toast({
           title: "Success!",
           description: "Account created successfully. Please check your email to verify your account.",
