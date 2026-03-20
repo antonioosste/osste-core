@@ -34,6 +34,7 @@ function getPermissions(role: AdminRole): AdminPermissions {
         canManageStories: true,
         canManagePayments: true,
         canManageSettings: false,
+        canManagePlans: true,
         canViewAuditLog: true,
         canManageRoles: false,
       };
