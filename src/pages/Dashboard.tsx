@@ -156,10 +156,26 @@ export default function Dashboard() {
           <Button 
             size="lg" 
             className="gap-2 text-lg px-8 py-6 h-auto"
-            onClick={() => navigate('/session')}
+            onClick={() => {
+              if (isRecordingLimitReached) {
+                setShowUpgradeDialog(true);
+              } else {
+                navigate('/session');
+              }
+            }}
+            variant={isRecordingLimitReached ? "outline" : "default"}
           >
-            <Play className="w-5 h-5" />
-            Start Recording
+            {isRecordingLimitReached ? (
+              <>
+                <AlertTriangle className="w-5 h-5" />
+                Limit Reached
+              </>
+            ) : (
+              <>
+                <Play className="w-5 h-5" />
+                Start Recording
+              </>
+            )}
           </Button>
           
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
