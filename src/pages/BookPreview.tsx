@@ -449,6 +449,13 @@ export default function BookPreview() {
           onClose={() => setIsBookOpen(false)}
         />
       )}
+
+      {/* Upgrade Dialog */}
+      <UpgradeDialog
+        open={showUpgradeDialog}
+        onOpenChange={setShowUpgradeDialog}
+        reason="feature_locked"
+      />
     </div>
   );
 }
