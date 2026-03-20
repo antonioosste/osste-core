@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, Clock, Mic, Trash2, Edit, Eye, Play } from "lucide-react";
+import { Calendar, Clock, Mic, Trash2, Edit, Eye, Play, RotateCcw, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ interface ChapterCardProps {
   chapterId?: string;
   chapterIndex: number;
   title: string;
-  suggestedTitle?: string | null; // kept for prop compat but not displayed
+  suggestedTitle?: string | null;
   status: string;
   startedAt: string | null;
   endedAt: string | null;
@@ -20,8 +20,10 @@ interface ChapterCardProps {
   hasChapterContent: boolean;
   wordCount: number;
   recordingDurationSeconds: number;
+  hasTurns?: boolean;
   onEdit: (sessionId: string, newTitle: string) => Promise<void>;
   onDelete: (sessionId: string) => void;
+  onGenerateChapter?: (sessionId: string) => Promise<void>;
 }
 
 export function ChapterCard({
