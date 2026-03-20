@@ -197,14 +197,36 @@ export function ChapterCard({
             </Button>
           )}
 
-          {/* View Button - only show if completed AND has chapter content */}
-          {/* View button hidden - chapter menu button handles viewing */}
-
           {/* If completed but wants to continue editing */}
           {isCompleted && (
             <Button variant="outline" size="sm" onClick={() => navigate(`/session?id=${sessionId}`)} className="h-8">
               <Play className="w-3.5 h-3.5 mr-1.5" />
               Continue
+            </Button>
+          )}
+
+          {/* Generate / Retry Chapter - show for completed sessions without chapter content that have turns */}
+          {isCompleted && !hasChapterContent && hasTurns && onGenerateChapter && (
+            <Button
+              variant="default"
+              size="sm"
+              className="h-8"
+              disabled={isGenerating}
+              onClick={async () => {
+                setIsGenerating(true);
+                try {
+                  await onGenerateChapter(sessionId);
+                } finally {
+                  setIsGenerating(false);
+                }
+              }}
+            >
+              {isGenerating ? (
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+              ) : (
+                <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+              )}
+              {isGenerating ? "Generating…" : "Generate Chapter"}
             </Button>
           )}
 
