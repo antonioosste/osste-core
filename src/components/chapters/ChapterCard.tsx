@@ -39,13 +39,16 @@ export function ChapterCard({
   hasChapterContent,
   wordCount,
   recordingDurationSeconds,
+  hasTurns,
   onEdit,
   onDelete,
+  onGenerateChapter,
 }: ChapterCardProps) {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(title);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const isCompleted = status === "completed";
   const canView = isCompleted && hasChapterContent && chapterId;
