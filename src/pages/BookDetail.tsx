@@ -533,7 +533,8 @@ export default function BookDetail() {
                             description: "Your changes have been saved"
                           });
                         }}
-                        onDelete={(sessionId) => setDeleteChapterId(sessionId)}
+                        onDelete={(sid) => setDeleteChapterId(sid)}
+                        onGenerateChapter={handleGenerateChapter}
                       />
                     );
                   })}
