@@ -36,6 +36,7 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminAuditLog from "./pages/admin/AdminAuditLog";
 import AdminQuestions from "./pages/AdminQuestions";
 import AdminPrintOrders from "./pages/AdminPrintOrders";
+import AdminPlans from "./pages/admin/AdminPlans";
 import QuestionBankImport from "./pages/QuestionBankImport";
 import QuestionImport from "./pages/QuestionImport";
 import Interview from "./pages/Interview";
