@@ -12,7 +12,8 @@ import {
   Loader2,
   Printer,
   RotateCcw,
-  AlertTriangle
+  AlertTriangle,
+  Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,9 +37,12 @@ import { useStories } from "@/hooks/useStories";
 import { useChapters } from "@/hooks/useChapters";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useProjectFeatures } from "@/hooks/useProjectFeatures";
 import { assembleStory } from "@/lib/backend-api";
 import { supabase } from "@/integrations/supabase/client";
 import { getChapterDisplayTitle } from "@/lib/chapterTitle";
+import { FeatureLocked } from "@/components/ui/feature-locked";
+import { UpgradeDialog } from "@/components/dashboard/UpgradeDialog";
 
 export default function BookDetail() {
   const navigate = useNavigate();
@@ -62,6 +66,10 @@ export default function BookDetail() {
   const [styleInstruction, setStyleInstruction] = useState("");
   const [recordingsBySession, setRecordingsBySession] = useState<Record<string, { duration_seconds: number }[]>>({});
   const [dismissedSuggestionTitle, setDismissedSuggestionTitle] = useState<string | null>(null);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+
+  // Project-level feature flags
+  const { features: projectFeatures } = useProjectFeatures(bookId);
 
   // Get sessions for this book
   const bookSessions = sessions.filter(s => s.story_group_id === bookId);
@@ -647,9 +655,16 @@ export default function BookDetail() {
                       {bookStory.approved && (
                         <Button 
                           variant="outline"
-                          onClick={() => navigate(`/book/preview/${bookStory.id}`)}
+                          onClick={() => {
+                            if (!projectFeatures?.pdfEnabled) {
+                              setShowUpgradeDialog(true);
+                              return;
+                            }
+                            navigate(`/book/preview/${bookStory.id}`);
+                          }}
                           className="flex-1 sm:flex-none min-h-[44px]"
                         >
+                          {!projectFeatures?.pdfEnabled && <Lock className="w-4 h-4 mr-2" />}
                           <BookOpen className="w-4 h-4 mr-2" />
                           Preview Book
                         </Button>
@@ -665,9 +680,16 @@ export default function BookDetail() {
                       </Button>
                       <Button 
                         variant="outline"
-                        onClick={() => navigate(`/print-request?group=${bookId}`)}
+                        onClick={() => {
+                          if (!projectFeatures?.printingEnabled) {
+                            setShowUpgradeDialog(true);
+                            return;
+                          }
+                          navigate(`/print-request?group=${bookId}`);
+                        }}
                         className="flex-1 sm:flex-none min-h-[44px]"
                       >
+                        {!projectFeatures?.printingEnabled && <Lock className="w-4 h-4 mr-2" />}
                         <Printer className="w-4 h-4 mr-2" />
                         Order Print
                       </Button>
@@ -841,6 +863,13 @@ export default function BookDetail() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Upgrade Dialog */}
+        <UpgradeDialog
+          open={showUpgradeDialog}
+          onOpenChange={setShowUpgradeDialog}
+          reason="feature_locked"
+        />
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Download, Loader2 } from "lucide-react";
+import { ArrowLeft, BookOpen, Download, Loader2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { InteractiveBook } from "@/components/book/InteractiveBook";
@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { listStoryImages } from "@/lib/backend-api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getChapterDisplayTitle } from "@/lib/chapterTitle";
+import { useProjectFeatures } from "@/hooks/useProjectFeatures";
+import { UpgradeDialog } from "@/components/dashboard/UpgradeDialog";
 
 interface StoryData {
   id: string;
@@ -59,6 +61,11 @@ export default function BookPreview() {
   const [isBookOpen, setIsBookOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [storyGroupTitle, setStoryGroupTitle] = useState<string>("");
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+
+  // Derive story_group_id from loaded story data
+  const storyGroupId = story?.story_group_id;
+  const { features: projectFeatures } = useProjectFeatures(storyGroupId);
 
   // Fetch story and related data
   useEffect(() => {
@@ -387,16 +394,24 @@ export default function BookPreview() {
             <Button 
               variant="outline" 
               size="lg" 
-              onClick={handleDownloadPDF}
+              onClick={() => {
+                if (!projectFeatures?.pdfEnabled) {
+                  setShowUpgradeDialog(true);
+                  return;
+                }
+                handleDownloadPDF();
+              }}
               disabled={isDownloading}
               className="gap-2"
             >
               {isDownloading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
+              ) : !projectFeatures?.pdfEnabled ? (
+                <Lock className="w-5 h-5" />
               ) : (
                 <Download className="w-5 h-5" />
               )}
-              {isDownloading ? "Generating..." : "Download Printable Book"}
+              {isDownloading ? "Generating..." : !projectFeatures?.pdfEnabled ? "Upgrade to Download" : "Download Printable Book"}
             </Button>
           </div>
 
@@ -434,6 +449,13 @@ export default function BookPreview() {
           onClose={() => setIsBookOpen(false)}
         />
       )}
+
+      {/* Upgrade Dialog */}
+      <UpgradeDialog
+        open={showUpgradeDialog}
+        onOpenChange={setShowUpgradeDialog}
+        reason="feature_locked"
+      />
     </div>
   );
 }
