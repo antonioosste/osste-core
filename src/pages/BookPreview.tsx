@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Download, Loader2 } from "lucide-react";
+import { ArrowLeft, BookOpen, Download, Loader2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { InteractiveBook } from "@/components/book/InteractiveBook";
@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { listStoryImages } from "@/lib/backend-api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getChapterDisplayTitle } from "@/lib/chapterTitle";
+import { useProjectFeatures } from "@/hooks/useProjectFeatures";
+import { UpgradeDialog } from "@/components/dashboard/UpgradeDialog";
 
 interface StoryData {
   id: string;
