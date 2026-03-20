@@ -394,16 +394,24 @@ export default function BookPreview() {
             <Button 
               variant="outline" 
               size="lg" 
-              onClick={handleDownloadPDF}
+              onClick={() => {
+                if (!projectFeatures?.pdfEnabled) {
+                  setShowUpgradeDialog(true);
+                  return;
+                }
+                handleDownloadPDF();
+              }}
               disabled={isDownloading}
               className="gap-2"
             >
               {isDownloading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
+              ) : !projectFeatures?.pdfEnabled ? (
+                <Lock className="w-5 h-5" />
               ) : (
                 <Download className="w-5 h-5" />
               )}
-              {isDownloading ? "Generating..." : "Download Printable Book"}
+              {isDownloading ? "Generating..." : !projectFeatures?.pdfEnabled ? "Upgrade to Download" : "Download Printable Book"}
             </Button>
           </div>
 
