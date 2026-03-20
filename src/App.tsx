@@ -36,6 +36,7 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminAuditLog from "./pages/admin/AdminAuditLog";
 import AdminQuestions from "./pages/AdminQuestions";
 import AdminPrintOrders from "./pages/AdminPrintOrders";
+import AdminPlans from "./pages/admin/AdminPlans";
 import QuestionBankImport from "./pages/QuestionBankImport";
 import QuestionImport from "./pages/QuestionImport";
 import Interview from "./pages/Interview";
@@ -106,6 +107,7 @@ const App = () => (
             <Route path="/admin/settings" element={<ProtectedRoute><AdminLayout requirePermission="canManageSettings"><AdminSettings /></AdminLayout></ProtectedRoute>} />
             <Route path="/admin/audit" element={<ProtectedRoute><AdminLayout requirePermission="canViewAuditLog"><AdminAuditLog /></AdminLayout></ProtectedRoute>} />
             <Route path="/admin/print-orders" element={<ProtectedRoute><AdminLayout><AdminPrintOrders /></AdminLayout></ProtectedRoute>} />
+            <Route path="/admin/plans" element={<ProtectedRoute><AdminLayout requirePermission="canManageSettings"><AdminPlans /></AdminLayout></ProtectedRoute>} />
             <Route path="/admin/questions" element={<ProtectedRoute><AdminLayout><AdminQuestions /></AdminLayout></ProtectedRoute>} />
             <Route path="/admin/import-questions" element={<ProtectedRoute><AdminLayout><QuestionBankImport /></AdminLayout></ProtectedRoute>} />
             <Route path="/admin/question-import" element={<ProtectedRoute><AdminLayout><QuestionImport /></AdminLayout></ProtectedRoute>} />

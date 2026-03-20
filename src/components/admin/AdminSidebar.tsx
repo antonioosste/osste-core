@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, Mic, BookOpen, CreditCard,
-  BarChart3, Settings, ScrollText, ArrowLeft, Printer, HelpCircle,
+  BarChart3, Settings, ScrollText, ArrowLeft, Printer, HelpCircle, Package,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -22,6 +22,7 @@ const navItems = [
 ];
 
 const systemItems = [
+  { title: "Plans", url: "/admin/plans", icon: Package, permission: "canManageSettings" as const },
   { title: "Settings", url: "/admin/settings", icon: Settings, permission: "canManageSettings" as const },
   { title: "Audit Log", url: "/admin/audit", icon: ScrollText, permission: "canViewAuditLog" as const },
   { title: "Questions", url: "/admin/questions", icon: HelpCircle },
