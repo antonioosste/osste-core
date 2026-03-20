@@ -863,6 +863,13 @@ export default function BookDetail() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Upgrade Dialog */}
+        <UpgradeDialog
+          open={showUpgradeDialog}
+          onOpenChange={setShowUpgradeDialog}
+          reason="feature_locked"
+        />
       </div>
     </div>
   );
