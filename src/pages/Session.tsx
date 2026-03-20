@@ -122,6 +122,7 @@ export default function Session() {
 
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
   const [isGeneratingChapters, setIsGeneratingChapters] = useState(false);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
 
   // Conversation state
   const [messages, setMessages] = useState<Message[]>([]);
