@@ -38,7 +38,7 @@ import { useChapters } from "@/hooks/useChapters";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useProjectFeatures } from "@/hooks/useProjectFeatures";
-import { assembleStory } from "@/lib/backend-api";
+import { assembleStory, generateChapters } from "@/lib/backend-api";
 import { supabase } from "@/integrations/supabase/client";
 import { getChapterDisplayTitle } from "@/lib/chapterTitle";
 import { FeatureLocked } from "@/components/ui/feature-locked";
