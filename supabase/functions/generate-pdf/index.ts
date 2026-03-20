@@ -571,20 +571,30 @@ serve(async (req) => {
 
     const admin = createClient(supabaseUrl, serviceRoleKey);
 
-    // Fetch story + story group
+    // Fetch story + story group (including plan flags)
     const { data: story, error: storyErr } = await admin
       .from("stories")
-      .select("*, story_groups!inner(title, user_id)")
+      .select("*, story_groups!inner(title, user_id, pdf_enabled, plan)")
       .eq("id", storyId)
       .single();
 
     if (storyErr || !story) throw new Error("Story not found");
 
     const storyGroupUserId = (story as any).story_groups?.user_id;
+    const pdfEnabled = (story as any).story_groups?.pdf_enabled;
 
     // Ownership check (skip for service role)
     if (!isServiceRole && storyGroupUserId !== userId) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Plan-based PDF access check (skip for service role / print orders)
+    if (!isServiceRole && !print_order_id && pdfEnabled === false) {
+      log("PDF generation blocked – pdf_enabled is false", { plan: (story as any).story_groups?.plan });
+      return new Response(JSON.stringify({ error: "PDF download is not available on your current plan. Please upgrade to Digital or Legacy." }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
