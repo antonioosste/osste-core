@@ -52,7 +52,7 @@ export default function BookDetail() {
   const { getStoryGroup, updateStoryGroup } = useStoryGroups();
   const { sessions, deleteSession, updateSession } = useSessions();
   const { stories, refetch: refetchStories } = useStories();
-  const { chapters } = useChapters();
+  const { chapters, refetch: refetchChapters } = useChapters();
   
   const [book, setBook] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -175,9 +175,8 @@ export default function BookDetail() {
     try {
       toast({ title: "Generating chapter…", description: "This may take a moment." });
       await generateChapters(session.access_token, targetSessionId);
-      toast({ title: "Chapter generated!", description: "Refreshing…" });
-      // Reload to refetch all data
-      window.location.reload();
+      await refetchChapters();
+      toast({ title: "Chapter generated!", description: "Your chapter is now available." });
     } catch (error) {
       console.error("Chapter generation failed:", error);
       toast({
@@ -550,126 +549,54 @@ export default function BookDetail() {
             </div>
 
             {(() => {
-              // Parse chapters from story raw_text markdown for content
-              const storyText = bookStory?.raw_text || "";
-              const parsedChapters: { title: string; content: string }[] = [];
-              
-              if (storyText) {
-                const lines = storyText.split('\n');
-                let currentTitle: string | null = null;
-                let currentLines: string[] = [];
-
-                for (const line of lines) {
-                  const headerMatch = line.match(/^##\s+(.+)$/);
-                  if (headerMatch) {
-                    if (currentLines.length > 0 || currentTitle !== null) {
-                      parsedChapters.push({ title: currentTitle || 'Untitled', content: currentLines.join('\n').trim() });
-                    }
-                    currentTitle = headerMatch[1];
-                    currentLines = [];
-                  } else {
-                    currentLines.push(line);
-                  }
-                }
-                if (currentLines.length > 0 || currentTitle !== null) {
-                  parsedChapters.push({ title: currentTitle || 'Untitled', content: currentLines.join('\n').trim() });
-                }
-              }
-
-              const filtered = parsedChapters.filter(c => c.content);
-              
               // Build ordered session+chapter pairs for consistent title resolution
               const orderedSessionChapters = bookSessions
                 .sort((a, b) => new Date(a.started_at || 0).getTime() - new Date(b.started_at || 0).getTime())
                 .map(s => ({ session: s, chapter: chaptersBySessionId[s.id] }));
-              
-              if (filtered.length === 0) {
-                // Fallback to DB chapters if no story text yet
-                const chaptersWithContent = orderedSessionChapters
-                  .filter(({ chapter }) => chapter && (chapter.polished_text || chapter.raw_transcript));
-                
-                if (chaptersWithContent.length === 0) {
-                  return (
-                    <EmptyState
-                      icon={FileText}
-                      title="No chapters yet"
-                      description="Chapters are generated from your recording sessions. Complete a session to see chapter content here."
-                    />
-                  );
-                }
 
+              // Always show DB chapters as the primary source of truth
+              const chaptersWithContent = orderedSessionChapters
+                .filter(({ chapter }) => chapter && (chapter.polished_text || chapter.raw_transcript));
+
+              if (chaptersWithContent.length === 0) {
                 return (
-                  <div className="space-y-4">
-                    {chaptersWithContent.map(({ session: sessionItem, chapter: chapterData }, index) => (
-                      <Card key={chapterData!.id} className="border-border/40">
-                        <CardHeader className="pb-2">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <CardTitle className="text-lg font-serif">
-                                Chapter {index + 1}: {getChapterDisplayTitle(sessionItem, chapterData)}
-                              </CardTitle>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="secondary">
-                                {(chapterData!.polished_text || '').split(/\s+/).length} words
-                              </Badge>
-                              <Button variant="outline" size="sm" onClick={() => navigate(`/chapters/${chapterData!.id}`)}>
-                                <Eye className="w-4 h-4 mr-1.5" />
-                                View
-                              </Button>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-muted-foreground line-clamp-3 text-sm">
-                            {chapterData!.polished_text || chapterData!.raw_transcript || 'No content'}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                  <EmptyState
+                    icon={FileText}
+                    title="No chapters yet"
+                    description="Chapters are generated from your recording sessions. Complete a session to see chapter content here."
+                  />
                 );
               }
 
               return (
                 <div className="space-y-4">
-                  {filtered.map((chapter, index) => {
-                    // Use the title hierarchy from sessions/chapters for consistency
-                    const matchedPair = orderedSessionChapters[index];
-                    const displayTitle = matchedPair 
-                      ? getChapterDisplayTitle(matchedPair.session, matchedPair.chapter)
-                      : chapter.title;
-                    
-                    return (
-                      <Card key={index} className="border-border/40">
-                        <CardHeader className="pb-2">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <CardTitle className="text-lg font-serif">
-                                Chapter {index + 1}: {displayTitle}
-                              </CardTitle>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="secondary">
-                                {chapter.content.split(/\s+/).length} words
-                              </Badge>
-                              {matchedPair?.chapter?.id && (
-                                <Button variant="outline" size="sm" onClick={() => navigate(`/chapters/${matchedPair.chapter!.id}`)}>
-                                  <Eye className="w-4 h-4 mr-1.5" />
-                                  View
-                                </Button>
-                              )}
-                            </div>
+                  {chaptersWithContent.map(({ session: sessionItem, chapter: chapterData }, index) => (
+                    <Card key={chapterData!.id} className="border-border/40">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <CardTitle className="text-lg font-serif">
+                              Chapter {index + 1}: {getChapterDisplayTitle(sessionItem, chapterData)}
+                            </CardTitle>
                           </div>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-muted-foreground line-clamp-3 text-sm">
-                            {chapter.content}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">
+                              {(chapterData!.polished_text || '').split(/\s+/).length} words
+                            </Badge>
+                            <Button variant="outline" size="sm" onClick={() => navigate(`/chapters/${chapterData!.id}`)}>
+                              <Eye className="w-4 h-4 mr-1.5" />
+                              View
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-muted-foreground line-clamp-3 text-sm">
+                          {chapterData!.polished_text || chapterData!.raw_transcript || 'No content'}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               );
             })()}
