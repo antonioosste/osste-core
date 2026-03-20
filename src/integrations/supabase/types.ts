@@ -297,6 +297,42 @@ export type Database = {
         }
         Relationships: []
       }
+      plans: {
+        Row: {
+          archive_days: number | null
+          created_at: string
+          minutes_limit: number
+          pdf_enabled: boolean
+          photo_uploads_enabled: boolean
+          plan_name: string
+          printing_enabled: boolean
+          watermark: boolean
+          words_limit: number | null
+        }
+        Insert: {
+          archive_days?: number | null
+          created_at?: string
+          minutes_limit: number
+          pdf_enabled?: boolean
+          photo_uploads_enabled?: boolean
+          plan_name: string
+          printing_enabled?: boolean
+          watermark?: boolean
+          words_limit?: number | null
+        }
+        Update: {
+          archive_days?: number | null
+          created_at?: string
+          minutes_limit?: number
+          pdf_enabled?: boolean
+          photo_uploads_enabled?: boolean
+          plan_name?: string
+          printing_enabled?: boolean
+          watermark?: boolean
+          words_limit?: number | null
+        }
+        Relationships: []
+      }
       print_order_admin_actions: {
         Row: {
           action: string
@@ -1235,6 +1271,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_user_perform: {
+        Args: { p_feature: string; p_user_id: string }
+        Returns: boolean
+      }
       get_admin_role: { Args: { _user_id: string }; Returns: string }
       get_gift_by_id: {
         Args: { p_gift_id: string }
@@ -1244,6 +1284,19 @@ export type Database = {
           recipient_name: string
           sender_name: string
           status: string
+        }[]
+      }
+      get_plan_config: {
+        Args: { p_plan_name: string }
+        Returns: {
+          archive_days: number
+          minutes_limit: number
+          pdf_enabled: boolean
+          photo_uploads_enabled: boolean
+          plan_name: string
+          printing_enabled: boolean
+          watermark: boolean
+          words_limit: number
         }[]
       }
       get_session_owner: { Args: { p_session_id: string }; Returns: string }

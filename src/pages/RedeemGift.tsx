@@ -74,25 +74,19 @@ export default function RedeemGift() {
 
       const plan = (gift as any).plan || "digital";
 
-      const PLAN_DEFAULTS: Record<string, { minutes_limit: number; words_limit: number | null; pdf_enabled: boolean; printing_enabled: boolean; photo_uploads_enabled: boolean }> = {
-        digital: { minutes_limit: 60, words_limit: 30000, pdf_enabled: true, printing_enabled: false, photo_uploads_enabled: true },
-        legacy:  { minutes_limit: 120, words_limit: null, pdf_enabled: true, printing_enabled: true, photo_uploads_enabled: true },
-      };
-      const defaults = PLAN_DEFAULTS[plan] || PLAN_DEFAULTS.digital;
+      // Fetch plan config from the central plans table
+      const { data: planRows } = await (supabase as any).rpc("get_plan_config", { p_plan_name: plan });
+      const defaults = planRows?.[0] || { minutes_limit: 60, words_limit: 30000, pdf_enabled: true, printing_enabled: false, photo_uploads_enabled: true, archive_days: null };
 
       // Create a story group for the user with the gifted plan + limits
+      // Create a story group — the DB trigger (apply_story_group_plan_defaults)
+      // will automatically apply correct limits from the plans table
       const { data: storyGroup, error: sgErr } = await supabase
         .from("story_groups")
         .insert({
           user_id: user.id,
           title: "My Story",
           plan,
-          minutes_limit: defaults.minutes_limit,
-          words_limit: defaults.words_limit,
-          pdf_enabled: defaults.pdf_enabled,
-          printing_enabled: defaults.printing_enabled,
-          photo_uploads_enabled: defaults.photo_uploads_enabled,
-          archive_at: null,
         })
         .select("id")
         .single();

@@ -7,10 +7,20 @@ import { logAuditEvent } from "../_shared/audit.ts";
 const log = (step: string, details?: unknown) =>
   console.log(`[STRIPE-WEBHOOK] ${step}${details ? ` – ${JSON.stringify(details)}` : ""}`);
 
-const PLAN_DEFAULTS: Record<string, { minutes_limit: number; words_limit: number | null; pdf_enabled: boolean; printing_enabled: boolean; photo_uploads_enabled: boolean }> = {
-  digital: { minutes_limit: 60, words_limit: 30000, pdf_enabled: true, printing_enabled: false, photo_uploads_enabled: true },
-  legacy:  { minutes_limit: 120, words_limit: null, pdf_enabled: true, printing_enabled: true, photo_uploads_enabled: true },
-};
+// Plan defaults are now fetched from the `plans` table via get_plan_config RPC
+async function getPlanDefaults(supabaseAdmin: any, plan: string) {
+  const { data, error } = await supabaseAdmin.rpc("get_plan_config", { p_plan_name: plan });
+  if (error || !data || data.length === 0) {
+    log("Failed to fetch plan config, using fallback", { plan, error: error?.message });
+    // Fallback defaults in case DB is unreachable
+    const fallback: Record<string, any> = {
+      digital: { minutes_limit: 60, words_limit: 30000, pdf_enabled: true, printing_enabled: false, photo_uploads_enabled: true, archive_days: null },
+      legacy:  { minutes_limit: 120, words_limit: null, pdf_enabled: true, printing_enabled: true, photo_uploads_enabled: true, archive_days: null },
+    };
+    return fallback[plan] || null;
+  }
+  return data[0];
+}
 
 serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
@@ -295,12 +305,11 @@ serve(async (req) => {
       }
 
       // ── SELF-PURCHASE FLOW ──
-      if (!plan || !PLAN_DEFAULTS[plan]) {
+      const planConfig = plan ? await getPlanDefaults(supabaseAdmin, plan) : null;
+      if (!plan || !planConfig) {
         await recordEvent(event.id, event.type, event.data.object, "ignored");
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
-
-      const planConfig = PLAN_DEFAULTS[plan];
 
       try {
         if (userId && paymentIntentId) {
@@ -314,11 +323,10 @@ serve(async (req) => {
         }
 
         if (storyGroupId) {
+          // Just update the plan — the DB trigger (apply_story_group_plan_defaults)
+          // will automatically apply all limits from the plans table
           const { error: updateErr } = await supabaseAdmin.from("story_groups").update({
-            plan, minutes_limit: planConfig.minutes_limit, words_limit: planConfig.words_limit,
-            watermark: false, pdf_enabled: planConfig.pdf_enabled,
-            printing_enabled: planConfig.printing_enabled, photo_uploads_enabled: planConfig.photo_uploads_enabled,
-            archive_at: null,
+            plan,
           }).eq("id", storyGroupId);
 
           if (updateErr) {
