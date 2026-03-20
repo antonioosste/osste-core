@@ -549,52 +549,23 @@ export default function BookDetail() {
             </div>
 
             {(() => {
-              // Parse chapters from story raw_text markdown for content
-              const storyText = bookStory?.raw_text || "";
-              const parsedChapters: { title: string; content: string }[] = [];
-              
-              if (storyText) {
-                const lines = storyText.split('\n');
-                let currentTitle: string | null = null;
-                let currentLines: string[] = [];
-
-                for (const line of lines) {
-                  const headerMatch = line.match(/^##\s+(.+)$/);
-                  if (headerMatch) {
-                    if (currentLines.length > 0 || currentTitle !== null) {
-                      parsedChapters.push({ title: currentTitle || 'Untitled', content: currentLines.join('\n').trim() });
-                    }
-                    currentTitle = headerMatch[1];
-                    currentLines = [];
-                  } else {
-                    currentLines.push(line);
-                  }
-                }
-                if (currentLines.length > 0 || currentTitle !== null) {
-                  parsedChapters.push({ title: currentTitle || 'Untitled', content: currentLines.join('\n').trim() });
-                }
-              }
-
-              const filtered = parsedChapters.filter(c => c.content);
-              
               // Build ordered session+chapter pairs for consistent title resolution
               const orderedSessionChapters = bookSessions
                 .sort((a, b) => new Date(a.started_at || 0).getTime() - new Date(b.started_at || 0).getTime())
                 .map(s => ({ session: s, chapter: chaptersBySessionId[s.id] }));
-              
-              if (filtered.length === 0) {
-                // Fallback to DB chapters if no story text yet
-                const chaptersWithContent = orderedSessionChapters
-                  .filter(({ chapter }) => chapter && (chapter.polished_text || chapter.raw_transcript));
-                
-                if (chaptersWithContent.length === 0) {
-                  return (
-                    <EmptyState
-                      icon={FileText}
-                      title="No chapters yet"
-                      description="Chapters are generated from your recording sessions. Complete a session to see chapter content here."
-                    />
-                  );
+
+              // Always show DB chapters as the primary source of truth
+              const chaptersWithContent = orderedSessionChapters
+                .filter(({ chapter }) => chapter && (chapter.polished_text || chapter.raw_transcript));
+
+              if (chaptersWithContent.length === 0) {
+                return (
+                  <EmptyState
+                    icon={FileText}
+                    title="No chapters yet"
+                    description="Chapters are generated from your recording sessions. Complete a session to see chapter content here."
+                  />
+                );
                 }
 
                 return (
