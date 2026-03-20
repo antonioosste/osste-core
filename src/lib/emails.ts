@@ -67,14 +67,14 @@ export async function sendWelcomeEmail(params: {
   firstName?: string;
   source?: 'waitlist' | 'direct';
 }): Promise<EmailResponse> {
-  return sendEmail({ type: 'welcome', ...params });
+  return sendEmail({ type: 'welcome', ...params, idempotencyKey: `welcome:${params.email}` });
 }
 
 export async function sendAccountCreationEmail(params: {
   email: string;
   firstName?: string;
 }): Promise<EmailResponse> {
-  return sendEmail({ type: 'accountCreation', ...params });
+  return sendEmail({ type: 'accountCreation', ...params, idempotencyKey: `accountCreation:${params.email}` });
 }
 
 export async function sendEmailVerificationEmail(params: {
