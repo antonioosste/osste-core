@@ -10,6 +10,7 @@ export interface AdminPermissions {
   canManageStories: boolean;
   canManagePayments: boolean;
   canManageSettings: boolean;
+  canManagePlans: boolean;
   canViewAuditLog: boolean;
   canManageRoles: boolean;
 }
@@ -23,6 +24,7 @@ function getPermissions(role: AdminRole): AdminPermissions {
         canManageStories: true,
         canManagePayments: true,
         canManageSettings: true,
+        canManagePlans: true,
         canViewAuditLog: true,
         canManageRoles: true,
       };
@@ -33,6 +35,7 @@ function getPermissions(role: AdminRole): AdminPermissions {
         canManageStories: true,
         canManagePayments: true,
         canManageSettings: false,
+        canManagePlans: true,
         canViewAuditLog: true,
         canManageRoles: false,
       };
@@ -43,6 +46,7 @@ function getPermissions(role: AdminRole): AdminPermissions {
         canManageStories: false,
         canManagePayments: false,
         canManageSettings: false,
+        canManagePlans: false,
         canViewAuditLog: false,
         canManageRoles: false,
       };
@@ -53,6 +57,7 @@ function getPermissions(role: AdminRole): AdminPermissions {
         canManageStories: false,
         canManagePayments: false,
         canManageSettings: false,
+        canManagePlans: false,
         canViewAuditLog: false,
         canManageRoles: false,
       };

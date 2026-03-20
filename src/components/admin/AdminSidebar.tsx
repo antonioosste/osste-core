@@ -22,7 +22,7 @@ const navItems = [
 ];
 
 const systemItems = [
-  { title: "Plans", url: "/admin/plans", icon: Package, permission: "canManageSettings" as const },
+  { title: "Plans", url: "/admin/plans", icon: Package, permission: "canManagePlans" as const },
   { title: "Settings", url: "/admin/settings", icon: Settings, permission: "canManageSettings" as const },
   { title: "Audit Log", url: "/admin/audit", icon: ScrollText, permission: "canViewAuditLog" as const },
   { title: "Questions", url: "/admin/questions", icon: HelpCircle },
