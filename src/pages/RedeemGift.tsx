@@ -79,18 +79,14 @@ export default function RedeemGift() {
       const defaults = planRows?.[0] || { minutes_limit: 60, words_limit: 30000, pdf_enabled: true, printing_enabled: false, photo_uploads_enabled: true, archive_days: null };
 
       // Create a story group for the user with the gifted plan + limits
+      // Create a story group — the DB trigger (apply_story_group_plan_defaults)
+      // will automatically apply correct limits from the plans table
       const { data: storyGroup, error: sgErr } = await supabase
         .from("story_groups")
         .insert({
           user_id: user.id,
           title: "My Story",
           plan,
-          minutes_limit: defaults.minutes_limit,
-          words_limit: defaults.words_limit,
-          pdf_enabled: defaults.pdf_enabled,
-          printing_enabled: defaults.printing_enabled,
-          photo_uploads_enabled: defaults.photo_uploads_enabled,
-          archive_at: null,
         })
         .select("id")
         .single();
