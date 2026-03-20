@@ -323,11 +323,10 @@ serve(async (req) => {
         }
 
         if (storyGroupId) {
+          // Just update the plan — the DB trigger (apply_story_group_plan_defaults)
+          // will automatically apply all limits from the plans table
           const { error: updateErr } = await supabaseAdmin.from("story_groups").update({
-            plan, minutes_limit: planConfig.minutes_limit, words_limit: planConfig.words_limit,
-            watermark: false, pdf_enabled: planConfig.pdf_enabled,
-            printing_enabled: planConfig.printing_enabled, photo_uploads_enabled: planConfig.photo_uploads_enabled,
-            archive_at: null,
+            plan,
           }).eq("id", storyGroupId);
 
           if (updateErr) {
