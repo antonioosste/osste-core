@@ -1,21 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  Mic,
   MicOff,
-  Square,
-  Save,
-  X,
   WifiOff,
   AlertCircle,
   Loader2,
   Volume2,
-  ChevronDown,
-  ChevronUp,
+  SkipForward,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -24,15 +18,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Header } from "@/components/layout/Header";
-import { QuestionSwitcher } from "@/components/ui/question-switcher";
 import { CategorySelector } from "@/components/session/CategorySelector";
 import { GuidedSetup } from "@/components/session/GuidedSetup";
-import { ConversationSkeleton } from "@/components/loaders/ConversationSkeleton";
 import { GeneratingOverlay } from "@/components/loaders/GeneratingOverlay";
+import { SessionHeader } from "@/components/session/SessionHeader";
+import { RecordButton } from "@/components/session/RecordButton";
+import { SessionWaveform } from "@/components/session/SessionWaveform";
+import { ProcessingState } from "@/components/session/ProcessingState";
+import { SuggestedQuestions } from "@/components/session/SuggestedQuestions";
+import { ConversationHistory } from "@/components/session/ConversationHistory";
 import { getQuestionsByCategory, getRandomQuestion } from "@/lib/questions";
 import type { QuestionRow, QuestionCategory } from "@/types/questions";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/hooks/useSession";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
