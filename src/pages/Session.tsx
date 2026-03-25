@@ -1227,8 +1227,7 @@ export default function Session() {
 
             {/* AI-Inspired Follow-up Suggestions - Only show in non-guided mode */}
             {sessionMode === "non-guided" &&
-              messages.length > 0 &&
-              messages[messages.length - 1]?.suggestions &&
+              suggestedQuestions.length > 0 &&
               !isRecording &&
               status !== "thinking" && (
                 <div className="w-full max-w-2xl animate-fade-in mb-4">
@@ -1255,9 +1254,9 @@ export default function Session() {
 
                       {/* Suggestions List */}
                       <div className="space-y-2">
-                        {messages[messages.length - 1].suggestions!.map((suggestion, index) => (
+                        {suggestedQuestions.map((suggestion, index) => (
                           <button
-                            key={index}
+                            key={`suggestion-${index}-${suggestion.slice(0, 20)}`}
                             onClick={() => {
                               setCurrentPrompt(suggestion);
                               toast({
