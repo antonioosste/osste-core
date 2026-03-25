@@ -646,6 +646,7 @@ export default function Session() {
   const handleStopRecording = async () => {
     try {
       setStatus("thinking");
+      setSuggestedQuestions([]); // Clear old suggestions to prevent glitch during processing
 
       // Stop recording and get blob
       const recording = await stopRecording();
