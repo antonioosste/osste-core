@@ -362,10 +362,7 @@ export default function Session() {
     return () => clearInterval(intervalRef.current);
   }, [status]);
 
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    conversationEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  // Auto-scroll handled by ConversationHistory component
 
   // Mock prompts rotation
   const prompts = [
