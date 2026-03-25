@@ -128,8 +128,6 @@ export default function Session() {
   const [waveformData, setWaveformData] = useState<number[]>(new Array(20).fill(0));
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
 
-  // Conversation scroll reference
-  const conversationEndRef = useRef<HTMLDivElement>(null);
 
 
   // TTS audio playback
