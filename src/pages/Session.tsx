@@ -990,61 +990,42 @@ export default function Session() {
     });
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
+  // Compute question progress for guided mode
+  const questionNumber = sessionMode === "guided" && questionBank.length > 0
+    ? currentQuestionIndex + 1
+    : undefined;
+  const totalQuestions = sessionMode === "guided" && questionBank.length > 0
+    ? questionBank.length
+    : undefined;
 
-  const getStatusBadge = () => {
-    if (isProcessing) {
-      return (
-        <Badge variant="secondary" className="animate-pulse">
-          Processing
-        </Badge>
-      );
-    }
-
-    const statusConfig = {
-      idle: { variant: "secondary" as const, text: "Ready" },
-      listening: { variant: "default" as const, text: "Listening" },
-      thinking: { variant: "secondary" as const, text: "Thinking" },
-      speaking: { variant: "default" as const, text: "Speaking" },
-      paused: { variant: "outline" as const, text: "Paused" },
-      error: { variant: "destructive" as const, text: "Error" },
-    };
-
-    const config = statusConfig[status];
-    return (
-      <Badge variant={config.variant} className="animate-pulse">
-        {config.text}
-      </Badge>
-    );
+  // Microcopy based on state
+  const getMicrocopy = () => {
+    if (isProcessing || status === "thinking") return null;
+    if (isRecording) return "We're listening... take your time";
+    if (messages.length === 0) return "Tap to start recording your story";
+    return "Continue your story";
   };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header isAuthenticated={true} />
-
-      {/* Full Screen Loading Animation */}
+      {/* Full Screen Loading */}
       {isLoadingSession && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+        <div className="fixed inset-0 z-50 bg-background/90 backdrop-blur-sm flex items-center justify-center">
           <div className="flex flex-col items-center gap-4 animate-fade-in">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            <div className="text-center space-y-2">
-              <p className="text-lg font-medium text-foreground">Loading your session...</p>
-              <p className="text-sm text-muted-foreground">Preparing your conversation</p>
-            </div>
+            <Loader2 className="h-10 w-10 animate-spin text-primary/60" />
+            <p className="text-sm text-muted-foreground">Loading your session...</p>
           </div>
         </div>
       )}
 
       {/* Chapter Generation Overlay */}
-      <GeneratingOverlay 
-        isVisible={isGeneratingChapters} 
-        type="chapter" 
+      <GeneratingOverlay
+        isVisible={isGeneratingChapters}
+        type="chapter"
         title={currentQuestionData?.question_text || "Your recording"}
       />
+
+      {/* Guided Setup Overlay */}
       {showGuidedSetup && (
         <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="w-full py-8">
@@ -1053,7 +1034,7 @@ export default function Session() {
         </div>
       )}
 
-      {/* Category Selector (Legacy - kept for existing sessions) */}
+      {/* Category Selector */}
       {showCategorySelector && (
         <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="max-w-4xl w-full">
@@ -1062,228 +1043,125 @@ export default function Session() {
         </div>
       )}
 
-      {/* Main Session Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="max-w-4xl mx-auto w-full flex flex-col h-full px-4">
-          {/* Minimalistic Header */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-3 sm:py-4 border-b border-border/50 flex-shrink-0 gap-2">
-            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-              <h1 className="text-base sm:text-lg font-medium text-foreground">Chapter Recording</h1>
-              {getStatusBadge()}
-              <span className="text-sm text-muted-foreground tabular-nums">{formatTime(sessionTime)}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={cancelAndExit} disabled={isGeneratingChapters} className="min-h-[44px]">
-                Cancel
-              </Button>
-              <Button size="sm" onClick={saveAndExit} disabled={isGeneratingChapters} className="min-h-[44px]">
-                {isGeneratingChapters ? (
-                  <>
-                    <Loader2 className="w-3 h-3 mr-2 animate-spin" />
-                    Saving
-                  </>
-                ) : (
-                  "Save & Exit"
-                )}
-              </Button>
-            </div>
-          </div>
+      {/* ─── Minimal Top Bar ─── */}
+      <SessionHeader
+        sessionTime={sessionTime}
+        questionNumber={questionNumber}
+        totalQuestions={totalQuestions}
+        isGenerating={isGeneratingChapters}
+        onCancel={cancelAndExit}
+        onSaveAndExit={saveAndExit}
+      />
 
-          {/* Central Recording Control - Top Section */}
-          <div className="flex flex-col items-center py-6 flex-shrink-0 border-b border-border/30">
-            {/* Error States */}
-            {hasNetworkError && (
-              <div className="mb-6 p-4 rounded-lg border border-destructive/50 bg-destructive/5 max-w-md w-full">
-                <div className="flex items-center space-x-3">
-                  <WifiOff className="w-5 h-5 text-destructive" />
-                  <div className="flex-1">
-                    <h3 className="font-medium text-sm text-foreground">Connection Lost</h3>
-                    <p className="text-xs text-muted-foreground">Unable to connect to the server.</p>
-                  </div>
-                  <Button onClick={retryConnection} size="sm" variant="outline">
-                    Retry
-                  </Button>
+      {/* ─── Main Focus Area (vertically centered) ─── */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8 overflow-y-auto">
+        <div className="w-full max-w-lg flex flex-col items-center gap-8">
+
+          {/* Network Error */}
+          {hasNetworkError && (
+            <div className="w-full p-4 rounded-2xl border border-destructive/20 bg-destructive/5 animate-fade-in">
+              <div className="flex items-center gap-3">
+                <WifiOff className="w-5 h-5 text-destructive/60" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">Connection lost</p>
+                  <p className="text-xs text-muted-foreground">Unable to reach the server</p>
                 </div>
+                <Button onClick={retryConnection} size="sm" variant="outline" className="text-xs">
+                  Retry
+                </Button>
               </div>
-            )}
-
-            {/* Large Microphone Button */}
-            <div className="relative mb-4">
-              <Button
-                size="lg"
-                variant={isRecording ? "destructive" : "default"}
-                className={`w-24 h-24 sm:w-32 sm:h-32 rounded-full shadow-lg hover:shadow-xl transition-all ${
-                  isRecording ? "animate-pulse" : "hover:scale-105"
-                }`}
-                onClick={isRecording ? handleStopRecording : startRecording}
-                disabled={micPermission === "denied" || hasNetworkError || isProcessing}
-              >
-                {isProcessing ? (
-                  <Loader2 className="w-12 h-12 animate-spin" />
-                ) : isRecording ? (
-                  <Square className="w-8 h-8 sm:w-12 sm:h-12" />
-                ) : (
-                  <Mic className="w-8 h-8 sm:w-12 sm:h-12" />
-                )}
-              </Button>
-              {micPermission === "denied" && (
-                <div className="absolute top-0 right-0">
-                  <div className="w-8 h-8 bg-destructive rounded-full flex items-center justify-center">
-                    <MicOff className="w-4 h-4 text-destructive-foreground" />
-                  </div>
-                </div>
-              )}
             </div>
+          )}
 
-            {/* Current Question Display */}
-            <div className="text-center max-w-xl mb-4">
-              <div className="flex flex-col items-center gap-2">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground/60 font-medium">
-                  Current Question
-                </p>
-                <div className="flex items-center justify-center gap-3 w-full">
-                  <p className="text-base text-foreground leading-relaxed flex-1 font-medium">{currentPrompt}</p>
-                  {currentQuestionTtsUrl && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 w-8 p-0 flex-shrink-0"
-                      onClick={() => {
-                        if (currentQuestionTtsUrl) {
-                          playAudio("current-question", currentQuestionTtsUrl);
-                        }
-                      }}
-                      disabled={playingAudioId === "current-question"}
-                    >
-                      {playingAudioId === "current-question" ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Volume2 className="h-4 w-4" />
-                      )}
-                    </Button>
+          {/* Mic Permission Denied Indicator */}
+          {micPermission === "denied" && (
+            <div className="flex items-center gap-2 text-xs text-destructive/70 animate-fade-in">
+              <MicOff className="w-4 h-4" />
+              <span>Microphone access blocked</span>
+            </div>
+          )}
+
+          {/* ─── Current Question ─── */}
+          {currentPrompt && status !== "thinking" && !isProcessing && (
+            <div className="text-center space-y-3 animate-fade-in">
+              <h2 className="font-serif text-xl sm:text-2xl font-medium text-foreground leading-relaxed max-w-md mx-auto">
+                {currentPrompt}
+              </h2>
+              {currentQuestionTtsUrl && (
+                <button
+                  onClick={() => playAudio("current-question", currentQuestionTtsUrl)}
+                  disabled={playingAudioId === "current-question"}
+                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/50 hover:text-primary transition-colors"
+                >
+                  {playingAudioId === "current-question" ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Volume2 className="h-3.5 w-3.5" />
                   )}
-                </div>
-              </div>
-            </div>
-
-            {/* Waveform - Only show when recording */}
-            {isRecording && (
-              <div className="flex items-center justify-center space-x-1 h-12 mb-4">
-                {waveformData.map((height, index) => (
-                  <div
-                    key={index}
-                    className="w-1 bg-primary rounded-full transition-all duration-100"
-                    style={{ height: `${Math.max(4, height / 2)}px` }}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Recording Actions */}
-            {isRecording && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  cancelRecording();
-                  setStatus("idle");
-                  toast({
-                    title: "Recording cancelled",
-                    description: "Your recording has been discarded.",
-                  });
-                }}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10 mb-4"
-              >
-                <X className="w-4 h-4 mr-2" />
-                Cancel Recording
-              </Button>
-            )}
-
-            {/* AI Thinking Animation - Shows when processing */}
-            {status === "thinking" && !isRecording && (
-              <div className="w-full max-w-2xl animate-fade-in mb-4">
-                <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-card via-card to-muted/20 shadow-xl backdrop-blur-sm">
-                  <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-accent/5 pointer-events-none" />
-
-                  <div className="relative p-6 flex items-center justify-center gap-4">
-                    <div className="flex space-x-2">
-                      <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" />
-                      <div
-                        className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce"
-                        style={{ animationDelay: "0.1s" }}
-                      />
-                      <div
-                        className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce"
-                        style={{ animationDelay: "0.2s" }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* AI-Inspired Follow-up Suggestions - Only show in non-guided mode */}
-            {sessionMode === "non-guided" &&
-              suggestedQuestions.length > 0 &&
-              !isRecording &&
-              status !== "thinking" && (
-                <div className="w-full max-w-2xl animate-fade-in mb-4">
-                  <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-card via-card to-muted/20 shadow-xl backdrop-blur-sm">
-                    {/* Subtle gradient overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-accent/5 pointer-events-none" />
-
-                    <div className="relative p-6">
-                      {/* Header with AI indicator */}
-                      <div className="flex items-center gap-3 mb-5">
-                        <div className="relative">
-                          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                          <div className="absolute inset-0 w-2 h-2 rounded-full bg-primary animate-ping" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
-                            Suggested Next Steps
-                          </h3>
-                          <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                            AI-generated follow-up questions
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Suggestions List */}
-                      <div className="space-y-2">
-                        {suggestedQuestions.map((suggestion, index) => (
-                          <button
-                            key={`suggestion-${index}-${suggestion.slice(0, 20)}`}
-                            onClick={() => {
-                              setCurrentPrompt(suggestion);
-                              toast({
-                                title: "Question selected",
-                                description: "Ready to record your answer",
-                              });
-                            }}
-                            className="group w-full text-left p-4 rounded-xl border border-border/30 bg-background/50 hover:bg-accent/10 hover:border-accent/40 transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold mt-0.5 group-hover:bg-primary/20 transition-colors">
-                                {index + 1}
-                              </div>
-                              <p className="flex-1 text-sm text-foreground leading-relaxed font-medium">{suggestion}</p>
-                              <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
-                                  <span className="text-primary text-xs">→</span>
-                                </div>
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  Listen
+                </button>
               )}
+            </div>
+          )}
 
-            {/* Additional Options - Mode-specific Navigation */}
-            <div className="flex items-center justify-center gap-4 text-xs">
+          {/* ─── Processing State ─── */}
+          {(status === "thinking" || isProcessing) && !isRecording && (
+            <ProcessingState />
+          )}
+
+          {/* ─── Record Button ─── */}
+          <RecordButton
+            isRecording={isRecording}
+            isProcessing={isProcessing || status === "thinking"}
+            disabled={micPermission === "denied" || hasNetworkError || isProcessing}
+            onToggle={isRecording ? handleStopRecording : startRecording}
+          />
+
+          {/* ─── Waveform ─── */}
+          <SessionWaveform data={waveformData} visible={isRecording} />
+
+          {/* ─── Microcopy ─── */}
+          {getMicrocopy() && (
+            <p className="text-xs text-muted-foreground/50 text-center tracking-wide">
+              {getMicrocopy()}
+            </p>
+          )}
+
+          {/* ─── Recording Cancel ─── */}
+          {isRecording && (
+            <button
+              onClick={() => {
+                cancelRecording();
+                setStatus("idle");
+                toast({
+                  title: "Recording cancelled",
+                  description: "Your recording has been discarded.",
+                });
+              }}
+              className="text-xs text-muted-foreground/40 hover:text-destructive transition-colors flex items-center gap-1"
+            >
+              <X className="w-3 h-3" />
+              Discard
+            </button>
+          )}
+
+          {/* ─── AI Suggested Questions (non-guided mode) ─── */}
+          {sessionMode === "non-guided" &&
+            !isRecording &&
+            status !== "thinking" &&
+            !isProcessing && (
+              <SuggestedQuestions
+                questions={suggestedQuestions}
+                onSelect={(question) => {
+                  setCurrentPrompt(question);
+                  toast({ title: "Question selected", description: "Ready to record your answer" });
+                }}
+              />
+            )}
+
+          {/* ─── Guided Mode Navigation ─── */}
+          {!isRecording && status !== "thinking" && !isProcessing && (
+            <div className="flex items-center gap-3">
               {sessionMode === "guided" && guidedPrompts.length > 0 && (
                 <>
                   <Button
@@ -1306,11 +1184,11 @@ export default function Session() {
                       }
                     }}
                     disabled={currentGuidedPromptIndex >= guidedPrompts.length - 1}
-                    className="text-xs"
+                    className="text-xs text-muted-foreground/60"
                   >
-                    Next Question ({currentGuidedPromptIndex + 1}/{guidedPrompts.length})
+                    <SkipForward className="w-3 h-3 mr-1" />
+                    Next
                   </Button>
-
                   <Button
                     variant="ghost"
                     size="sm"
@@ -1318,7 +1196,7 @@ export default function Session() {
                       setShowGuidedSetup(true);
                       setGuidedPrompts([]);
                     }}
-                    className="text-xs"
+                    className="text-xs text-muted-foreground/60"
                   >
                     Change Topic
                   </Button>
@@ -1332,131 +1210,34 @@ export default function Session() {
                     size="sm"
                     onClick={nextQuestion}
                     disabled={isLoadingQuestions}
-                    className="text-xs"
+                    className="text-xs text-muted-foreground/60"
                   >
-                    Next Question
+                    <SkipForward className="w-3 h-3 mr-1" />
+                    Skip
                   </Button>
-
-                  <Button variant="ghost" size="sm" onClick={changeTopic} className="text-xs">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={changeTopic}
+                    className="text-xs text-muted-foreground/60"
+                  >
                     Change Topic
                   </Button>
                 </>
               )}
-
             </div>
-          </div>
+          )}
 
-          {/* Conversation History - Collapsible Section */}
-          <Collapsible open={conversationOpen} onOpenChange={setConversationOpen} className="flex-shrink-0">
-            <div className="relative overflow-hidden group">
-              {/* Gradient background */}
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-              <div className="relative flex items-center justify-between py-4 px-2 border-b border-border/40 backdrop-blur-sm">
-                <div className="flex items-center gap-3">
-                  {/* Chat icon with subtle animation */}
-                  <div className="p-1.5 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors duration-200">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="text-primary"
-                    >
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold text-foreground">Conversation History</h3>
-                    {/* Message count badge */}
-                    {messages.filter((m) => !m.isPartial).length > 0 && (
-                      <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold text-primary-foreground bg-primary rounded-full animate-scale-in">
-                        {messages.filter((m) => !m.isPartial).length}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <CollapsibleTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 hover:bg-primary/10 transition-all duration-200 group/button"
-                  >
-                    <div
-                      className={`transition-transform duration-300 ${conversationOpen ? "rotate-180" : "rotate-0"}`}
-                    >
-                      <ChevronDown className="h-4 w-4 group-hover/button:text-primary transition-colors" />
-                    </div>
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
-            </div>
-
-            <CollapsibleContent>
-              <div className="overflow-y-auto py-4 max-h-[25vh] conversation-history-scroll">
-                <div className="space-y-6">
-                  {messages.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>Start recording to begin your conversation</p>
-                    </div>
-                  ) : (
-                    <>
-                      {messages
-                        .filter((m) => !m.isPartial)
-                        .map((message) => (
-                          <div key={message.id} className="space-y-2">
-                            {/* Message */}
-                            <div className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
-                              <div
-                                className={`flex items-start gap-3 max-w-[80%] ${message.type === "user" ? "flex-row-reverse" : ""}`}
-                              >
-                                <div
-                                  className={`rounded-2xl px-4 py-3 ${
-                                    message.type === "user"
-                                      ? "bg-primary text-primary-foreground"
-                                      : "bg-muted/50 text-foreground border border-border/50"
-                                  }`}
-                                >
-                                  <p className="text-sm leading-relaxed">{message.content}</p>
-
-                                  {/* Topic badge for AI messages */}
-                                  {message.type === "ai" && message.topic && (
-                                    <div className="mt-2">
-                                      <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
-                                        {message.topic}
-                                      </Badge>
-                                    </div>
-                                  )}
-
-                                  <div className="text-xs opacity-60 mt-2">
-                                    {message.timestamp.toLocaleTimeString([], {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    })}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                    </>
-                  )}
-                  <div ref={conversationEndRef} />
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+          {/* ─── Conversation History ─── */}
+          <ConversationHistory
+            messages={messages}
+            open={conversationOpen}
+            onOpenChange={setConversationOpen}
+          />
         </div>
       </div>
 
-      {/* Microphone Permission Dialog */}
+      {/* ─── Microphone Permission Dialog ─── */}
       <Dialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
         <DialogContent>
           <DialogHeader>
@@ -1465,8 +1246,7 @@ export default function Session() {
               Microphone Permission Required
             </DialogTitle>
             <DialogDescription>
-              To record your stories, we need access to your microphone. Please grant permission when prompted by your
-              browser.
+              To record your stories, we need access to your microphone. Please grant permission when prompted by your browser.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1478,7 +1258,7 @@ export default function Session() {
         </DialogContent>
       </Dialog>
 
-      {/* Usage limit banner for session page */}
+      {/* Usage limit banner */}
       {isRecordingLimitReached && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-4">
           <UsageBanner onUpgrade={() => setShowUpgradeDialog(true)} />
