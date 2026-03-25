@@ -187,10 +187,14 @@ export default function Session() {
     startNonGuidedSession();
   }, [modeParam, existingSessionId, sessionId, targetBookId]);
 
+  // Track whether initial load has completed to prevent re-running on every turns change
+  const hasLoadedSessionRef = useRef(false);
+
   // Load existing session data on mount
   useEffect(() => {
     const loadExistingSession = async () => {
-      if (existingSessionId && turns.length > 0) {
+      if (existingSessionId && turns.length > 0 && !hasLoadedSessionRef.current) {
+        hasLoadedSessionRef.current = true;
         setIsLoadingSession(true);
         console.log("📥 Loading existing session:", existingSessionId, "with", turns.length, "turns");
 
