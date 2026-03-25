@@ -364,14 +364,7 @@ export default function Session() {
 
   // Auto-scroll handled by ConversationHistory component
 
-  // Mock prompts rotation
-  const prompts = [
-    "Tell me about your earliest childhood memory. What stands out most vividly?",
-    "What was your hometown like when you were growing up?",
-    "Can you describe your parents and what they were like?",
-    "What was school like for you? Do you have any favorite teachers or subjects?",
-    "Tell me about your first job or career. How did you get started?",
-  ];
+  // (prompts removed – questions come from DB/API)
 
   const requestMicPermission = async () => {
     try {
