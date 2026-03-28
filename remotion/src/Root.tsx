@@ -1,15 +1,26 @@
 import { Composition } from "remotion";
 import { MainVideo } from "./MainVideo";
+import { GiftGuideVideo } from "./GiftGuideVideo";
 
-// Intro(90) + 6 scenes(105 each) + 5 scene transitions(20 each) + 2 boundary transitions(20 each) + Outro(90)
-// = 90 + 630 - 100 - 40 + 90 = ~670 frames ≈ 22s
+// Landscape walkthrough
 export const RemotionRoot = () => (
-  <Composition
-    id="main"
-    component={MainVideo}
-    durationInFrames={700}
-    fps={30}
-    width={1920}
-    height={1080}
-  />
+  <>
+    <Composition
+      id="main"
+      component={MainVideo}
+      durationInFrames={700}
+      fps={30}
+      width={1920}
+      height={1080}
+    />
+    {/* Vertical TikTok/Reels gift guide: 9:16 */}
+    <Composition
+      id="gift-guide"
+      component={GiftGuideVideo}
+      durationInFrames={810}
+      fps={30}
+      width={1080}
+      height={1920}
+    />
+  </>
 );
