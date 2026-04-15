@@ -21,7 +21,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { PasswordStrength, isPasswordStrong } from "@/components/ui/password-strength";
 import { useAuth } from "@/hooks/useAuth";
@@ -40,7 +39,7 @@ export function MobileProfile() {
   const { user, signOut } = useAuth();
   const { profile, loading, updateProfile } = useProfile();
   const { accountUsage } = useEntitlements();
-  const { billing, isManual, isStripe } = useBilling();
+  const { isStripe } = useBilling();
 
   const [name, setName] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -92,31 +91,26 @@ export function MobileProfile() {
   };
 
   return (
-    <div className="px-5 pt-safe-top pb-4">
+    <div className="px-5 pt-safe-top pb-8">
       {/* Header */}
-      <div className="pt-10 pb-6 flex items-center gap-4">
-        <Avatar className="h-14 w-14">
-          <AvatarFallback className="bg-primary/10 text-primary text-lg font-serif">
+      <div className="pt-10 pb-8 flex flex-col items-center text-center">
+        <Avatar className="h-16 w-16 mb-3">
+          <AvatarFallback className="bg-primary/10 text-primary text-xl font-serif">
             {profile?.name?.charAt(0).toUpperCase() || "U"}
           </AvatarFallback>
         </Avatar>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-serif font-bold text-foreground truncate">
-            {profile?.name || "Your Profile"}
-          </h1>
-          <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
-        </div>
+        <h1 className="text-xl font-serif font-bold text-foreground">
+          {profile?.name || "Your Profile"}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{user?.email}</p>
       </div>
 
-      {/* Plan Card */}
+      {/* Plan */}
       <Card className="mb-4 border-border/40">
         <CardContent className="p-4">
           <div className="flex items-center gap-3 mb-3">
             <PlanIcon className="h-5 w-5 text-primary" />
             <span className="font-semibold text-foreground text-sm">{PLAN_LABELS[planKey]}</span>
-            <Badge variant={planKey === "free" ? "secondary" : "default"} className="ml-auto text-[10px]">
-              {PLAN_LABELS[planKey]}
-            </Badge>
           </div>
           <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
             <span>Recording time</span>
@@ -131,23 +125,19 @@ export function MobileProfile() {
         </CardContent>
       </Card>
 
-      {/* Profile Edit */}
+      {/* Account */}
       <Card className="mb-4 border-border/40">
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center gap-2 mb-1">
             <User className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium text-foreground">Profile</span>
+            <span className="text-sm font-medium text-foreground">Account</span>
           </div>
           <div className="space-y-2">
             <Label className="text-xs">Full Name</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} className="h-11 rounded-xl" disabled={loading} />
           </div>
-          <div className="space-y-2">
-            <Label className="text-xs">Email</Label>
-            <Input value={user?.email || ""} disabled className="h-11 rounded-xl" />
-          </div>
           <Button size="sm" onClick={handleSave} disabled={loading} className="w-full rounded-xl">
-            Save Changes
+            Save
           </Button>
         </CardContent>
       </Card>
@@ -166,7 +156,7 @@ export function MobileProfile() {
             <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${showPasswordSection ? "rotate-90" : ""}`} />
           </button>
           {showPasswordSection && (
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-3 animate-fade-in">
               <div className="space-y-2">
                 <Label className="text-xs">Current Password</Label>
                 <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="h-11 rounded-xl" />
@@ -199,9 +189,9 @@ export function MobileProfile() {
         </CardContent>
       </Card>
 
-      {/* Quick Links */}
-      <Card className="mb-4 border-border/40">
-        <CardContent className="p-0 divide-y divide-border/40">
+      {/* Links */}
+      <Card className="mb-6 border-border/40">
+        <CardContent className="p-0">
           {isStripe && (
             <button
               className="flex items-center gap-3 w-full p-4 text-left active:bg-muted/50 transition-colors"
@@ -236,8 +226,8 @@ export function MobileProfile() {
 
       {/* Sign Out */}
       <Button
-        variant="outline"
-        className="w-full rounded-xl h-12 text-destructive border-destructive/20 hover:bg-destructive/5"
+        variant="ghost"
+        className="w-full rounded-xl h-12 text-destructive hover:bg-destructive/5"
         onClick={handleSignOut}
       >
         <LogOut className="h-4 w-4 mr-2" />

@@ -1,24 +1,16 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { BookOpen, Search, Eye, MoreVertical, Trash2, CheckCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { BookOpen, Search, Feather } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { EmptyState } from "@/components/empty-states/EmptyState";
 import { StoryCardSkeleton } from "@/components/loaders/StoryCardSkeleton";
 import { useStories } from "@/hooks/useStories";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
 
-type StoryStatus = "draft" | "polished" | "approved";
-
 export function MobileStories() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; storyId?: string }>({ open: false });
-  const { stories: dbStories, loading, updateStory, deleteStory } = useStories();
+  const { stories: dbStories, loading } = useStories();
   const { storyGroups } = useStoryGroups();
 
   const getBookTitle = (sgId: string | null) => {
@@ -32,9 +24,7 @@ export function MobileStories() {
       id: s.id,
       storyGroupId: s.story_group_id,
       title: s.title || bookTitle || "Untitled Story",
-      summary: s.edited_text?.substring(0, 120) || s.raw_text?.substring(0, 120) || "No content yet",
-      status: (s.approved ? "approved" : s.edited_text ? "polished" : "draft") as StoryStatus,
-      wordCount: (s.edited_text || s.raw_text || "").split(" ").length,
+      summary: s.edited_text?.substring(0, 100) || s.raw_text?.substring(0, 100) || "",
       date: s.created_at || new Date().toISOString(),
     };
   });
@@ -45,12 +35,6 @@ export function MobileStories() {
       s.summary.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const statusColor: Record<StoryStatus, "default" | "secondary" | "outline"> = {
-    approved: "default",
-    polished: "secondary",
-    draft: "outline",
-  };
-
   return (
     <div className="px-5 pt-safe-top">
       {/* Header */}
@@ -59,16 +43,18 @@ export function MobileStories() {
         <p className="text-sm text-muted-foreground mt-0.5">Your written stories</p>
       </div>
 
-      {/* Search */}
-      <div className="relative mb-5">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search stories..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-9 h-11 rounded-xl"
-        />
-      </div>
+      {/* Search — only show when there are stories */}
+      {dbStories.length > 3 && (
+        <div className="relative mb-5">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search stories..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 h-11 rounded-xl"
+          />
+        </div>
+      )}
 
       {/* Story List */}
       {loading ? (
@@ -78,75 +64,40 @@ export function MobileStories() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <EmptyState
-          icon={BookOpen}
-          title={searchTerm ? "No stories found" : "No stories yet"}
-          description={searchTerm ? "Try a different search" : "Generate stories from your recordings"}
-        />
+        <div className="flex flex-col items-center justify-center text-center py-16 animate-fade-in">
+          <Feather className="h-12 w-12 text-muted-foreground/25 mb-4" />
+          <p className="text-base font-medium text-foreground mb-1">
+            {searchTerm ? "No stories found" : "No stories yet"}
+          </p>
+          <p className="text-sm text-muted-foreground max-w-[240px] leading-relaxed">
+            {searchTerm
+              ? "Try a different search"
+              : "Record a session and your stories will appear here"}
+          </p>
+        </div>
       ) : (
-        <div className="space-y-3 pb-4">
+        <div className="space-y-2 pb-4">
           {filtered.map((story) => (
-            <Card
+            <button
               key={story.id}
-              className="border-border/40 cursor-pointer active:scale-[0.98] transition-transform"
+              className="flex items-start gap-3 w-full p-4 rounded-xl active:bg-muted/50 transition-colors text-left"
               onClick={() => navigate(`/books/${story.storyGroupId || ""}`)}
             >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <h3 className="text-sm font-semibold text-foreground line-clamp-1 flex-1">
-                    {story.title}
-                  </h3>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Badge variant={statusColor[story.status]} className="text-[10px] px-2 py-0.5">
-                      {story.status}
-                    </Badge>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={(e) => e.stopPropagation()}>
-                          <MoreVertical className="h-3.5 w-3.5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-background">
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/books/${story.storyGroupId || ""}`); }}>
-                          <Eye className="h-4 w-4 mr-2" /> View
-                        </DropdownMenuItem>
-                        {story.status !== "approved" && (
-                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateStory(story.id, { approved: true }); }}>
-                            <CheckCircle className="h-4 w-4 mr-2" /> Approve
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={(e) => { e.stopPropagation(); setDeleteDialog({ open: true, storyId: story.id }); }}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{story.summary}</p>
-                <p className="text-[10px] text-muted-foreground">{story.wordCount} words</p>
-              </CardContent>
-            </Card>
+              <div className="h-9 w-9 rounded-lg bg-primary/8 flex items-center justify-center shrink-0 mt-0.5">
+                <BookOpen className="h-4 w-4 text-primary/70" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground line-clamp-1">{story.title}</p>
+                {story.summary && (
+                  <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">
+                    {story.summary}
+                  </p>
+                )}
+              </div>
+            </button>
           ))}
         </div>
       )}
-
-      <Dialog open={deleteDialog.open} onOpenChange={(o) => setDeleteDialog({ open: o })}>
-        <DialogContent className="mx-4 rounded-2xl">
-          <DialogHeader>
-            <DialogTitle>Delete Story?</DialogTitle>
-            <DialogDescription>This cannot be undone.</DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setDeleteDialog({ open: false })} className="rounded-xl">Cancel</Button>
-            <Button variant="destructive" onClick={() => { if (deleteDialog.storyId) deleteStory(deleteDialog.storyId); setDeleteDialog({ open: false }); }} className="rounded-xl">
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
