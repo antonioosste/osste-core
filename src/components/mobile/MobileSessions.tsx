@@ -1,6 +1,6 @@
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Plus, Clock, Calendar, Compass, Sparkles, Trash2 } from "lucide-react";
+import { Plus, Clock, Play, Mic, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,20 +20,20 @@ export function MobileSessions() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const getGroupName = (groupId?: string) => {
-    if (!groupId) return "Ungrouped";
-    return storyGroups?.find((g) => g.id === groupId)?.title || "Unknown";
-  };
-
-  const formatDate = (date: string | null) => {
-    if (!date) return "N/A";
-    return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    if (!groupId) return null;
+    return storyGroups?.find((g) => g.id === groupId)?.title || null;
   };
 
   const formatDuration = (start: string | null, end: string | null) => {
-    if (!start) return "N/A";
+    if (!start) return "";
     if (!end) return "In Progress";
     const mins = Math.floor((new Date(end).getTime() - new Date(start).getTime()) / 60000);
     return `${mins} min`;
+  };
+
+  const formatDate = (date: string | null) => {
+    if (!date) return "";
+    return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
   const handleDelete = async () => {
@@ -42,6 +42,10 @@ export function MobileSessions() {
       setDeleteId(null);
     }
   };
+
+  // Separate active sessions to the top
+  const activeSessions = sessions.filter((s) => s.status === "active" || !s.ended_at);
+  const completedSessions = sessions.filter((s) => s.status !== "active" && s.ended_at);
 
   return (
     <div className="px-5 pt-safe-top">
@@ -56,77 +60,84 @@ export function MobileSessions() {
         </Button>
       </div>
 
-      {/* List */}
       {loading ? (
         <div className="space-y-3">
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-20 w-full rounded-xl" />
           ))}
         </div>
       ) : sessions.length === 0 ? (
         <EmptyState
-          icon={Calendar}
+          icon={Mic}
           title="No sessions yet"
-          description="Start your first recording"
+          description="Start recording and your sessions will appear here"
           action={{ label: "Start Recording", onClick: () => navigate("/session") }}
         />
       ) : (
-        <div className="space-y-3 pb-4">
-          {sessions.map((session) => {
-            const chapterData = chapters.find((ch) => ch.session_id === session.id);
-            const title = getChapterDisplayTitle(session, chapterData);
-            const isActive = session.status === "active" || !session.ended_at;
+        <div className="space-y-4 pb-4">
+          {/* Active sessions — prominent */}
+          {activeSessions.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Continue</p>
+              {activeSessions.map((session) => {
+                const chapterData = chapters.find((ch) => ch.session_id === session.id);
+                const title = getChapterDisplayTitle(session, chapterData);
 
-            return (
-              <Card
-                key={session.id}
-                className="border-border/40 cursor-pointer active:scale-[0.98] transition-transform overflow-hidden"
-                onClick={() => navigate(`/session?id=${session.id}`)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <h3 className="text-sm font-semibold text-foreground line-clamp-1 flex-1">
-                      {title}
-                    </h3>
-                    <Badge
-                      variant={isActive ? "secondary" : "default"}
-                      className="shrink-0 text-[10px] px-2 py-0.5"
-                    >
-                      {isActive ? "Active" : "Done"}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="truncate max-w-[100px]">{getGroupName(session.story_group_id)}</span>
-                    <span className="flex items-center gap-1">
-                      {(session as any).mode === "non-guided" ? (
-                        <Sparkles className="h-3 w-3" />
-                      ) : (
-                        <Compass className="h-3 w-3" />
-                      )}
-                      {(session as any).mode === "non-guided" ? "Free" : "Guided"}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {formatDuration(session.started_at, session.ended_at)}
-                    </span>
-                    <span>{formatDate(session.started_at)}</span>
-                  </div>
-                  {/* Swipe-to-delete hint — using long press for now */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-2 right-2 h-7 w-7 p-0 opacity-0 group-hover:opacity-100"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteId(session.id);
-                    }}
+                return (
+                  <Card
+                    key={session.id}
+                    className="border-primary/20 bg-primary/5 cursor-pointer active:scale-[0.98] transition-transform"
+                    onClick={() => navigate(`/session?id=${session.id}`)}
                   >
-                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
+                    <CardContent className="flex items-center gap-3 p-4">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <Play className="h-4 w-4 text-primary ml-0.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground line-clamp-1">{title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {getGroupName(session.story_group_id) || "Tap to continue recording"}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Completed sessions — simple list */}
+          {completedSessions.length > 0 && (
+            <div className="space-y-2">
+              {activeSessions.length > 0 && (
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-2">Past</p>
+              )}
+              {completedSessions.map((session) => {
+                const chapterData = chapters.find((ch) => ch.session_id === session.id);
+                const title = getChapterDisplayTitle(session, chapterData);
+                const duration = formatDuration(session.started_at, session.ended_at);
+                const date = formatDate(session.started_at);
+
+                return (
+                  <button
+                    key={session.id}
+                    className="flex items-center gap-3 w-full p-3 rounded-xl active:bg-muted/50 transition-colors text-left"
+                    onClick={() => navigate(`/session?id=${session.id}`)}
+                  >
+                    <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                      <Mic className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground line-clamp-1">{title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {[duration, date].filter(Boolean).join(" · ")}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
