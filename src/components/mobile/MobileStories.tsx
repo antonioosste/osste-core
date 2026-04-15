@@ -1,54 +1,96 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Search, Feather } from "lucide-react";
+import {
+  BookOpen,
+  Search,
+  Feather,
+  Plus,
+  Mic,
+  FileText,
+  ChevronRight,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { StoryCardSkeleton } from "@/components/loaders/StoryCardSkeleton";
-import { useStories } from "@/hooks/useStories";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
+import { useSessions } from "@/hooks/useSessions";
+import { useStories } from "@/hooks/useStories";
 
 export function MobileStories() {
   const navigate = useNavigate();
+  const { storyGroups, loading, createStoryGroup } = useStoryGroups();
+  const { sessions } = useSessions();
+  const { stories } = useStories();
   const [searchTerm, setSearchTerm] = useState("");
-  const { stories: dbStories, loading } = useStories();
-  const { storyGroups } = useStoryGroups();
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newDesc, setNewDesc] = useState("");
 
-  const getBookTitle = (sgId: string | null) => {
-    if (!sgId) return null;
-    return storyGroups?.find((g) => g.id === sgId)?.title || null;
+  const getChapterCount = (bookId: string) =>
+    sessions.filter((s) => s.story_group_id === bookId).length;
+
+  const getBookStory = (bookId: string) =>
+    stories.find((s) => s.story_group_id === bookId);
+
+  const filteredBooks =
+    storyGroups?.filter(
+      (b) =>
+        b.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (b.description && b.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    ) || [];
+
+  const handleCreate = async () => {
+    if (!newTitle.trim()) return;
+    try {
+      const book = await createStoryGroup(newTitle.trim(), newDesc.trim() || undefined);
+      setIsCreateOpen(false);
+      setNewTitle("");
+      setNewDesc("");
+      navigate(`/books/${book.id}`);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const mappedStories = dbStories.map((s) => {
-    const bookTitle = getBookTitle(s.story_group_id);
-    return {
-      id: s.id,
-      storyGroupId: s.story_group_id,
-      title: s.title || bookTitle || "Untitled Story",
-      summary: s.edited_text?.substring(0, 100) || s.raw_text?.substring(0, 100) || "",
-      date: s.created_at || new Date().toISOString(),
-    };
-  });
-
-  const filtered = mappedStories.filter(
-    (s) =>
-      s.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.summary.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const formatDate = (date: string | null) => {
+    if (!date) return "";
+    const d = new Date(date);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - d.getTime()) / 86400000);
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Yesterday";
+    if (diff < 7) return `${diff} days ago`;
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
 
   return (
-    <div className="px-5 pt-safe-top">
+    <div className="px-5 pt-safe-top pb-4">
       {/* Header */}
-      <div className="pt-10 pb-4">
-        <h1 className="text-2xl font-serif font-bold text-foreground">Stories</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Your written stories</p>
+      <div className="flex items-center justify-between pt-10 pb-4">
+        <div>
+          <h1 className="text-2xl font-serif font-bold text-foreground">My Books</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Your story collections</p>
+        </div>
+        <Button
+          size="sm"
+          className="rounded-xl h-10 gap-1.5"
+          onClick={() => setIsCreateOpen(true)}
+        >
+          <Plus className="h-4 w-4" /> New
+        </Button>
       </div>
 
-      {/* Search — only show when there are stories */}
-      {dbStories.length > 3 && (
+      {/* Search */}
+      {storyGroups && storyGroups.length > 3 && (
         <div className="relative mb-5">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search stories..."
+            placeholder="Search books..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 h-11 rounded-xl"
@@ -56,48 +98,132 @@ export function MobileStories() {
         </div>
       )}
 
-      {/* Story List */}
+      {/* Book List */}
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <StoryCardSkeleton key={i} />
+            <Skeleton key={i} className="h-24 w-full rounded-xl" />
           ))}
         </div>
-      ) : filtered.length === 0 ? (
+      ) : filteredBooks.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center py-16 animate-fade-in">
           <Feather className="h-12 w-12 text-muted-foreground/25 mb-4" />
           <p className="text-base font-medium text-foreground mb-1">
-            {searchTerm ? "No stories found" : "No stories yet"}
+            {searchTerm ? "No books found" : "No books yet"}
           </p>
-          <p className="text-sm text-muted-foreground max-w-[240px] leading-relaxed">
+          <p className="text-sm text-muted-foreground max-w-[240px] leading-relaxed mb-5">
             {searchTerm
               ? "Try a different search"
-              : "Record a session and your stories will appear here"}
+              : "Create your first book to start capturing your life stories"}
           </p>
+          {!searchTerm && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl"
+              onClick={() => setIsCreateOpen(true)}
+            >
+              <Plus className="h-4 w-4 mr-1" /> Create Your First Book
+            </Button>
+          )}
         </div>
       ) : (
-        <div className="space-y-2 pb-4">
-          {filtered.map((story) => (
-            <button
-              key={story.id}
-              className="flex items-start gap-3 w-full p-4 rounded-xl active:bg-muted/50 transition-colors text-left"
-              onClick={() => navigate(`/books/${story.storyGroupId || ""}`)}
-            >
-              <div className="h-9 w-9 rounded-lg bg-primary/8 flex items-center justify-center shrink-0 mt-0.5">
-                <BookOpen className="h-4 w-4 text-primary/70" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground line-clamp-1">{story.title}</p>
-                {story.summary && (
-                  <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">
-                    {story.summary}
-                  </p>
-                )}
-              </div>
-            </button>
-          ))}
+        <div className="space-y-3">
+          {filteredBooks.map((book) => {
+            const chapterCount = getChapterCount(book.id);
+            const bookStory = getBookStory(book.id);
+            const preview = bookStory?.edited_text?.substring(0, 80) || bookStory?.raw_text?.substring(0, 80);
+
+            return (
+              <Card
+                key={book.id}
+                className="border-border/40 cursor-pointer active:scale-[0.98] transition-transform"
+                onClick={() => navigate(`/books/${book.id}`)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-primary/8 flex items-center justify-center shrink-0 mt-0.5">
+                      <BookOpen className="h-5 w-5 text-primary/70" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <h3 className="text-sm font-semibold text-foreground line-clamp-1">
+                          {book.title}
+                        </h3>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
+                      </div>
+
+                      {/* Timeline badges */}
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                        <span className="flex items-center gap-1">
+                          <Mic className="h-3 w-3" />
+                          {chapterCount} {chapterCount === 1 ? "session" : "sessions"}
+                        </span>
+                        {bookStory && (
+                          <span className="flex items-center gap-1">
+                            <FileText className="h-3 w-3" />
+                            Story ready
+                          </span>
+                        )}
+                        <span>·</span>
+                        <span>{formatDate(book.created_at)}</span>
+                      </div>
+
+                      {/* Preview excerpt */}
+                      {preview && (
+                        <p className="text-xs text-muted-foreground/70 line-clamp-2 leading-relaxed">
+                          {preview}…
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
+
+      {/* Create Book Dialog */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="mx-4 rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Create New Book</DialogTitle>
+            <DialogDescription>Give your story collection a name</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="mb-title">Book Title</Label>
+              <Input
+                id="mb-title"
+                placeholder="e.g., My Childhood"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                className="h-12 rounded-xl"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="mb-desc">Description (Optional)</Label>
+              <Textarea
+                id="mb-desc"
+                placeholder="What will this book be about?"
+                value={newDesc}
+                onChange={(e) => setNewDesc(e.target.value)}
+                rows={3}
+                className="rounded-xl"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setIsCreateOpen(false)} className="rounded-xl">
+              Cancel
+            </Button>
+            <Button onClick={handleCreate} disabled={!newTitle.trim()} className="rounded-xl">
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

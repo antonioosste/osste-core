@@ -1,9 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Plus, Clock, Play, Mic, Calendar } from "lucide-react";
+import { Plus, Clock, Play, Mic, Calendar, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSessions } from "@/hooks/useSessions";
@@ -33,7 +32,13 @@ export function MobileSessions() {
 
   const formatDate = (date: string | null) => {
     if (!date) return "";
-    return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const d = new Date(date);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - d.getTime()) / 86400000);
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Yesterday";
+    if (diff < 7) return `${diff}d ago`;
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
   const handleDelete = async () => {
@@ -43,7 +48,6 @@ export function MobileSessions() {
     }
   };
 
-  // Separate active sessions to the top
   const activeSessions = sessions.filter((s) => s.status === "active" || !s.ended_at);
   const completedSessions = sessions.filter((s) => s.status !== "active" && s.ended_at);
 
@@ -75,7 +79,7 @@ export function MobileSessions() {
         />
       ) : (
         <div className="space-y-4 pb-4">
-          {/* Active sessions — prominent */}
+          {/* Active sessions */}
           {activeSessions.length > 0 && (
             <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Continue</p>
@@ -99,6 +103,7 @@ export function MobileSessions() {
                           {getGroupName(session.story_group_id) || "Tap to continue recording"}
                         </p>
                       </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
                     </CardContent>
                   </Card>
                 );
@@ -106,7 +111,7 @@ export function MobileSessions() {
             </div>
           )}
 
-          {/* Completed sessions — simple list */}
+          {/* Completed sessions */}
           {completedSessions.length > 0 && (
             <div className="space-y-2">
               {activeSessions.length > 0 && (
@@ -133,6 +138,7 @@ export function MobileSessions() {
                         {[duration, date].filter(Boolean).join(" · ")}
                       </p>
                     </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
                   </button>
                 );
               })}
