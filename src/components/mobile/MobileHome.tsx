@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Play,
   Plus,
@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Mic,
   Feather,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,14 +18,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { useProfile } from "@/hooks/useProfile";
 import { useSessions } from "@/hooks/useSessions";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
+import { useStories } from "@/hooks/useStories";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { UpgradeDialog } from "@/components/dashboard/UpgradeDialog";
+
+const PROMPTS = [
+  "What's your earliest memory?",
+  "Tell me about someone who changed your life",
+  "What moment shaped who you are?",
+  "What's a story your family always tells?",
+  "Describe a place that feels like home",
+  "What advice would you give your younger self?",
+  "What's a lesson you learned the hard way?",
+  "Who taught you something you'll never forget?",
+];
 
 export function MobileHome() {
   const navigate = useNavigate();
   const { profile } = useProfile();
   const { sessions } = useSessions();
   const { storyGroups, createStoryGroup } = useStoryGroups();
+  const { stories } = useStories();
   const { isRecordingLimitReached } = useEntitlements();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -33,6 +47,12 @@ export function MobileHome() {
   const [showUpgrade, setShowUpgrade] = useState(false);
 
   const activeSession = sessions.find((s) => s.status === "active" || !s.ended_at);
+
+  // Rotate prompt daily
+  const dailyPrompt = useMemo(() => {
+    const dayIndex = Math.floor(Date.now() / 86400000) % PROMPTS.length;
+    return PROMPTS[dayIndex];
+  }, []);
 
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
@@ -62,34 +82,43 @@ export function MobileHome() {
     ? "Good afternoon"
     : "Good evening";
 
+  // Milestone messaging
+  const storyCount = stories.length;
+  const milestoneMessage = storyCount === 0
+    ? null
+    : storyCount === 1
+    ? "You've started your first story — keep going!"
+    : `You're building something special — ${storyCount} stories so far`;
+
   return (
     <div className="px-5 pt-safe-top flex flex-col min-h-[calc(100vh-5rem)]">
       {/* Greeting */}
-      <div className="pt-12 pb-2">
+      <div className="pt-12 pb-1">
         <p className="text-muted-foreground text-sm font-medium tracking-wide">
-          {greeting}
+          {activeSession ? "Welcome back 👋" : greeting}
         </p>
         <h1 className="text-2xl font-serif font-bold text-foreground mt-1">
-          {firstName ? `${firstName}` : "Welcome back"}
+          {activeSession
+            ? "Let's continue your story"
+            : firstName
+            ? firstName
+            : "Welcome back"}
         </h1>
       </div>
 
-      {/* Storytelling prompt */}
-      <p className="text-muted-foreground text-sm mt-1 mb-8 max-w-[260px] leading-relaxed">
-        What memory would you like to capture today?
-      </p>
+      {/* Daily storytelling prompt */}
+      <div className="mt-3 mb-6 animate-fade-in">
+        <Card className="border-border/30 bg-primary/[0.03]">
+          <CardContent className="p-4 flex items-start gap-3">
+            <Sparkles className="h-4 w-4 text-primary/60 shrink-0 mt-0.5" />
+            <p className="text-sm text-muted-foreground leading-relaxed italic">
+              "{dailyPrompt}"
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Primary CTA */}
-      <Button
-        size="lg"
-        className="w-full h-14 rounded-2xl text-base gap-3 shadow-md mb-4 animate-fade-in"
-        onClick={handleStartStory}
-      >
-        <Mic className="w-5 h-5" />
-        Start a New Story
-      </Button>
-
-      {/* Resume banner */}
+      {/* Resume banner — prominent when active session exists */}
       {activeSession && (
         <Card
           className="mb-4 border-primary/20 bg-primary/5 cursor-pointer active:scale-[0.98] transition-transform animate-fade-in"
@@ -110,17 +139,34 @@ export function MobileHome() {
         </Card>
       )}
 
-      {/* Spacer pushes recent stories to bottom */}
+      {/* Primary CTA */}
+      <Button
+        size="lg"
+        className="w-full h-14 rounded-2xl text-base gap-3 shadow-md mb-4 animate-fade-in"
+        onClick={handleStartStory}
+      >
+        <Mic className="w-5 h-5" />
+        Start a New Story
+      </Button>
+
+      {/* Milestone badge */}
+      {milestoneMessage && (
+        <p className="text-xs text-center text-muted-foreground/70 mb-2 animate-fade-in">
+          {milestoneMessage}
+        </p>
+      )}
+
+      {/* Spacer */}
       <div className="flex-1 min-h-6" />
 
-      {/* Recent Books — minimal */}
+      {/* Recent Books */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
             Recent
           </h2>
           {storyGroups && storyGroups.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={() => navigate("/books")} className="text-primary text-xs h-auto p-0">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/stories")} className="text-primary text-xs h-auto p-0">
               See all
             </Button>
           )}
