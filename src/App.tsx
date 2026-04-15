@@ -10,6 +10,10 @@ import { ApprovedRoute } from "@/components/auth/ApprovedRoute";
 import { useApproval } from "@/hooks/useApproval";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { MobileHome } from "@/components/mobile/MobileHome";
+import { MobileSessions } from "@/components/mobile/MobileSessions";
+import { MobileStories } from "@/components/mobile/MobileStories";
+import { MobileProfile } from "@/components/mobile/MobileProfile";
 import Waitlist from "./pages/Waitlist";
 import Landing from "./pages/Landing";
 import Pricing from "./pages/Pricing";
@@ -84,18 +88,18 @@ const App = () => (
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/login" element={<RedirectIfApproved><Login /></RedirectIfApproved>} />
             <Route path="/signup" element={<RedirectIfApproved><Signup /></RedirectIfApproved>} />
-            <Route path="/dashboard" element={<ApprovedRoute><DashboardLayout><Dashboard /></DashboardLayout></ApprovedRoute>} />
+            <Route path="/dashboard" element={<ApprovedRoute><DashboardLayout mobileContent={<MobileHome />}><Dashboard /></DashboardLayout></ApprovedRoute>} />
             <Route path="/session" element={<ApprovedRoute><Session /></ApprovedRoute>} />
-            <Route path="/books" element={<ApprovedRoute><DashboardLayout><Books /></DashboardLayout></ApprovedRoute>} />
+            <Route path="/books" element={<ApprovedRoute><DashboardLayout mobileContent={<MobileSessions />}><Books /></DashboardLayout></ApprovedRoute>} />
             <Route path="/books/:id" element={<ApprovedRoute><BookDetail /></ApprovedRoute>} />
-            <Route path="/stories" element={<ApprovedRoute><DashboardLayout><Stories /></DashboardLayout></ApprovedRoute>} />
+            <Route path="/stories" element={<ApprovedRoute><DashboardLayout mobileContent={<MobileStories />}><Stories /></DashboardLayout></ApprovedRoute>} />
             <Route path="/stories/:id" element={<ApprovedRoute><StoryDetail /></ApprovedRoute>} />
             <Route path="/chapters/:id" element={<ApprovedRoute><ChapterDetail /></ApprovedRoute>} />
             <Route path="/book/preview/:storyId" element={<ApprovedRoute><BookPreview /></ApprovedRoute>} />
             <Route path="/checkout" element={<ApprovedRoute><Checkout /></ApprovedRoute>} />
             <Route path="/checkout/success" element={<ApprovedRoute><CheckoutSuccess /></ApprovedRoute>} />
             <Route path="/checkout/cancel" element={<ApprovedRoute><CheckoutCancel /></ApprovedRoute>} />
-            <Route path="/settings" element={<ApprovedRoute><DashboardLayout><Settings /></DashboardLayout></ApprovedRoute>} />
+            <Route path="/settings" element={<ApprovedRoute><DashboardLayout mobileContent={<MobileProfile />}><Settings /></DashboardLayout></ApprovedRoute>} />
 
             {/* Admin routes with dedicated admin layout */}
             <Route path="/admin" element={<ProtectedRoute><AdminLayout><AdminDashboard /></AdminLayout></ProtectedRoute>} />
