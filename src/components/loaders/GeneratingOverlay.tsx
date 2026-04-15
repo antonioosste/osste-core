@@ -9,16 +9,16 @@ interface GeneratingOverlayProps {
 
 const loadingMessages = {
   story: [
-    "Weaving your memories together...",
-    "Crafting your narrative...",
-    "Polishing each chapter...",
-    "Adding the finishing touches...",
+    "Weaving your memories together…",
+    "Reflecting on what you shared…",
+    "Polishing each chapter…",
+    "Almost ready for you…",
   ],
   chapter: [
-    "Transcribing your words...",
-    "Understanding your story...",
-    "Creating your chapter...",
-    "Almost there...",
+    "Listening to your words…",
+    "Understanding your story…",
+    "Crafting your chapter…",
+    "Adding the finishing touches…",
   ],
 };
 
