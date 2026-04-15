@@ -379,6 +379,39 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
+    // Authenticate: require service role key or valid JWT
+    const authHeader = req.headers.get("Authorization");
+    const token = authHeader?.replace("Bearer ", "");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    let isAuthorized = false;
+
+    // Allow service-role calls (server-to-server)
+    if (token && serviceRoleKey && token === serviceRoleKey) {
+      isAuthorized = true;
+      logStep("Authenticated via service role key");
+    } else if (token) {
+      // Validate JWT for authenticated user calls
+      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: `Bearer ${token}` } },
+      });
+      const { data, error } = await supabase.auth.getUser(token);
+      if (!error && data?.user) {
+        isAuthorized = true;
+        logStep("Authenticated via JWT", { userId: data.user.id });
+      }
+    }
+
+    if (!isAuthorized) {
+      logStep("Unauthorized request rejected");
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
       throw new Error("RESEND_API_KEY is not configured");
