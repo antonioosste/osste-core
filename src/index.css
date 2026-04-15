@@ -737,3 +737,18 @@ select.auth-input {
   color: hsl(var(--gold));
   transition: color 0.2s ease;
 }
+
+/* ── Mobile App Shell ── */
+.pt-safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Mobile card press feedback */
+@media (max-width: 767px) {
+  .active\:scale-\[0\.98\]:active {
+    transform: scale(0.98);
+  }
+}
