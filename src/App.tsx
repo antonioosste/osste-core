@@ -14,6 +14,7 @@ import { MobileHome } from "@/components/mobile/MobileHome";
 import { MobileSessions } from "@/components/mobile/MobileSessions";
 import { MobileStories } from "@/components/mobile/MobileStories";
 import { MobileProfile } from "@/components/mobile/MobileProfile";
+import { InstallPrompt } from "@/components/mobile/InstallPrompt";
 import Waitlist from "./pages/Waitlist";
 import Landing from "./pages/Landing";
 import Pricing from "./pages/Pricing";
@@ -82,6 +83,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <InstallPrompt />
           <Routes>
             <Route path="/" element={<Waitlist />} />
             <Route path="/home" element={<Landing />} />
