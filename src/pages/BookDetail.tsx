@@ -43,8 +43,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { getChapterDisplayTitle } from "@/lib/chapterTitle";
 import { FeatureLocked } from "@/components/ui/feature-locked";
 import { UpgradeDialog } from "@/components/dashboard/UpgradeDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileBookDetail } from "@/components/mobile/MobileBookDetail";
 
 export default function BookDetail() {
+  const isMobile = useIsMobile();
+  if (isMobile) {
+    return <MobileBookDetail />;
+  }
   const navigate = useNavigate();
   const { id: bookId } = useParams();
   const { toast } = useToast();
