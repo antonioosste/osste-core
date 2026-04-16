@@ -48,9 +48,10 @@ import { MobileBookDetail } from "@/components/mobile/MobileBookDetail";
 
 export default function BookDetail() {
   const isMobile = useIsMobile();
-  if (isMobile) {
-    return <MobileBookDetail />;
-  }
+  return isMobile ? <MobileBookDetail /> : <DesktopBookDetail />;
+}
+
+function DesktopBookDetail() {
   const navigate = useNavigate();
   const { id: bookId } = useParams();
   const { toast } = useToast();
