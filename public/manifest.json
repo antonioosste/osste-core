@@ -1,0 +1,26 @@
+{
+  "name": "OSSTE",
+  "short_name": "OSSTE",
+  "description": "AI-powered storytelling and memoir app",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2E4DC",
+  "theme_color": "#2C2218",
+  "categories": ["lifestyle", "books", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
