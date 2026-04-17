@@ -968,7 +968,13 @@ export default function Session() {
         });
       }
     }
-    // Navigate back to the associated book if we know its ID, otherwise dashboard
+    // Mobile users go to the dedicated celebration screen.
+    // Desktop keeps the original behavior (back to book or dashboard).
+    const isMobileViewport = typeof window !== "undefined" && window.innerWidth < 768;
+    if (isMobileViewport && sessionId) {
+      navigate(`/session/complete?sessionId=${sessionId}`);
+      return;
+    }
     const redirectBookId = bookIdParam || targetBookId;
     navigate(redirectBookId ? `/books/${redirectBookId}` : "/dashboard");
   };

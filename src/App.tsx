@@ -24,6 +24,7 @@ const Waitlist = lazy(() => import("./pages/Waitlist"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Session = lazy(() => import("./pages/Session"));
+const SessionComplete = lazy(() => import("./pages/SessionComplete"));
 const Books = lazy(() => import("./pages/Books"));
 const BookDetail = lazy(() => import("./pages/BookDetail"));
 const Stories = lazy(() => import("./pages/Stories"));
@@ -110,6 +111,7 @@ const App = () => (
               <Route path="/signup" element={<RedirectIfApproved><Signup /></RedirectIfApproved>} />
               <Route path="/dashboard" element={<ApprovedRoute><DashboardLayout mobileContent={<MobileHome />}><Dashboard /></DashboardLayout></ApprovedRoute>} />
               <Route path="/session" element={<ApprovedRoute><Session /></ApprovedRoute>} />
+              <Route path="/session/complete" element={<ApprovedRoute><SessionComplete /></ApprovedRoute>} />
               <Route path="/books" element={<ApprovedRoute><DashboardLayout mobileContent={<MobileSessions />}><Books /></DashboardLayout></ApprovedRoute>} />
               <Route path="/books/:id" element={<ApprovedRoute><BookDetail /></ApprovedRoute>} />
               <Route path="/stories" element={<ApprovedRoute><DashboardLayout mobileContent={<MobileStories />}><Stories /></DashboardLayout></ApprovedRoute>} />

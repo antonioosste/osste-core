@@ -16,6 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useStoryImages } from "@/hooks/useStoryImages";
 import { Badge } from "@/components/ui/badge";
 import { getChapterDisplayTitle } from "@/lib/chapterTitle";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileChapterReader } from "@/components/mobile/MobileChapterReader";
 
 export default function ChapterDetail() {
   const { id } = useParams<{ id: string }>();
@@ -119,15 +121,31 @@ export default function ChapterDetail() {
     });
   };
 
+  const isMobile = useIsMobile();
+
   if (!chapter) {
     return (
       <div className="min-h-screen bg-background">
-        <Header isAuthenticated={true} />
+        {!isMobile && <Header isAuthenticated={true} />}
         <main className="container mx-auto px-4 py-8">
           <Skeleton className="h-8 w-64 mb-4" />
           <Skeleton className="h-96 w-full" />
         </main>
       </div>
+    );
+  }
+
+  // Mobile-only clean reader view (desktop UI is preserved below).
+  if (isMobile) {
+    const bodyText: string =
+      chapter.polished_text || chapter.raw_transcript || chapter.summary || "";
+    return (
+      <MobileChapterReader
+        title={title || "Untitled chapter"}
+        bodyText={bodyText}
+        bookId={session?.story_group_id || null}
+        bookTitle={null}
+      />
     );
   }
 
