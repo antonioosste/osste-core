@@ -70,8 +70,16 @@ const MobileProfile = lazy(() => import("@/components/mobile/MobileProfile").the
 
 const queryClient = new QueryClient();
 
-// Lightweight, non-flashing fallback (transparent — preserves layout, no flicker)
-const RouteFallback = () => <div aria-hidden="true" style={{ minHeight: "100vh" }} />;
+// Lightweight loading fallback with subtle spinner (avoids appearing as a blank page)
+const RouteFallback = () => (
+  <div
+    role="status"
+    aria-label="Loading"
+    style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "hsl(var(--background))" }}
+  >
+    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+  </div>
+);
 
 // Redirect authenticated+approved users away from auth pages to dashboard
 function RedirectIfApproved({ children }: { children: React.ReactNode }) {
