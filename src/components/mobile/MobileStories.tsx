@@ -1,10 +1,26 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Search, Feather, Plus, ChevronRight } from "lucide-react";
+import { BookOpen, Search, Feather, Plus, ChevronRight, MoreVertical, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,13 +41,15 @@ function relativeDate(date: string | null): string {
 
 export function MobileStories() {
   const navigate = useNavigate();
-  const { storyGroups, loading, createStoryGroup } = useStoryGroups();
+  const { storyGroups, loading, createStoryGroup, deleteBookDeep } = useStoryGroups();
   const { sessions } = useSessions();
   const { chapters } = useChapters();
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const getBookMeta = (bookId: string) => {
     const bookSessions = sessions.filter((s) => s.story_group_id === bookId);
