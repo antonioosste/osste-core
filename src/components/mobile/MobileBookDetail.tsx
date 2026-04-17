@@ -8,10 +8,28 @@ import {
   Plus,
   Loader2,
   CheckCircle2,
+  MoreVertical,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
 import { useSessions } from "@/hooks/useSessions";
 import { useChapters } from "@/hooks/useChapters";
@@ -79,7 +97,7 @@ export function MobileBookDetail() {
   const { id: bookId } = useParams();
   const { toast } = useToast();
   const { session } = useAuth();
-  const { getStoryGroup } = useStoryGroups();
+  const { getStoryGroup, deleteBookDeep } = useStoryGroups();
   const { sessions } = useSessions();
   const { chapters, refetch: refetchChapters } = useChapters();
   const { stories, refetch: refetchStories } = useStories();
@@ -90,6 +108,8 @@ export function MobileBookDetail() {
   const [isAssembling, setIsAssembling] = useState(false);
   const [completionChapter, setCompletionChapter] = useState<{ title: string; sessionId: string } | null>(null);
   const [seenChapterIds, setSeenChapterIds] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const bookSessions = useMemo(
     () => sessions.filter((s) => s.story_group_id === bookId),
@@ -227,6 +247,20 @@ export function MobileBookDetail() {
     }
   };
 
+  const handleDeleteBook = async () => {
+    if (!bookId) return;
+    setIsDeleting(true);
+    try {
+      await deleteBookDeep(bookId);
+      setConfirmDelete(false);
+      navigate("/stories");
+    } catch (e) {
+      // toast handled inside hook
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <MobileLayout>
@@ -255,16 +289,34 @@ export function MobileBookDetail() {
     <MobileLayout>
       <div className="px-5 pt-safe-top pb-32">
         {/* Header */}
-        <div className="flex items-center gap-2 pt-10 pb-4 -ml-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/stories")}
-            className="rounded-full"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <span className="text-sm text-muted-foreground">All books</span>
+        <div className="flex items-center justify-between gap-2 pt-10 pb-4 -ml-2">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/stories")}
+              className="rounded-full"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <span className="text-sm text-muted-foreground">All books</span>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full mr-1">
+                <MoreVertical className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="rounded-xl">
+              <DropdownMenuItem
+                onClick={() => setConfirmDelete(true)}
+                className="text-destructive focus:text-destructive gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete book
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Book title */}
@@ -524,6 +576,41 @@ export function MobileBookDetail() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete confirmation */}
+      <AlertDialog open={confirmDelete} onOpenChange={(o) => !isDeleting && setConfirmDelete(o)}>
+        <AlertDialogContent className="mx-4 rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this book?</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{book?.title}" and all of its recordings, chapters, and stories will be permanently
+              removed. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="rounded-xl" disabled={isDeleting}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteBook();
+              }}
+              disabled={isDeleting}
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting…
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MobileLayout>
   );
 }

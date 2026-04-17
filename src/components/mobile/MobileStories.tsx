@@ -1,10 +1,26 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Search, Feather, Plus, ChevronRight } from "lucide-react";
+import { BookOpen, Search, Feather, Plus, MoreVertical, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,13 +41,15 @@ function relativeDate(date: string | null): string {
 
 export function MobileStories() {
   const navigate = useNavigate();
-  const { storyGroups, loading, createStoryGroup } = useStoryGroups();
+  const { storyGroups, loading, createStoryGroup, deleteBookDeep } = useStoryGroups();
   const { sessions } = useSessions();
   const { chapters } = useChapters();
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const getBookMeta = (bookId: string) => {
     const bookSessions = sessions.filter((s) => s.story_group_id === bookId);
@@ -77,6 +95,19 @@ export function MobileStories() {
   const handleContinue = (e: React.MouseEvent, bookId: string) => {
     e.stopPropagation();
     navigate(`/books/${bookId}`);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      await deleteBookDeep(deleteTarget.id);
+      setDeleteTarget(null);
+    } catch (e) {
+      // toast handled in hook
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -160,7 +191,28 @@ export function MobileStories() {
                         <h3 className="text-base font-serif font-semibold text-foreground line-clamp-1">
                           {book.title}
                         </h3>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <button
+                              className="h-7 w-7 -mr-1 -mt-1 rounded-full flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-muted/60 active:scale-90 transition-all shrink-0"
+                              aria-label="Book options"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="rounded-xl">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteTarget({ id: book.id, title: book.title });
+                              }}
+                              className="text-destructive focus:text-destructive gap-2"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete book
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         {chapterCount === 0
@@ -225,6 +277,44 @@ export function MobileStories() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete confirmation */}
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(o) => !isDeleting && !o && setDeleteTarget(null)}
+      >
+        <AlertDialogContent className="mx-4 rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this book?</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{deleteTarget?.title}" and all its recordings, chapters, and stories will be
+              permanently removed. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="rounded-xl" disabled={isDeleting}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleConfirmDelete();
+              }}
+              disabled={isDeleting}
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting…
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
