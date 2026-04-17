@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Search, Feather, Plus, ChevronRight, MoreVertical, Trash2, Loader2 } from "lucide-react";
+import { BookOpen, Search, Feather, Plus, MoreVertical, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
