@@ -24,17 +24,16 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks(id) {
           if (!id.includes("node_modules")) return;
-          if (id.includes("react-dom") || id.includes("react-router") || id.includes("scheduler") || id.match(/[\\/]react[\\/]/)) {
+          // Keep React and all React-dependent libs in ONE chunk so React is
+          // always defined before any consumer runs. Splitting React from its
+          // consumers causes "Cannot read properties of undefined (reading
+          // 'createContext')" at load time.
+          if (
+            /[\\/]node_modules[\\/](react|react-dom|scheduler|react-router|react-router-dom|@radix-ui|framer-motion|@tanstack|react-hook-form|react-day-picker|react-resizable-panels|cmdk|sonner|vaul|recharts|d3-|react-markdown|remark|rehype|micromark|mdast|hast|use-sync-external-store|react-remove-scroll|react-style-singleton|@floating-ui)/.test(id)
+          ) {
             return "vendor-react";
           }
-          if (id.includes("@radix-ui")) return "vendor-radix";
-          if (id.includes("framer-motion")) return "vendor-motion";
-          if (id.includes("recharts") || id.includes("d3-")) return "vendor-charts";
           if (id.includes("@supabase")) return "vendor-supabase";
-          if (id.includes("@tanstack")) return "vendor-query";
-          if (id.includes("react-markdown") || id.includes("remark") || id.includes("micromark") || id.includes("mdast") || id.includes("hast")) {
-            return "vendor-markdown";
-          }
           if (id.includes("lucide-react")) return "vendor-icons";
           if (id.includes("date-fns")) return "vendor-date";
           return "vendor";
