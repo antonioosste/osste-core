@@ -60,12 +60,19 @@ function relativeDate(date: string | null): string {
 }
 
 function formatDuration(seconds: number): string {
-  if (!seconds) return "—";
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
+  if (!seconds || !Number.isFinite(seconds)) return "—";
+  const total = Math.max(0, Math.floor(seconds));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
   if (m === 0) return `${s}s`;
-  return `${m} min`;
+  return `${m}m ${s.toString().padStart(2, "0")}s`;
 }
+
+const PROGRESSION_MESSAGES = [
+  "You're building something meaningful ✨",
+  "Every chapter brings your story to life",
+  "Keep going — your story is unfolding",
+];
 
 export function MobileBookDetail() {
   const navigate = useNavigate();
@@ -179,7 +186,7 @@ export function MobileBookDetail() {
     items.sort((a, b) => {
       const ta = a.date ? new Date(a.date).getTime() : 0;
       const tb = b.date ? new Date(b.date).getTime() : 0;
-      return ta - tb;
+      return tb - ta; // newest first
     });
     return items;
   }, [bookSessions, bookChapters, recordingsBySession]);
@@ -324,50 +331,45 @@ export function MobileBookDetail() {
                       onClick={() =>
                         navigate(`/session?sessionId=${item.sessionId}&bookId=${bookId}`)
                       }
-                      className="w-full text-left rounded-2xl bg-card border border-border/50 p-4 active:scale-[0.98] transition-transform"
+                      className="w-full text-left rounded-xl bg-card/60 border border-border/40 p-3.5 active:scale-[0.98] transition-transform"
                     >
                       <div className="flex items-baseline justify-between gap-2 mb-1">
-                        <span className="text-xs uppercase tracking-wide text-muted-foreground/70 font-medium">
+                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground/70 font-medium">
                           Recording
                         </span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-[11px] text-muted-foreground">
                           {relativeDate(item.date)}
                         </span>
                       </div>
-                      <h3 className="text-base font-medium text-foreground line-clamp-2 mb-2">
-                        {item.title}
-                      </h3>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">
-                          {formatDuration(item.durationSec)}
-                        </span>
-                        <span className="text-xs text-primary font-medium">
-                          {item.hasContent ? "Continue →" : "Start →"}
-                        </span>
-                      </div>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {formatDuration(item.durationSec)}
+                      </p>
+                      <span className="text-xs text-primary font-medium">
+                        {item.hasContent ? "Continue recording →" : "Start recording →"}
+                      </span>
                     </button>
                   ) : (
                     <button
                       onClick={() => navigate(`/chapters/${item.sessionId}`)}
-                      className="w-full text-left rounded-2xl bg-card border border-border/50 p-4 active:scale-[0.98] transition-transform"
+                      className="w-full text-left rounded-2xl bg-card border border-border/60 p-5 shadow-sm active:scale-[0.98] transition-transform"
                     >
-                      <div className="flex items-baseline justify-between gap-2 mb-1">
-                        <span className="text-xs uppercase tracking-wide text-muted-foreground/70 font-medium">
+                      <div className="flex items-baseline justify-between gap-2 mb-1.5">
+                        <span className="text-[11px] uppercase tracking-wide text-primary/80 font-semibold">
                           Chapter
                         </span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-[11px] text-muted-foreground">
                           {relativeDate(item.date)}
                         </span>
                       </div>
-                      <h3 className="text-base font-serif font-semibold text-foreground line-clamp-2 mb-1.5">
+                      <h3 className="text-lg font-serif font-semibold text-foreground line-clamp-2 mb-2 leading-snug">
                         {item.title}
                       </h3>
                       {item.preview && (
-                        <p className="text-sm text-muted-foreground/80 line-clamp-2 leading-relaxed mb-2">
+                        <p className="text-sm text-muted-foreground/80 line-clamp-2 leading-relaxed mb-3">
                           {item.preview}…
                         </p>
                       )}
-                      <span className="text-xs text-primary font-medium">Read chapter →</span>
+                      <span className="text-sm text-primary font-medium">Read chapter →</span>
                     </button>
                   )}
                 </div>
@@ -416,6 +418,15 @@ export function MobileBookDetail() {
                   </div>
                 </div>
               </button>
+            )}
+
+            {/* Progression message */}
+            {bookChapters.length > 0 && (
+              <p className="mt-8 text-center text-xs text-muted-foreground/70 italic animate-fade-in">
+                {bookChapters.length === 1
+                  ? "Chapter 1 completed"
+                  : PROGRESSION_MESSAGES[bookChapters.length % PROGRESSION_MESSAGES.length]}
+              </p>
             )}
           </div>
         )}
