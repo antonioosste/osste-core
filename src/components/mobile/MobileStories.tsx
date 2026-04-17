@@ -97,6 +97,19 @@ export function MobileStories() {
     navigate(`/books/${bookId}`);
   };
 
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      await deleteBookDeep(deleteTarget.id);
+      setDeleteTarget(null);
+    } catch (e) {
+      // toast handled in hook
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="px-5 pt-safe-top pb-4">
       {/* Header */}
@@ -178,7 +191,28 @@ export function MobileStories() {
                         <h3 className="text-base font-serif font-semibold text-foreground line-clamp-1">
                           {book.title}
                         </h3>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <button
+                              className="h-7 w-7 -mr-1 -mt-1 rounded-full flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-muted/60 active:scale-90 transition-all shrink-0"
+                              aria-label="Book options"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="rounded-xl">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteTarget({ id: book.id, title: book.title });
+                              }}
+                              className="text-destructive focus:text-destructive gap-2"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete book
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         {chapterCount === 0
