@@ -61,14 +61,11 @@ export function MobileSessions() {
   return (
     <div className="px-5 pt-safe-top">
       {/* Header */}
-      <div className="flex items-center justify-between pt-10 pb-6">
-        <div>
-          <h1 className="text-2xl font-serif font-bold text-foreground">Sessions</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Your recording sessions</p>
-        </div>
-        <Button size="sm" className="rounded-xl h-10 gap-1.5" onClick={() => navigate("/session")}>
-          <Plus className="h-4 w-4" /> New
-        </Button>
+      <div className="pt-10 pb-6">
+        <h1 className="text-2xl font-serif font-bold text-foreground">Sessions</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          All your recordings, tied to a book
+        </p>
       </div>
 
       {loading ? (
@@ -81,8 +78,8 @@ export function MobileSessions() {
         <EmptyState
           icon={Mic}
           title="No sessions yet"
-          description="Start recording and your sessions will appear here"
-          action={{ label: "Start Recording", onClick: () => navigate("/session") }}
+          description="Open a book and tap Continue this story to start recording."
+          action={{ label: "Browse books", onClick: () => navigate("/stories") }}
         />
       ) : (
         <div className="space-y-4 pb-4">

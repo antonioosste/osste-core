@@ -1,41 +1,58 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  BookOpen,
-  Search,
-  Feather,
-  Plus,
-  Mic,
-  FileText,
-  ChevronRight,
-} from "lucide-react";
+import { BookOpen, Search, Feather, Plus, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
 import { useSessions } from "@/hooks/useSessions";
-import { useStories } from "@/hooks/useStories";
+import { useChapters } from "@/hooks/useChapters";
+
+function relativeDate(date: string | null): string {
+  if (!date) return "";
+  const d = new Date(date);
+  const diff = Math.floor((Date.now() - d.getTime()) / 86400000);
+  if (diff === 0) return "Updated today";
+  if (diff === 1) return "Updated yesterday";
+  if (diff < 7) return `Updated ${diff} days ago`;
+  if (diff < 30) return `Updated ${Math.floor(diff / 7)}w ago`;
+  return `Updated ${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+}
 
 export function MobileStories() {
   const navigate = useNavigate();
   const { storyGroups, loading, createStoryGroup } = useStoryGroups();
   const { sessions } = useSessions();
-  const { stories } = useStories();
+  const { chapters } = useChapters();
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
 
-  const getChapterCount = (bookId: string) =>
-    sessions.filter((s) => s.story_group_id === bookId).length;
-
-  const getBookStory = (bookId: string) =>
-    stories.find((s) => s.story_group_id === bookId);
+  const getBookMeta = (bookId: string) => {
+    const bookSessions = sessions.filter((s) => s.story_group_id === bookId);
+    const bookChapters = chapters.filter((c) =>
+      bookSessions.some((s) => s.id === c.session_id)
+    );
+    // Latest activity = max of session.started_at and chapter.created_at
+    let latest = 0;
+    bookSessions.forEach((s) => {
+      const t = s.started_at ? new Date(s.started_at).getTime() : 0;
+      if (t > latest) latest = t;
+    });
+    bookChapters.forEach((c) => {
+      const t = c.created_at ? new Date(c.created_at).getTime() : 0;
+      if (t > latest) latest = t;
+    });
+    return {
+      chapterCount: bookChapters.length,
+      lastUpdated: latest > 0 ? new Date(latest).toISOString() : null,
+    };
+  };
 
   const filteredBooks =
     storyGroups?.filter(
@@ -57,15 +74,9 @@ export function MobileStories() {
     }
   };
 
-  const formatDate = (date: string | null) => {
-    if (!date) return "";
-    const d = new Date(date);
-    const now = new Date();
-    const diff = Math.floor((now.getTime() - d.getTime()) / 86400000);
-    if (diff === 0) return "Today";
-    if (diff === 1) return "Yesterday";
-    if (diff < 7) return `${diff} days ago`;
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const handleContinue = (e: React.MouseEvent, bookId: string) => {
+    e.stopPropagation();
+    navigate(`/books/${bookId}`);
   };
 
   return (
@@ -102,7 +113,7 @@ export function MobileStories() {
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-24 w-full rounded-xl" />
+            <Skeleton key={i} className="h-28 w-full rounded-2xl" />
           ))}
         </div>
       ) : filteredBooks.length === 0 ? (
@@ -129,54 +140,44 @@ export function MobileStories() {
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredBooks.map((book) => {
-            const chapterCount = getChapterCount(book.id);
-            const bookStory = getBookStory(book.id);
-            const preview = bookStory?.edited_text?.substring(0, 80) || bookStory?.raw_text?.substring(0, 80);
+          {filteredBooks.map((book, idx) => {
+            const { chapterCount, lastUpdated } = getBookMeta(book.id);
 
             return (
               <Card
                 key={book.id}
-                className="border-border/40 cursor-pointer active:scale-[0.98] transition-transform"
+                className="border-border/40 cursor-pointer active:scale-[0.98] transition-transform animate-fade-in"
+                style={{ animationDelay: `${Math.min(idx * 50, 300)}ms` }}
                 onClick={() => navigate(`/books/${book.id}`)}
               >
                 <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-3 mb-3">
                     <div className="h-10 w-10 rounded-xl bg-primary/8 flex items-center justify-center shrink-0 mt-0.5">
                       <BookOpen className="h-5 w-5 text-primary/70" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-1">
-                        <h3 className="text-sm font-semibold text-foreground line-clamp-1">
+                        <h3 className="text-base font-serif font-semibold text-foreground line-clamp-1">
                           {book.title}
                         </h3>
                         <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
                       </div>
-
-                      {/* Timeline badges */}
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                        <span className="flex items-center gap-1">
-                          <Mic className="h-3 w-3" />
-                          {chapterCount} {chapterCount === 1 ? "session" : "sessions"}
-                        </span>
-                        {bookStory && (
-                          <span className="flex items-center gap-1">
-                            <FileText className="h-3 w-3" />
-                            Story ready
-                          </span>
-                        )}
-                        <span>·</span>
-                        <span>{formatDate(book.created_at)}</span>
-                      </div>
-
-                      {/* Preview excerpt */}
-                      {preview && (
-                        <p className="text-xs text-muted-foreground/70 line-clamp-2 leading-relaxed">
-                          {preview}…
-                        </p>
-                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {chapterCount === 0
+                          ? "No chapters yet"
+                          : `${chapterCount} ${chapterCount === 1 ? "chapter" : "chapters"}`}
+                        {lastUpdated && ` · ${relativeDate(lastUpdated)}`}
+                      </p>
                     </div>
                   </div>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="w-full h-10 rounded-xl text-sm"
+                    onClick={(e) => handleContinue(e, book.id)}
+                  >
+                    {chapterCount === 0 ? "Start story" : "Continue"}
+                  </Button>
                 </CardContent>
               </Card>
             );

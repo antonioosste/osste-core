@@ -419,6 +419,15 @@ export function MobileBookDetail() {
                 </div>
               </button>
             )}
+
+            {/* Progression message */}
+            {bookChapters.length > 0 && (
+              <p className="mt-8 text-center text-xs text-muted-foreground/70 italic animate-fade-in">
+                {bookChapters.length === 1
+                  ? "Chapter 1 completed"
+                  : PROGRESSION_MESSAGES[bookChapters.length % PROGRESSION_MESSAGES.length]}
+              </p>
+            )}
           </div>
         )}
       </div>
