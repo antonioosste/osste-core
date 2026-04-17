@@ -8,10 +8,28 @@ import {
   Plus,
   Loader2,
   CheckCircle2,
+  MoreVertical,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
 import { useSessions } from "@/hooks/useSessions";
 import { useChapters } from "@/hooks/useChapters";
@@ -79,7 +97,7 @@ export function MobileBookDetail() {
   const { id: bookId } = useParams();
   const { toast } = useToast();
   const { session } = useAuth();
-  const { getStoryGroup } = useStoryGroups();
+  const { getStoryGroup, deleteBookDeep } = useStoryGroups();
   const { sessions } = useSessions();
   const { chapters, refetch: refetchChapters } = useChapters();
   const { stories, refetch: refetchStories } = useStories();
@@ -90,6 +108,8 @@ export function MobileBookDetail() {
   const [isAssembling, setIsAssembling] = useState(false);
   const [completionChapter, setCompletionChapter] = useState<{ title: string; sessionId: string } | null>(null);
   const [seenChapterIds, setSeenChapterIds] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const bookSessions = useMemo(
     () => sessions.filter((s) => s.story_group_id === bookId),
