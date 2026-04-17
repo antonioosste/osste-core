@@ -247,6 +247,20 @@ export function MobileBookDetail() {
     }
   };
 
+  const handleDeleteBook = async () => {
+    if (!bookId) return;
+    setIsDeleting(true);
+    try {
+      await deleteBookDeep(bookId);
+      setConfirmDelete(false);
+      navigate("/stories");
+    } catch (e) {
+      // toast handled inside hook
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <MobileLayout>
@@ -275,16 +289,34 @@ export function MobileBookDetail() {
     <MobileLayout>
       <div className="px-5 pt-safe-top pb-32">
         {/* Header */}
-        <div className="flex items-center gap-2 pt-10 pb-4 -ml-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/stories")}
-            className="rounded-full"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <span className="text-sm text-muted-foreground">All books</span>
+        <div className="flex items-center justify-between gap-2 pt-10 pb-4 -ml-2">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/stories")}
+              className="rounded-full"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <span className="text-sm text-muted-foreground">All books</span>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full mr-1">
+                <MoreVertical className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="rounded-xl">
+              <DropdownMenuItem
+                onClick={() => setConfirmDelete(true)}
+                className="text-destructive focus:text-destructive gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete book
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Book title */}
