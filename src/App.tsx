@@ -85,8 +85,9 @@ const App = () => (
         <AuthProvider>
           <InstallPrompt />
           <Routes>
-            <Route path="/" element={<Waitlist />} />
-            <Route path="/home" element={<Landing />} />
+            <Route path="/" element={<RedirectIfApproved><Landing /></RedirectIfApproved>} />
+            <Route path="/waitlist" element={<Waitlist />} />
+            <Route path="/home" element={<Navigate to="/" replace />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/login" element={<RedirectIfApproved><Login /></RedirectIfApproved>} />
             <Route path="/signup" element={<RedirectIfApproved><Signup /></RedirectIfApproved>} />
