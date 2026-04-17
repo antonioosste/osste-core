@@ -26,8 +26,15 @@ export function MobileSessions() {
   const formatDuration = (start: string | null, end: string | null) => {
     if (!start) return "";
     if (!end) return "In Progress";
-    const mins = Math.floor((new Date(end).getTime() - new Date(start).getTime()) / 60000);
-    return `${mins} min`;
+    const totalSeconds = Math.max(
+      0,
+      Math.floor((new Date(end).getTime() - new Date(start).getTime()) / 1000)
+    );
+    if (!Number.isFinite(totalSeconds)) return "";
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    if (mins === 0) return `${secs}s`;
+    return `${mins}m ${secs.toString().padStart(2, "0")}s`;
   };
 
   const formatDate = (date: string | null) => {

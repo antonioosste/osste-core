@@ -11,16 +11,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useProfile } from "@/hooks/useProfile";
 import { useSessions } from "@/hooks/useSessions";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
 import { useStories } from "@/hooks/useStories";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { UpgradeDialog } from "@/components/dashboard/UpgradeDialog";
+import { MobileStartSheet } from "@/components/mobile/MobileStartSheet";
 
 const PROMPTS = [
   "What's your earliest memory?",
@@ -37,13 +34,11 @@ export function MobileHome() {
   const navigate = useNavigate();
   const { profile } = useProfile();
   const { sessions } = useSessions();
-  const { storyGroups, createStoryGroup } = useStoryGroups();
+  const { storyGroups } = useStoryGroups();
   const { stories } = useStories();
   const { isRecordingLimitReached } = useEntitlements();
 
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [newDesc, setNewDesc] = useState("");
+  const [showStart, setShowStart] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
 
   const activeSession = sessions.find((s) => s.status === "active" || !s.ended_at);
@@ -54,24 +49,11 @@ export function MobileHome() {
     return PROMPTS[dayIndex];
   }, []);
 
-  const handleCreate = async () => {
-    if (!newTitle.trim()) return;
-    try {
-      const book = await createStoryGroup(newTitle.trim(), newDesc.trim() || undefined);
-      setIsCreateOpen(false);
-      setNewTitle("");
-      setNewDesc("");
-      navigate(`/books/${book.id}`);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
   const handleStartStory = () => {
     if (isRecordingLimitReached) {
       setShowUpgrade(true);
     } else {
-      navigate("/session");
+      setShowStart(true);
     }
   };
 
@@ -201,7 +183,7 @@ export function MobileHome() {
               variant="outline"
               size="sm"
               className="rounded-xl"
-              onClick={() => setIsCreateOpen(true)}
+              onClick={() => setShowStart(true)}
             >
               <Plus className="h-4 w-4 mr-1" /> Create a Book
             </Button>
@@ -209,47 +191,7 @@ export function MobileHome() {
         )}
       </div>
 
-      {/* Create Book Dialog */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="mx-4 rounded-2xl">
-          <DialogHeader>
-            <DialogTitle>Create New Book</DialogTitle>
-            <DialogDescription>Give your story collection a name</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="m-title">Book Title</Label>
-              <Input
-                id="m-title"
-                placeholder="e.g., My Childhood"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                className="h-12 rounded-xl"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="m-desc">Description (Optional)</Label>
-              <Textarea
-                id="m-desc"
-                placeholder="What will this book be about?"
-                value={newDesc}
-                onChange={(e) => setNewDesc(e.target.value)}
-                rows={3}
-                className="rounded-xl"
-              />
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setIsCreateOpen(false)} className="rounded-xl">
-              Cancel
-            </Button>
-            <Button onClick={handleCreate} disabled={!newTitle.trim()} className="rounded-xl">
-              Create
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
+      <MobileStartSheet open={showStart} onOpenChange={setShowStart} />
       <UpgradeDialog open={showUpgrade} onOpenChange={setShowUpgrade} />
     </div>
   );
