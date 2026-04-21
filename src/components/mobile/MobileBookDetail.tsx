@@ -58,13 +58,6 @@ type TimelineItem =
       preview: string;
     };
 
-const CONTINUATION_PROMPTS = [
-  "What happened next?",
-  "Tell me more about this moment",
-  "Who else was involved?",
-  "How did that make you feel?",
-];
-
 function relativeDate(date: string | null): string {
   if (!date) return "";
   const d = new Date(date);
