@@ -7,13 +7,11 @@ import {
   Sparkles,
   Plus,
   Loader2,
-  CheckCircle2,
   MoreVertical,
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
