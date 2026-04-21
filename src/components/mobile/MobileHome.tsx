@@ -167,6 +167,45 @@ export function MobileHome() {
       {/* Spacer */}
       <div className="flex-1 min-h-6" />
 
+      {/* Latest chapters — horizontal scroll */}
+      {recentChapters.length > 0 && (
+        <div className="mb-6 -mx-5 animate-fade-in">
+          <div className="flex items-center justify-between mb-3 px-5">
+            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+              Latest chapters
+            </h2>
+          </div>
+          <div className="flex gap-3 overflow-x-auto px-5 pb-2 snap-x snap-mandatory scrollbar-none">
+            {recentChapters.map((ch) => (
+              <button
+                key={ch.id}
+                onClick={() => navigate(`/chapters/${ch.sessionId}`)}
+                className="snap-start shrink-0 w-[78%] text-left active:scale-[0.98] transition-transform"
+              >
+                <Card className="h-full border-border/40 bg-card">
+                  <CardContent className="p-4 flex flex-col gap-2 h-full">
+                    <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-primary/70">
+                      <Sparkles className="h-3 w-3" />
+                      Chapter ready
+                    </div>
+                    <h3 className="font-serif text-base text-foreground leading-snug line-clamp-2">
+                      {ch.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground truncate mt-auto">
+                      from “{ch.bookTitle}”
+                    </p>
+                    <div className="flex items-center gap-1 text-xs text-primary font-medium pt-1">
+                      Read chapter
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Recent Books */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
