@@ -15,9 +15,11 @@ import { useProfile } from "@/hooks/useProfile";
 import { useSessions } from "@/hooks/useSessions";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
 import { useStories } from "@/hooks/useStories";
+import { useChapters } from "@/hooks/useChapters";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { UpgradeDialog } from "@/components/dashboard/UpgradeDialog";
 import { MobileStartSheet } from "@/components/mobile/MobileStartSheet";
+import { getChapterDisplayTitle } from "@/lib/chapterTitle";
 
 const PROMPTS = [
   "What's your earliest memory?",
@@ -36,6 +38,7 @@ export function MobileHome() {
   const { sessions } = useSessions();
   const { storyGroups } = useStoryGroups();
   const { stories } = useStories();
+  const { chapters } = useChapters();
   const { isRecordingLimitReached } = useEntitlements();
 
   const [showStart, setShowStart] = useState(false);
@@ -63,6 +66,29 @@ export function MobileHome() {
     : new Date().getHours() < 18
     ? "Good afternoon"
     : "Good evening";
+
+  // Recent chapters across all books — newest first, top 3
+  const recentChapters = useMemo(() => {
+    return [...chapters]
+      .filter((c) => !!c.session_id)
+      .sort((a, b) => {
+        const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return tb - ta;
+      })
+      .slice(0, 3)
+      .map((c) => {
+        const sess = sessions.find((s) => s.id === c.session_id);
+        const book = storyGroups?.find((g) => g.id === sess?.story_group_id);
+        return {
+          id: c.id,
+          sessionId: c.session_id as string,
+          title: getChapterDisplayTitle(sess, c),
+          bookTitle: book?.title || "Untitled book",
+          createdAt: c.created_at,
+        };
+      });
+  }, [chapters, sessions, storyGroups]);
 
   // Milestone messaging
   const storyCount = stories.length;
@@ -140,6 +166,45 @@ export function MobileHome() {
 
       {/* Spacer */}
       <div className="flex-1 min-h-6" />
+
+      {/* Latest chapters — horizontal scroll */}
+      {recentChapters.length > 0 && (
+        <div className="mb-6 -mx-5 animate-fade-in">
+          <div className="flex items-center justify-between mb-3 px-5">
+            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+              Latest chapters
+            </h2>
+          </div>
+          <div className="flex gap-3 overflow-x-auto px-5 pb-2 snap-x snap-mandatory scrollbar-none">
+            {recentChapters.map((ch) => (
+              <button
+                key={ch.id}
+                onClick={() => navigate(`/chapters/${ch.sessionId}`)}
+                className="snap-start shrink-0 w-[78%] text-left active:scale-[0.98] transition-transform"
+              >
+                <Card className="h-full border-border/40 bg-card">
+                  <CardContent className="p-4 flex flex-col gap-2 h-full">
+                    <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-primary/70">
+                      <Sparkles className="h-3 w-3" />
+                      Chapter ready
+                    </div>
+                    <h3 className="font-serif text-base text-foreground leading-snug line-clamp-2">
+                      {ch.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground truncate mt-auto">
+                      from “{ch.bookTitle}”
+                    </p>
+                    <div className="flex items-center gap-1 text-xs text-primary font-medium pt-1">
+                      Read chapter
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Recent Books */}
       <div className="mb-6">

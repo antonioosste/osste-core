@@ -7,13 +7,11 @@ import {
   Sparkles,
   Plus,
   Loader2,
-  CheckCircle2,
   MoreVertical,
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,13 +58,6 @@ type TimelineItem =
       preview: string;
     };
 
-const CONTINUATION_PROMPTS = [
-  "What happened next?",
-  "Tell me more about this moment",
-  "Who else was involved?",
-  "How did that make you feel?",
-];
-
 function relativeDate(date: string | null): string {
   if (!date) return "";
   const d = new Date(date);
@@ -106,8 +97,6 @@ export function MobileBookDetail() {
   const [loading, setLoading] = useState(true);
   const [recordingsBySession, setRecordingsBySession] = useState<Record<string, number>>({});
   const [isAssembling, setIsAssembling] = useState(false);
-  const [completionChapter, setCompletionChapter] = useState<{ title: string; sessionId: string } | null>(null);
-  const [seenChapterIds, setSeenChapterIds] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -154,27 +143,6 @@ export function MobileBookDetail() {
       setRecordingsBySession(map);
     })();
   }, [bookSessions.length]);
-
-  // Initialize seen chapter set on first load
-  useEffect(() => {
-    if (bookChapters.length > 0 && seenChapterIds.size === 0) {
-      setSeenChapterIds(new Set(bookChapters.map((c) => c.id)));
-    }
-  }, [bookChapters.length]);
-
-  // Detect newly generated chapters → trigger completion screen
-  useEffect(() => {
-    if (seenChapterIds.size === 0 && bookChapters.length === 0) return;
-    const fresh = bookChapters.find((c) => !seenChapterIds.has(c.id));
-    if (fresh && fresh.session_id) {
-      const sess = bookSessions.find((s) => s.id === fresh.session_id);
-      setCompletionChapter({
-        title: getChapterDisplayTitle(sess, fresh),
-        sessionId: fresh.session_id,
-      });
-      setSeenChapterIds((prev) => new Set([...prev, ...bookChapters.map((c) => c.id)]));
-    }
-  }, [bookChapters.length]);
 
   // Build chronological timeline
   const timeline: TimelineItem[] = useMemo(() => {
@@ -508,74 +476,6 @@ export function MobileBookDetail() {
           </div>
         </div>
       )}
-
-      {/* Completion modal */}
-      <Dialog
-        open={!!completionChapter}
-        onOpenChange={(open) => !open && setCompletionChapter(null)}
-      >
-        <DialogContent className="mx-4 rounded-3xl border-0 max-w-sm p-0 overflow-hidden">
-          <div className="px-6 pt-10 pb-6 text-center">
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5 animate-scale-in">
-              <CheckCircle2 className="h-8 w-8 text-primary" />
-            </div>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
-              Your chapter is ready
-            </p>
-            <h2 className="text-2xl font-serif font-semibold text-foreground leading-tight mb-2">
-              {completionChapter?.title}
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6">
-              {book?.title} just grew stronger.
-            </p>
-
-            <div className="space-y-2 mb-6">
-              <Button
-                size="lg"
-                className="w-full h-13 rounded-2xl"
-                onClick={() => {
-                  if (completionChapter) {
-                    navigate(`/chapters/${completionChapter.sessionId}`);
-                  }
-                  setCompletionChapter(null);
-                }}
-              >
-                Read your chapter
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full h-12 rounded-2xl"
-                onClick={() => {
-                  setCompletionChapter(null);
-                  handleContinueStory();
-                }}
-              >
-                Continue storytelling
-              </Button>
-            </div>
-
-            <div className="text-left">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground/70 mb-2">
-                Want to go deeper?
-              </p>
-              <div className="space-y-1.5">
-                {CONTINUATION_PROMPTS.slice(0, 3).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => {
-                      setCompletionChapter(null);
-                      navigate(`/session?bookId=${bookId}&prompt=${encodeURIComponent(p)}`);
-                    }}
-                    className="w-full text-left text-sm text-foreground/90 px-3 py-2.5 rounded-xl bg-muted/40 hover:bg-muted active:scale-[0.98] transition-all"
-                  >
-                    → {p}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete confirmation */}
       <AlertDialog open={confirmDelete} onOpenChange={(o) => !isDeleting && setConfirmDelete(o)}>
