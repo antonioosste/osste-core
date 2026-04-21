@@ -15,9 +15,11 @@ import { useProfile } from "@/hooks/useProfile";
 import { useSessions } from "@/hooks/useSessions";
 import { useStoryGroups } from "@/hooks/useStoryGroups";
 import { useStories } from "@/hooks/useStories";
+import { useChapters } from "@/hooks/useChapters";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { UpgradeDialog } from "@/components/dashboard/UpgradeDialog";
 import { MobileStartSheet } from "@/components/mobile/MobileStartSheet";
+import { getChapterDisplayTitle } from "@/lib/chapterTitle";
 
 const PROMPTS = [
   "What's your earliest memory?",
@@ -36,6 +38,7 @@ export function MobileHome() {
   const { sessions } = useSessions();
   const { storyGroups } = useStoryGroups();
   const { stories } = useStories();
+  const { chapters } = useChapters();
   const { isRecordingLimitReached } = useEntitlements();
 
   const [showStart, setShowStart] = useState(false);
