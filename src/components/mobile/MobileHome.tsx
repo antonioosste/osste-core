@@ -67,6 +67,29 @@ export function MobileHome() {
     ? "Good afternoon"
     : "Good evening";
 
+  // Recent chapters across all books — newest first, top 3
+  const recentChapters = useMemo(() => {
+    return [...chapters]
+      .filter((c) => !!c.session_id)
+      .sort((a, b) => {
+        const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return tb - ta;
+      })
+      .slice(0, 3)
+      .map((c) => {
+        const sess = sessions.find((s) => s.id === c.session_id);
+        const book = storyGroups?.find((g) => g.id === sess?.story_group_id);
+        return {
+          id: c.id,
+          sessionId: c.session_id as string,
+          title: getChapterDisplayTitle(sess, c),
+          bookTitle: book?.title || "Untitled book",
+          createdAt: c.created_at,
+        };
+      });
+  }, [chapters, sessions, storyGroups]);
+
   // Milestone messaging
   const storyCount = stories.length;
   const milestoneMessage = storyCount === 0
