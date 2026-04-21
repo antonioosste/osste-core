@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Loader2, Check } from "lucide-react";
+import { BookOpen, Loader2, Check, ChevronRight, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { BACKEND_URL } from "@/config/backend";
@@ -171,16 +171,16 @@ export function GuidedSetup({ onComplete, onSkip }: GuidedSetupProps) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <Card>
-        <CardHeader>
+    <div className="max-w-4xl mx-auto p-4 sm:p-6 pb-28 sm:pb-6">
+      <Card className="border-0 sm:border shadow-none sm:shadow-sm">
+        <CardHeader className="px-2 sm:px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                 <BookOpen className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-2xl">
+                <CardTitle className="text-xl sm:text-2xl">
                   {step === 'topic' ? 'Want some guidance?' : 'Select Your Questions'}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -192,17 +192,33 @@ export function GuidedSetup({ onComplete, onSkip }: GuidedSetupProps) {
               </div>
             </div>
             {step === 'topic' && (
-              <Button variant="ghost" onClick={onSkip}>
+              <Button variant="ghost" onClick={onSkip} className="hidden sm:inline-flex">
                 Skip
               </Button>
             )}
           </div>
         </CardHeader>
         
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 px-2 sm:px-6">
           {step === 'topic' ? (
             <>
-              <div className="flex flex-wrap gap-2 p-4">
+              {/* Mobile: full-width tappable rows. Desktop (sm+): chip cloud. */}
+              <div className="sm:hidden flex flex-col gap-2">
+                {topics.map((topic) => (
+                  <button
+                    key={topic.id}
+                    onClick={() => handleTopicSelect(topic)}
+                    className="flex items-center justify-between gap-3 w-full min-h-14 px-4 py-3 rounded-2xl bg-card border border-border/60 active:scale-[0.99] active:bg-muted/60 transition-all text-left"
+                  >
+                    <span className="text-base font-medium text-foreground">
+                      {topic.name}
+                    </span>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground/60 shrink-0" />
+                  </button>
+                ))}
+              </div>
+
+              <div className="hidden sm:flex flex-wrap gap-2 p-4">
                 {topics.map((topic) => (
                   <button
                     key={topic.id}
@@ -213,20 +229,65 @@ export function GuidedSetup({ onComplete, onSkip }: GuidedSetupProps) {
                   </button>
                 ))}
               </div>
-              
-              <div className="flex justify-end gap-3 pt-4 border-t">
+
+              {/* Desktop skip footer */}
+              <div className="hidden sm:flex justify-end gap-3 pt-4 border-t">
                 <Button variant="ghost" onClick={onSkip}>
+                  Skip & Record Freely
+                </Button>
+              </div>
+
+              {/* Mobile sticky skip bar */}
+              <div className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-background via-background to-transparent pt-6 pb-4 px-4">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={onSkip}
+                  className="w-full h-12 rounded-2xl"
+                >
                   Skip & Record Freely
                 </Button>
               </div>
             </>
           ) : (
             <>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">
                   Select up to 3 questions you'd like to explore during your recording.
                 </p>
-                <div className="flex flex-wrap gap-2 max-h-[400px] overflow-y-auto p-2">
+
+                {/* Mobile: stacked rows with checkmark. Desktop: chip cloud. */}
+                <div className="sm:hidden flex flex-col gap-2">
+                  {prompts.map((prompt) => {
+                    const isSelected = !!selectedPrompts.find(p => p.id === prompt.id);
+                    return (
+                      <button
+                        key={prompt.id}
+                        onClick={() => togglePrompt(prompt)}
+                        className={`flex items-start gap-3 w-full min-h-14 px-4 py-3 rounded-2xl border text-left transition-all active:scale-[0.99] ${
+                          isSelected
+                            ? "bg-primary/[0.06] border-primary/50"
+                            : "bg-card border-border/60 active:bg-muted/60"
+                        }`}
+                      >
+                        <span
+                          className={`mt-0.5 h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                            isSelected
+                              ? "bg-primary border-primary"
+                              : "border-muted-foreground/30"
+                          }`}
+                        >
+                          {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                        </span>
+                        <span className="text-[15px] leading-snug text-foreground">
+                          {prompt.text}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="hidden sm:flex flex-wrap gap-2 max-h-[400px] overflow-y-auto p-2">
                   {prompts.map((prompt) => {
                     const isSelected = selectedPrompts.find(p => p.id === prompt.id);
                     return (
@@ -234,8 +295,8 @@ export function GuidedSetup({ onComplete, onSkip }: GuidedSetupProps) {
                         key={prompt.id}
                         onClick={() => togglePrompt(prompt)}
                         className={`px-4 py-2 rounded-full text-sm transition-all duration-200 border group hover:scale-105 ${
-                          isSelected 
-                            ? 'bg-primary text-primary-foreground border-primary shadow-md' 
+                          isSelected
+                            ? 'bg-primary text-primary-foreground border-primary shadow-md'
                             : 'bg-secondary/50 hover:bg-secondary border-border hover:border-primary/50'
                         }`}
                       >
@@ -248,8 +309,9 @@ export function GuidedSetup({ onComplete, onSkip }: GuidedSetupProps) {
                   })}
                 </div>
               </div>
-              
-              <div className="flex justify-between items-center gap-3 pt-4 border-t">
+
+              {/* Desktop footer */}
+              <div className="hidden sm:flex justify-between items-center gap-3 pt-4 border-t">
                 <Button variant="outline" onClick={() => setStep('topic')}>
                   Back to Topics
                 </Button>
@@ -257,7 +319,7 @@ export function GuidedSetup({ onComplete, onSkip }: GuidedSetupProps) {
                   <Badge variant="secondary">
                     {selectedPrompts.length} / 3 selected
                   </Badge>
-                  <Button 
+                  <Button
                     onClick={handleComplete}
                     disabled={selectedPrompts.length === 0 || isStarting}
                   >
@@ -271,6 +333,36 @@ export function GuidedSetup({ onComplete, onSkip }: GuidedSetupProps) {
                     )}
                   </Button>
                 </div>
+              </div>
+
+              {/* Mobile sticky action bar */}
+              <div className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-background via-background to-transparent pt-6 pb-4 px-4">
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <button
+                    onClick={() => setStep('topic')}
+                    className="flex items-center gap-1 text-sm text-muted-foreground active:text-foreground"
+                  >
+                    <ArrowLeft className="h-4 w-4" /> Topics
+                  </button>
+                  <span className="text-xs text-muted-foreground">
+                    {selectedPrompts.length} / 3 selected
+                  </span>
+                </div>
+                <Button
+                  size="lg"
+                  onClick={handleComplete}
+                  disabled={selectedPrompts.length === 0 || isStarting}
+                  className="w-full h-14 rounded-2xl text-base shadow-lg"
+                >
+                  {isStarting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Starting…
+                    </>
+                  ) : (
+                    'Start Recording'
+                  )}
+                </Button>
               </div>
             </>
           )}
