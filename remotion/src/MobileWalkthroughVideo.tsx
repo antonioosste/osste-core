@@ -302,9 +302,6 @@ const AppScene: React.FC<{
   const shellY = interpolate(intro, [0, 1], [70, 0]);
   const shellOpacity = interpolate(intro, [0, 1], [0, 1]);
 
-  const drift = interpolate(frame, [0, SCENE_DURATION], [0, -index % 2 === 0 ? -36 : 36], {
-    extrapolateRight: "clamp",
-  });
   const driftTargetX = index % 2 === 0 ? -36 : 36;
   const drift = interpolate(frame, [0, SCENE_DURATION], [0, driftTargetX], {
     extrapolateRight: "clamp",
