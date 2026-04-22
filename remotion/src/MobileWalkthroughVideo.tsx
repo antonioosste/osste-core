@@ -305,6 +305,10 @@ const AppScene: React.FC<{
   const drift = interpolate(frame, [0, SCENE_DURATION], [0, -index % 2 === 0 ? -36 : 36], {
     extrapolateRight: "clamp",
   });
+  const driftTargetX = index % 2 === 0 ? -36 : 36;
+  const drift = interpolate(frame, [0, SCENE_DURATION], [0, driftTargetX], {
+    extrapolateRight: "clamp",
+  });
   const driftY = interpolate(frame, [0, SCENE_DURATION], [0, -54], {
     extrapolateRight: "clamp",
   });
