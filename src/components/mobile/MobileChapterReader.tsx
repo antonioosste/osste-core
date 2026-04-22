@@ -7,6 +7,7 @@ interface MobileChapterReaderProps {
   bodyText: string;
   bookId?: string | null;
   bookTitle?: string | null;
+  sessionId?: string | null;
 }
 
 const FOLLOW_UP_PROMPTS = [
@@ -26,6 +27,7 @@ export function MobileChapterReader({
   bodyText,
   bookId,
   bookTitle,
+  sessionId,
 }: MobileChapterReaderProps) {
   const navigate = useNavigate();
 
@@ -35,6 +37,10 @@ export function MobileChapterReader({
   };
 
   const continueStory = () => {
+    if (sessionId) {
+      navigate(bookId ? `/session?id=${sessionId}&bookId=${bookId}` : `/session?id=${sessionId}`);
+      return;
+    }
     if (bookId) navigate(`/session?bookId=${bookId}&mode=non-guided`);
     else navigate("/session");
   };

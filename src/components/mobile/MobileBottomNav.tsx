@@ -1,10 +1,9 @@
-import { Home, Mic, BookOpen, User } from "lucide-react";
+import { Home, BookOpen, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { label: "Home", icon: Home, path: "/dashboard" },
-  { label: "Sessions", icon: Mic, path: "/books" },
   { label: "Books", icon: BookOpen, path: "/stories" },
   { label: "Profile", icon: User, path: "/settings" },
 ];
@@ -14,6 +13,9 @@ export function MobileBottomNav() {
 
   const isActive = (path: string) => {
     if (path === "/dashboard") return location.pathname === "/dashboard";
+    if (path === "/stories") {
+      return location.pathname.startsWith("/stories") || location.pathname.startsWith("/books");
+    }
     return location.pathname.startsWith(path);
   };
 

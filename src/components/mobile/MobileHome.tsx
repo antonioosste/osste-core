@@ -82,7 +82,6 @@ export function MobileHome() {
         const book = storyGroups?.find((g) => g.id === sess?.story_group_id);
         return {
           id: c.id,
-          sessionId: c.session_id as string,
           title: getChapterDisplayTitle(sess, c),
           bookTitle: book?.title || "Untitled book",
           createdAt: c.created_at,
@@ -179,7 +178,7 @@ export function MobileHome() {
             {recentChapters.map((ch) => (
               <button
                 key={ch.id}
-                onClick={() => navigate(`/chapters/${ch.sessionId}`)}
+                onClick={() => navigate(`/chapters/${ch.id}`)}
                 className="snap-start shrink-0 w-[78%] text-left active:scale-[0.98] transition-transform"
               >
                 <Card className="h-full border-border/40 bg-card">
