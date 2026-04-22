@@ -1,7 +1,6 @@
 import { Composition } from "remotion";
 import { MainVideo } from "./MainVideo";
 import { GiftGuideVideo } from "./GiftGuideVideo";
-import { MobileWalkthroughVideo, mobileWalkthroughDuration, mobileWalkthroughFps } from "./MobileWalkthroughVideo";
 
 // Landscape walkthrough
 export const RemotionRoot = () => (
@@ -20,14 +19,6 @@ export const RemotionRoot = () => (
       component={GiftGuideVideo}
       durationInFrames={810}
       fps={30}
-      width={1080}
-      height={1920}
-    />
-    <Composition
-      id="mobile-walkthrough"
-      component={MobileWalkthroughVideo}
-      durationInFrames={mobileWalkthroughDuration}
-      fps={mobileWalkthroughFps}
       width={1080}
       height={1920}
     />
