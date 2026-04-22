@@ -67,9 +67,10 @@ interface GuidedPrompt {
 export default function Session() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const existingSessionId = searchParams.get("id");
+  const existingSessionId = searchParams.get("id") || searchParams.get("sessionId");
   const bookIdParam = searchParams.get("bookId"); // Book ID to add chapter to
   const modeParam = searchParams.get("mode") as "guided" | "non-guided" | null;
+  const isMobileViewport = typeof window !== "undefined" && window.innerWidth < 768;
 
   const { toast } = useToast();
   const { user } = useAuth();
@@ -98,7 +99,7 @@ export default function Session() {
   const [isNewlyCreatedSession, setIsNewlyCreatedSession] = useState(false);
 
   // Session mode and question bank state
-  const [showGuidedSetup, setShowGuidedSetup] = useState(!existingSessionId && !modeParam);
+  const [showGuidedSetup, setShowGuidedSetup] = useState(!existingSessionId && !modeParam && !isMobileViewport);
   const [sessionMode, setSessionMode] = useState<"guided" | "non-guided">(modeParam || "non-guided");
   const [guidedPrompts, setGuidedPrompts] = useState<GuidedPrompt[]>([]);
   const [currentGuidedPromptIndex, setCurrentGuidedPromptIndex] = useState(0);
@@ -186,6 +187,28 @@ export default function Session() {
 
     startNonGuidedSession();
   }, [modeParam, existingSessionId, sessionId, targetBookId]);
+
+  useEffect(() => {
+    if (!isMobileViewport || existingSessionId || sessionId || modeParam || !targetBookId) return;
+
+    setShowGuidedSetup(false);
+    setSessionMode("non-guided");
+
+    void startSessionDb({
+      story_group_id: targetBookId,
+      persona: "friendly",
+      themes: [],
+      language: "en",
+      mode: "non-guided",
+    })
+      .then(() => {
+        setIsNewlyCreatedSession(true);
+        setCurrentPrompt("Tell me a story from your life that's meaningful to you.");
+      })
+      .catch((error) => {
+        console.error("Error starting mobile session:", error);
+      });
+  }, [isMobileViewport, existingSessionId, sessionId, modeParam, targetBookId, startSessionDb]);
 
   // Track whether initial load has completed to prevent re-running on every turns change
   const hasLoadedSessionRef = useRef(false);
@@ -970,7 +993,6 @@ export default function Session() {
     }
     // Mobile users go to the dedicated celebration screen.
     // Desktop keeps the original behavior (back to book or dashboard).
-    const isMobileViewport = typeof window !== "undefined" && window.innerWidth < 768;
     if (isMobileViewport && sessionId) {
       navigate(`/session/complete?sessionId=${sessionId}`);
       return;
