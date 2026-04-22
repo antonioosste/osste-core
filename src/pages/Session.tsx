@@ -1213,8 +1213,12 @@ export default function Session() {
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      setShowGuidedSetup(true);
                       setGuidedPrompts([]);
+                      if (isMobileViewport) {
+                        setShowCategorySelector(true);
+                        return;
+                      }
+                      setShowGuidedSetup(true);
                     }}
                     className="text-xs text-muted-foreground/60"
                   >
