@@ -31,6 +31,8 @@ export default function ChapterDetail() {
   const [sessionId, setSessionId] = useState<string | undefined>();
   const [dismissedSuggestion, setDismissedSuggestion] = useState(false);
   const [isSavingSuggestion, setIsSavingSuggestion] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const { getChapter, updateChapter } = useChapters();
   const { getSession, updateSession } = useSessions();
   
@@ -41,28 +43,49 @@ export default function ChapterDetail() {
   });
 
   useEffect(() => {
-    if (id) {
-      getChapter(id).then(async (data: any) => {
-        setChapter(data);
-        setSummary(data?.summary || "");
-        setOverallSummary(data?.overall_summary || "");
-        setSessionId(data?.session_id || undefined);
-        
-        // Load session to get story_group_id
-        if (data?.session_id) {
-          const sessionData = await getSession(data.session_id);
-          setSession(sessionData);
+    const loadChapter = async () => {
+      if (!id) {
+        setLoadError("Missing chapter ID.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setLoadError(null);
+
+        const data = await getChapter(id);
+        if (!data) {
+          throw new Error("Chapter not found.");
         }
-        
-        // Use chapters.title as single source of truth
-        const resolvedTitle = getChapterDisplayTitle(
-          data?.session_id ? await getSession(data.session_id) : null,
-          data
-        );
+
+        setChapter(data);
+        setSummary(data.summary || "");
+        setOverallSummary(data.overall_summary || "");
+        setSessionId(data.session_id || undefined);
+
+        let sessionData = null;
+        if (data.session_id) {
+          sessionData = await getSession(data.session_id);
+          setSession(sessionData);
+        } else {
+          setSession(null);
+        }
+
+        const resolvedTitle = getChapterDisplayTitle(sessionData, data);
         setTitle(resolvedTitle);
-      });
-    }
-  }, [id]);
+      } catch (error) {
+        console.error("Error loading chapter:", error);
+        setLoadError(error instanceof Error ? error.message : "Failed to load chapter.");
+        setChapter(null);
+        setSession(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadChapter();
+  }, [id, getChapter, getSession]);
   
   useEffect(() => {
     if (sessionId) {
@@ -123,13 +146,37 @@ export default function ChapterDetail() {
 
   const isMobile = useIsMobile();
 
-  if (!chapter) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background">
         {!isMobile && <Header isAuthenticated={true} />}
         <main className="container mx-auto px-4 py-8">
           <Skeleton className="h-8 w-64 mb-4" />
           <Skeleton className="h-96 w-full" />
+        </main>
+      </div>
+    );
+  }
+
+  if (loadError || !chapter) {
+    const backHref = session?.story_group_id ? `/books/${session.story_group_id}` : "/books";
+
+    return (
+      <div className="min-h-screen bg-background">
+        {!isMobile && <Header isAuthenticated={true} />}
+        <main className="container mx-auto px-4 py-8">
+          <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center text-center">
+            <h1 className="font-serif text-2xl font-bold text-foreground">Something went wrong loading your story</h1>
+            <p className="mt-3 text-sm text-muted-foreground">
+              {loadError || "We couldn't open this chapter right now."}
+            </p>
+            <div className="mt-6 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
+              <Button onClick={() => window.location.reload()}>Try again</Button>
+              <Button variant="outline" onClick={() => navigate(backHref)}>
+                Back to book
+              </Button>
+            </div>
+          </div>
         </main>
       </div>
     );
@@ -145,6 +192,7 @@ export default function ChapterDetail() {
         bodyText={bodyText}
         bookId={session?.story_group_id || null}
         bookTitle={null}
+        sessionId={sessionId || null}
       />
     );
   }
