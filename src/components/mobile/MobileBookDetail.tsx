@@ -191,9 +191,9 @@ export function MobileBookDetail() {
 
   const handleContinueStory = () => {
     if (resumableSession) {
-      navigate(`/session?sessionId=${resumableSession.id}&bookId=${bookId}`);
+      navigate(`/session?id=${resumableSession.id}&bookId=${bookId}`);
     } else {
-      navigate(`/session?bookId=${bookId}`);
+      navigate(`/session?bookId=${bookId}&mode=non-guided`);
     }
   };
 
@@ -349,7 +349,7 @@ export function MobileBookDetail() {
                   {item.kind === "session" ? (
                     <button
                       onClick={() =>
-                        navigate(`/session?sessionId=${item.sessionId}&bookId=${bookId}`)
+                        navigate(`/session?id=${item.sessionId}&bookId=${bookId}`)
                       }
                       className="w-full text-left rounded-xl bg-card/60 border border-border/40 p-3.5 active:scale-[0.98] transition-transform"
                     >
@@ -370,7 +370,7 @@ export function MobileBookDetail() {
                     </button>
                   ) : (
                     <button
-                      onClick={() => navigate(`/chapters/${item.sessionId}`)}
+                      onClick={() => navigate(`/chapters/${item.id.replace("c-", "")}`)}
                       className="w-full text-left rounded-2xl bg-card border border-border/60 p-5 shadow-sm active:scale-[0.98] transition-transform"
                     >
                       <div className="flex items-baseline justify-between gap-2 mb-1.5">
